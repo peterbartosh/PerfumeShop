@@ -1,0 +1,39 @@
+{
+  "project_info": {
+    "project_number": "473475779715",
+    "project_id": "goldparfum-68548",
+    "storage_bucket": "goldparfum-68548.appspot.com"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:473475779715:android:b81728b4693ecb897b1fb6",
+        "android_client_info": {
+          "package_name": "com.example.perfumeshop"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "473475779715-ajdvoovhaf47fh04qomll88v94ooobfl.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyBhjcklZiIN9K5BgG-wLK3cocyprz-FyrY"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "473475779715-ajdvoovhaf47fh04qomll88v94ooobfl.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
