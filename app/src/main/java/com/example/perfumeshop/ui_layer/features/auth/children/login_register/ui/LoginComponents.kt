@@ -13,6 +13,7 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.layout.wrapContentHeight
+import androidx.compose.foundation.layout.wrapContentWidth
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.foundation.text.KeyboardOptions
@@ -89,8 +90,8 @@ fun InputField(
 @Preview(showBackground = true)
 @Composable
 fun PhoneInput(
-    phone: MutableState<String> = mutableStateOf("22222222"),
     modifier: Modifier = Modifier,
+    phone: MutableState<String> = mutableStateOf("22222222"),
     mask: String = " (00) 000-00-00",
     enabled: Boolean = true,
     maskNumber: Char = '0',
@@ -105,7 +106,7 @@ fun PhoneInput(
         Box(
             modifier = Modifier
                 .height(40.dp)
-                .width(70.dp)
+                .width(85.dp)
                 .border(width = 1.dp, color = Color.LightGray, shape = RectangleShape)
         ) {
 

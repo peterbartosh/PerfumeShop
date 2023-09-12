@@ -6,9 +6,8 @@ import androidx.navigation.NavGraphBuilder
 import androidx.navigation.NavOptions
 import androidx.navigation.compose.composable
 import com.example.perfumeshop.ui_layer.features.auth.children.login_register.navigation.loginAskRoute
-import com.example.perfumeshop.ui_layer.features.auth.children.login_register.ui.CodeVerificationScreen
+import com.example.perfumeshop.ui_layer.features.auth.children.code_verif.ui.CodeVerificationScreen
 import com.example.perfumeshop.ui_layer.features.auth.children.login_register.ui.AuthViewModel
-import com.example.perfumeshop.ui_layer.features.start.children.ask.navigation.askRoute
 
 
 const val codeAskVerification = "ask login code"

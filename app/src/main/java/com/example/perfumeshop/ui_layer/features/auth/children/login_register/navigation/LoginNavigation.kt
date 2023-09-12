@@ -11,8 +11,8 @@ import com.example.perfumeshop.ui_layer.features.main.children.profile.children.
 import com.example.perfumeshop.ui_layer.features.start.children.ask.navigation.askRoute
 
 
-const val loginAskRoute = "ask login"
-const val loginProfileRoute = "profile login"
+const val loginAskRoute = "ask|login"
+const val loginProfileRoute = "profile|login"
 
 
 fun NavController.navigateToLogin(navOptions: NavOptions? = null) {

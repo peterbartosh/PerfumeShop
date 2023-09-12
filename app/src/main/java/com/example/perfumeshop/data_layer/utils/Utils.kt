@@ -6,21 +6,13 @@ import android.widget.Toast
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
-import androidx.navigation.NavController
-import androidx.navigation.NavGraph
-import androidx.navigation.NavGraphBuilder
-import androidx.navigation.NavOptionsBuilder
 import com.example.perfumeshop.data_layer.models.Product
-import com.example.perfumeshop.ui_layer.features.main.children.cart.children.cart.navigation.cartRoute
-import com.example.perfumeshop.ui_layer.features.main.children.cart.navigation.cartGraphRoute
-import com.example.perfumeshop.ui_layer.features.main.children.cart.navigation.cartGraphStartDestination
-import com.example.perfumeshop.ui_layer.features.main.children.home.children.home.navigation.homeRoute
-import com.example.perfumeshop.ui_layer.features.main.children.home.navigation.homeGraphRoute
-import com.example.perfumeshop.ui_layer.features.main.children.home.navigation.homeGraphStartDestination
-import com.example.perfumeshop.ui_layer.features.main.children.profile.children.profile.navigation.profileRoute
-import com.example.perfumeshop.ui_layer.features.main.children.profile.navigation.profileGraphRoute
-import com.example.perfumeshop.ui_layer.features.main.children.profile.navigation.profileGraphStartDestination
+import com.example.perfumeshop.data_layer.models.User
+import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.firestore.FirebaseFirestore
+import com.google.firebase.firestore.ktx.toObject
+import kotlinx.coroutines.tasks.await
+import java.util.Objects
 import java.util.function.Predicate
 import kotlin.random.Random
 
@@ -106,35 +98,39 @@ fun deleteFromDatabase(id: String, collectionName: String, onSuccess: () -> Unit
 }
 
 
-fun updateInDatabase(
-    id: String,
-    bookToUpdate: Map<String, Comparable<*>?>,
-    context: Context
-) {
+fun updateFieldInDatabase(
+    collectionPath : String,
+    id : String,
+    fieldPath : String,
+    updatedValue : Any) {
 
     FirebaseFirestore.getInstance()
-        .collection("books")
+        .collection(collectionPath)
         .document(id)
-        .update(bookToUpdate)
+        .update(fieldPath, updatedValue)
         .addOnCompleteListener {
-            Toast.makeText(context, "User Updated Successfully!",
-                           Toast.LENGTH_LONG).show()
-           // navController.navigate(ReaderScreens.HomeScreen.name)
-
+            Log.d("DATABASE_TASK", "updateFieldInDatabase: SUCCESS")
         }.addOnFailureListener{
-            Toast.makeText(context, "Error updating document",
-                           Toast.LENGTH_LONG).show()
-            Log.w("ERROR_ERROR", "Error updating document" , it)
+            Log.d("DATABASE_TASK", "updateFieldInDatabase: FAILED")
         }
 }
 
+suspend fun getCurrentUserDatabaseId() : String {
+    val auth = FirebaseAuth.getInstance()
+    return if (auth.currentUser?.isAnonymous == true)
+         ""
+    else
+        FirebaseFirestore.getInstance()
+        .collection("users")
+        .whereIn("user_auth_id", listOf(auth.uid))
+            .get().await().documents.first().toObject(User::class.java)?.id ?: ""
+}
 
-
-fun createProduct() {
-    for (i in 10..200) {
+fun createProducts(collectionName : String = "hot") {
+    for (i in 0..20) {
         val product = Product(type = "type$i", volume = i*5, brand = "Tom Ford", collection = "Mustang",
-                              price = Random.nextDouble(5.0, 40.0), sex = Sex.Male, isOnHand = true)
-        saveToFirebase(product, collectionName = "products")
+                              price = Random.nextDouble(5.0, 40.0), sex = if (i % 2 == 0) Sex.Male else Sex.Female, isOnHand = true)
+        saveToFirebase(product, collectionName = collectionName)
     }
 }
 
@@ -148,39 +144,4 @@ fun getWidthPercent(context: Context): Dp {
 fun getHeightPercent(context: Context): Dp {
     val displayMetrics = context.resources.displayMetrics
     return ((displayMetrics.heightPixels / displayMetrics.density) / 100).dp
-}
-
-
-var homeGraphR : NavGraph? = null
-var cartGraphR : NavGraph? = null
-var profileGraphR : NavGraph? = null
-
-
-fun NavController.setNestedGraphStartDest(){
-    when (this.currentDestination?.route?.split(' ')?.first()) {
-        homeRoute -> homeGraphR?.setStartDestination(this.currentDestination?.route.toString())
-        cartRoute -> cartGraphR?.setStartDestination(this.currentDestination?.route.toString())
-        profileRoute -> profileGraphR?.setStartDestination(this.currentDestination?.route.toString())
-    }
-}
-
-fun NavController.navigateToGraph(
-    graphRoute : String,
-    saveStartDest : Boolean = true,
-    navOptions: NavOptionsBuilder.() -> Unit
-){
-
-
-//    if (saveStartDest)
-//        currentNestedGraph?.setStartDestination(startDestRoute = this.currentDestination?.route.toString())
-
-//    if (saveStartDest)
-//        this.setNestedGraphStartDest()
-
-    Log.d(
-        "TTTTTOOOOO",
-        homeGraphStartDestination.value + " " + cartGraphStartDestination.value + " " + profileGraphStartDestination.value
-    )
-
-    this.navigate(route = graphRoute)
 }

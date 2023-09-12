@@ -1,34 +1,38 @@
 package com.example.perfumeshop.ui_layer.features.main.children.cart.navigation
 
+import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
-import androidx.navigation.NavController
+import androidx.compose.runtime.setValue
 import androidx.navigation.NavGraphBuilder
-import androidx.navigation.navigation
-import com.example.perfumeshop.data_layer.utils.cartGraphR
-import com.example.perfumeshop.data_layer.utils.navigateToGraph
 import com.example.perfumeshop.ui_layer.features.main.children.cart.children.cart.navigation.cartRoute
 import com.example.perfumeshop.ui_layer.features.main.children.cart.children.cart.navigation.cartScreen
-import com.example.perfumeshop.ui_layer.features.main.children.cart.children.product_cart.navigation.productCartScreen
+import com.example.perfumeshop.ui_layer.features.main.children.cart.children.cart.ui.CartViewModel
+import com.example.perfumeshop.ui_layer.features.main.children.product.navigation.productScreen
+import com.example.perfumeshop.ui_layer.features.main.children.profile.children.favourite.ui.FavouriteViewModel
 
 
-const val cartGraphRoute = "cartGraph"
+//const val cartGraphRoute = "cartGraph"
 
-var cartGraphStartDestination = mutableStateOf(cartRoute)
+var cartActiveChild by mutableStateOf(cartRoute)
 
 //fun NavController.navigateToCartGraph(){
 //    this.navigateToGraph(graphRoute = cartGraphRoute, saveStartDest = true){}
 //}
 
 
-fun NavGraphBuilder.cartGraph(onProductClick: () -> Unit){
+fun NavGraphBuilder.cartGraph(
+        onProductClick: (String) -> Unit,
+        cartViewModel: CartViewModel,
+        favouriteViewModel: FavouriteViewModel
+){
+        cartScreen(
+                cartViewModel = cartViewModel,
+                favouriteViewModel = favouriteViewModel,
+                onProductClick = onProductClick)
 
-    //navigation(startDestination = cartGraphStartDestination.value, route = cartGraphRoute){
-
-
-        cartScreen(onProductClick = onProductClick)
-
-        productCartScreen(onClick = {})
-
-
-   // }
+        productScreen(
+                cartViewModel = cartViewModel,
+                favouriteViewModel = favouriteViewModel,
+                onClick = {}
+        )
 }

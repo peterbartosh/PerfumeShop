@@ -28,7 +28,7 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.example.perfumeshop.R
-import com.example.perfumeshop.ui.theme.Gold
+import com.example.perfumeshop.ui_layer.theme.Gold
 import com.google.firebase.auth.FirebaseAuth
 
 

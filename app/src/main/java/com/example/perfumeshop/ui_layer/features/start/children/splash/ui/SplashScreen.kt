@@ -24,7 +24,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.scale
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
-import com.example.perfumeshop.ui.theme.Gold
+import com.example.perfumeshop.ui_layer.theme.Gold
 import com.google.firebase.auth.FirebaseAuth
 import kotlinx.coroutines.delay
 
@@ -50,15 +50,15 @@ fun SplashScreen(navigateAsk : () -> Unit, navigateMain : () -> Unit) {
 
         Log.d("CUR_USER", "SplashScreen: ${currentUser == null}")
 
-       // if (currentUser?.isAnonymous == true || currentUser?.phoneNumber.isNullOrEmpty()){
-//        if (currentUser?.isAnonymous == true || !currentUser?.phoneNumber.isNullOrEmpty()){
-//            navigateMain.invoke()
-//            //navController.navigate(Screens.LoginScreen.name)
-//        }else {
-//            navigateAsk.invoke()
-//            //navController.navigate(Screens.HomeScreen.name)
-//        }
-        navigateAsk.invoke()
+        //if (currentUser?.isAnonymous == true || currentUser?.phoneNumber.isNullOrEmpty()){
+        if (currentUser?.isAnonymous == true || !currentUser?.phoneNumber.isNullOrEmpty()){
+            navigateMain.invoke()
+            //navController.navigate(Screens.LoginScreen.name)
+        }else {
+            navigateAsk.invoke()
+            //navController.navigate(Screens.HomeScreen.name)
+        }
+        //navigateAsk.invoke()
 
 
         //navigateFront.invoke()
@@ -83,7 +83,7 @@ fun SplashScreen(navigateAsk : () -> Unit, navigateMain : () -> Unit) {
             MainLogo()
             Spacer(modifier = Modifier.height(15.dp))
             Text(
-                text = "\"Read. Change. Yourself \"",
+                text = "\" Парфюмерия и косметика оптом \"",
                 style = MaterialTheme.typography.bodyMedium,
                 color = Color.LightGray
             )
@@ -100,6 +100,7 @@ fun MainLogo(modifier: Modifier = Modifier) {
     Text(text = "Gold Parfum",
          modifier = modifier.padding(bottom = 16.dp),
          style = MaterialTheme.typography.bodyMedium,
-         color = Gold)
+         color = Gold
+    )
 }
 

@@ -1,134 +1,158 @@
 package com.example.perfumeshop.ui_layer.features.main.children.home.children.search.ui
 
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.foundation.lazy.items
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
-import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.foundation.Image
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
-import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.width
-import androidx.compose.material3.Card
-import androidx.compose.material3.CardDefaults
-import androidx.compose.material3.LinearProgressIndicator
-import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Icon
+import androidx.compose.runtime.MutableState
 import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
 
-import androidx.compose.ui.graphics.RectangleShape
-import androidx.compose.ui.text.font.FontStyle
-import androidx.compose.ui.text.style.TextOverflow
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.unit.dp
-import coil.compose.rememberAsyncImagePainter
+import com.example.perfumeshop.R
 import com.example.perfumeshop.data_layer.models.Product
 import com.example.perfumeshop.data_layer.utils.QueryType
+import com.example.perfumeshop.ui_layer.theme.Gold
+import com.example.perfumeshop.ui_layer.components.LoadingIndicator
+import com.example.perfumeshop.ui_layer.features.main.children.cart.children.cart.ui.CartViewModel
+import com.example.perfumeshop.ui_layer.features.main.children.profile.children.favourite.ui.FavouriteViewModel
 
 
 @Composable
-fun SearchScreen(query : String, queryType : QueryType,
-                 viewModel: SearchViewModel, onProductClick : (String) -> Unit) {
+fun SearchScreen(
+    favouriteViewModel: FavouriteViewModel,
+    cartViewModel: CartViewModel,
+    viewModel: SearchViewModel,
+    onProductClick: (String) -> Unit,
+    query: String,
+    queryType: QueryType
+) {
 
-    if (viewModel.initSearchQuery) {
-        viewModel.updateQuery(query = query, queryType = queryType)
-        viewModel.searchQuery()
+   // Log.d("OOOOOOOOOOOOOOO", "SCREEN: $cartViewModel  $favouriteViewModel")
+
+
+    val showProductList = remember {
+        mutableStateOf(true)
     }
 
-        Column(modifier = Modifier) {
+    if (viewModel.initSearchQuery)
+        viewModel.searchQuery(query = query, queryType = queryType)
 
-            SearchForm() { q ->
-                viewModel.updateQuery(q, QueryType.brand)
-                viewModel.searchQuery()
-            }
+    val showFilter = remember {
+        mutableStateOf(false)
+    }
+    
 
-           // Log.d("IR_IR", "${viewModel.isInitialized}  ${viewModel.searchList.size}")
+    Column(modifier = Modifier) {
 
-            if (viewModel.isInitialized)
-                if (viewModel.isFailure) {
-                    Text(text = "ERROR")
-                } else if (viewModel.isLoading || viewModel.searchList.collectAsState().value.isEmpty()){
-                    Column(
-                        modifier = Modifier.fillMaxWidth(),
-                        horizontalAlignment = Alignment.Start,
-                        verticalArrangement = Arrangement.Center
-                    ) {
-                        Text(text = "Loading...")
-                        LinearProgressIndicator()
-                    }
-                } else
-                   // Log.d("SIZE_SIZE", "SearchScreen: ${viewModel.searchList.size}")
-                    ProductList(onProductClick = onProductClick,
-                                listOfProducts = viewModel.searchList.collectAsState().value)
-                }
-
+        SearchForm() { q ->
+            viewModel.searchQuery(query = q, queryType = QueryType.brand)
+            showProductList.value = true
+        }
+        
+        Row(horizontalArrangement = Arrangement.End,
+            modifier = Modifier
+                .fillMaxWidth()
+                .height(30.dp)) {
+            Icon(painter = painterResource(id = R.drawable.filter),
+                 tint = Gold,
+                 contentDescription = "filter icon",
+                 modifier = Modifier.clickable { showFilter.value = !showFilter.value })
         }
 
+        ShowProductList(
+            showProductList = showProductList,
+            viewModel = viewModel,
+            onProductClick = onProductClick,
+            onAddToCartClick = cartViewModel::addToCart,
+            onAddToFavouriteClick = favouriteViewModel::addToFavourite,
+            onRemoveFromCartClick = cartViewModel::removeFromCart,
+            onRemoveFromFavouriteClick = favouriteViewModel::removeFromFavourite,
+            isInFavouriteCheck = favouriteViewModel::isInFavourite,
+            isInCartCheck = cartViewModel::isInCart
+        )
 
-
-@Composable
-fun ProductList( onProductClick : (String) -> Unit, listOfProducts : List<Product>) {
-
-
-        LazyColumn(contentPadding = PaddingValues(10.dp),
-                   modifier = Modifier.fillMaxSize()){
-            items(listOfProducts){ product ->
-                ProductRow(product = product, onProductClick = onProductClick)
-            }
-
+        val rangeSliderState = remember {
+            mutableStateOf(0f..10f)
         }
 
+        val selected = remember {
+            mutableStateOf(false)
+        }
 
-}
+        val listOfButtonsStates = remember {
+            listOf(Pair(mutableStateOf(false), 35),
+                                  Pair(mutableStateOf(false), 50),
+                                  Pair(mutableStateOf(false), 125))
+        }
 
-@Composable
-fun ProductRow(product: Product, onProductClick : (String) -> Unit) {
+        val applyFilter = remember(rangeSliderState, selected, listOfButtonsStates) {
+            mutableStateOf(
+                rangeSliderState.value != 0f..10f ||
+                        selected.value ||
+                        listOfButtonsStates.any { it.first.value }
+            )
+        }
 
-    Card(modifier = Modifier
-        .clickable { onProductClick.invoke(product.id.toString()) }
-        .fillMaxWidth()
-        .height(70.dp)
-        .padding(3.dp),
-         shape = RectangleShape,
-         elevation = CardDefaults.cardElevation(7.dp)) {
-        Row(modifier = Modifier.padding(5.dp), verticalAlignment = Alignment.Top) {
-            //if (book != null)
-            //"https://www.pngarts.com/files/8/Standing-Book-Cover-PNG-Photo.png"
+            FilterList(showDialog = showFilter,
+                       rangeSliderState = rangeSliderState,
+                       selected = selected,
+                       listOfButtonsStates = listOfButtonsStates,
+            onApplyButtonClick = {
+                showProductList.value = true
+                showFilter.value = false
 
-
-//            if (book != null)
-//            if (book.isbn != null)
-
-            Image(painter = rememberAsyncImagePainter(model =
-            "https://www.google.com/url?sa=i&url=https%3A%2F%2Fvanille.by%2Fgucci-flora-by-gucci-gracious-tuberose&psig=AOvVaw1E9yBoCNg_-1U0HlIRKQ7l&ust=1692929272446000&source=images&cd=vfe&opi=89978449&ved=0CBAQjRxqFwoTCPDipJGb9IADFQAAAAAdAAAAABAE"),
-                  contentDescription = "image book",
-                  modifier = Modifier
-                      .height(30.dp)
-                      .width(30.dp)
-                      .padding(end = 5.dp))
-
-
-            Column {
-
-                Text(text = product.brand.toString(), overflow = TextOverflow.Ellipsis)
-
-                Text(
-                    text = "Collection: ${product.collection}",
-                    overflow = TextOverflow.Clip,
-                    fontStyle = FontStyle.Italic,
-                    style = MaterialTheme.typography.bodyMedium
+                viewModel.searchQuery(
+                    query = query,
+                    queryType = queryType,
+                    applyFilter = applyFilter.value,
+                    minValue = rangeSliderState.value.start,
+                    maxValue = rangeSliderState.value.endInclusive,
+                    volume = listOfButtonsStates.filter { it.first.value }.map { it.second }
                 )
-
-            }
-
-
-        }
-
+            })
     }
 }
+
+@Composable
+fun ShowProductList(
+    showProductList: MutableState<Boolean>,
+    viewModel: SearchViewModel,
+    onProductClick: (String) -> Unit,
+    onAddToFavouriteClick : (Product) -> Unit,
+    onAddToCartClick : (Product) -> Unit,
+    onRemoveFromFavouriteClick : (String) -> Unit,
+    onRemoveFromCartClick : (String) -> Unit,
+    isInFavouriteCheck : (String) -> Boolean,
+    isInCartCheck : (String) -> Boolean
+) {
+
+    if (showProductList.value)
+    if (viewModel.isSuccess)
+        LazyProductList(
+            onProductClick = onProductClick,
+            listOfProducts = viewModel.searchList.collectAsState().value,
+            onAddToFavouriteClick = onAddToFavouriteClick,
+            onAddToCartClick = onAddToCartClick,
+            onRemoveFromFavouriteClick = onRemoveFromFavouriteClick,
+            onRemoveFromCartClick = onRemoveFromCartClick,
+            isInFavouriteCheck = isInFavouriteCheck,
+            isInCartCheck = isInCartCheck
+        )
+    if (viewModel.isFailure)
+        Text(text = "ERROR")
+    else if (viewModel.isLoading)
+        LoadingIndicator()
+    else if (!viewModel.isLoading && viewModel.searchList.collectAsState().value.isEmpty())
+        viewModel.isFailure = true
+}
+
+

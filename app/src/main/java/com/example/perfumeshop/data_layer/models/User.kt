@@ -26,7 +26,7 @@ data class User(
     var email : String? = null,
     var sex: String? = null,
     var country : String? = null,
-    var products : List<String>? = null
+    var products : List<String>? = null         // rename to cart todo
                     ){
 //    fun toMap(): MutableMap<String, Any> {
 //        return mutableMapOf("user_id" to this.userId,

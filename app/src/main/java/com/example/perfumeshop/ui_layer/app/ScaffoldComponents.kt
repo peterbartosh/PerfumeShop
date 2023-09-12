@@ -1,6 +1,5 @@
 package com.example.perfumeshop.ui_layer.app
 
-import android.util.Log
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.isSystemInDarkTheme
@@ -28,7 +27,7 @@ import androidx.compose.material3.NavigationBarItem
 import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.shadow
@@ -38,11 +37,31 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.navigation.NavGraph.Companion.findStartDestination
 import androidx.navigation.NavHostController
+import androidx.navigation.compose.currentBackStackEntryAsState
 import com.example.perfumeshop.data_layer.utils.getWidthPercent
+import com.example.perfumeshop.ui_layer.features.auth.children.code_verif.navigation.codeAskVerification
+import com.example.perfumeshop.ui_layer.features.auth.children.code_verif.navigation.codeProfileVerification
+import com.example.perfumeshop.ui_layer.features.auth.children.login_register.navigation.loginAskRoute
+import com.example.perfumeshop.ui_layer.features.auth.children.login_register.navigation.loginProfileRoute
 import com.example.perfumeshop.ui_layer.features.main.children.cart.children.cart.navigation.cartRoute
+import com.example.perfumeshop.ui_layer.features.main.children.cart.navigation.cartActiveChild
 import com.example.perfumeshop.ui_layer.features.main.children.home.children.home.navigation.homeRoute
+import com.example.perfumeshop.ui_layer.features.main.children.home.children.search.navigation.searchRoute
+import com.example.perfumeshop.ui_layer.features.main.children.home.navigation.homeActiveChild
+import com.example.perfumeshop.ui_layer.features.main.children.product.navigation.productCartRoute
+import com.example.perfumeshop.ui_layer.features.main.children.product.navigation.productHomeRoute
+import com.example.perfumeshop.ui_layer.features.main.children.product.navigation.productProfileRoute
+import com.example.perfumeshop.ui_layer.features.main.children.product.navigation.productSearchRoute
+import com.example.perfumeshop.ui_layer.features.main.children.profile.children.edit_profile.navigation.editProfileRoute
+import com.example.perfumeshop.ui_layer.features.main.children.profile.children.favourite.navigation.favouriteRoute
+import com.example.perfumeshop.ui_layer.features.main.children.profile.children.orders.navigation.ordersRoute
 import com.example.perfumeshop.ui_layer.features.main.children.profile.children.profile.navigation.profileRoute
+import com.example.perfumeshop.ui_layer.features.main.children.profile.navigation.profileActiveChild
+import com.example.perfumeshop.ui_layer.features.main.children.settings.navigation.settingsRoute
+import com.example.perfumeshop.ui_layer.features.main.navigation.getActiveChild
+import com.example.perfumeshop.ui_layer.features.start.children.ask.navigation.askRoute
 
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -94,7 +113,7 @@ fun MyTopAppBar(
                          tint = Color.Black,
                          modifier = Modifier
                              .size(30.dp)
-                             .clickable { onSettingsClick.invoke() })
+                             .clickable { onSettingsClick() })
                 }
         },
         colors = TopAppBarDefaults.centerAlignedTopAppBarColors(
@@ -153,14 +172,16 @@ fun MyTopAppBar(
 //    )
 }
 
-private data class MainItem(val selectedIcon: ImageVector, val notSelectedIcon : ImageVector,
+private data class MainItem(
+                    val selectedIcon: ImageVector,
+                    val notSelectedIcon : ImageVector,
                     val parentRoute : String,
                     val label : String)
 
 @Composable
 fun BottomNavigationBar(
     bottomBarSelectedIndex : Int,
-    onButtonClick : (String) -> Unit = {}){
+    navController : NavHostController){
 
     val items = listOf(
         MainItem(selectedIcon = Icons.Filled.Home,
@@ -179,6 +200,9 @@ fun BottomNavigationBar(
 
     val wp = getWidthPercent(LocalContext.current)
 
+    val navBackStackEntry by navController.currentBackStackEntryAsState()
+    val currentDestination = navBackStackEntry?.destination
+
 
     NavigationBar(modifier = Modifier
         //.height(60.dp)
@@ -195,7 +219,28 @@ fun BottomNavigationBar(
                                   .fillMaxHeight()
                                   .width(wp * 33),
                               onClick = {
-                                  onButtonClick(item.parentRoute)
+                                  if (item.parentRoute != currentDestination?.route) {
+
+                                      val route = getActiveChild(item.parentRoute)
+                                      navController.navigate(route = route){
+                                          popUpTo(currentDestination?.id ?: navController.graph.findStartDestination().id){
+                                              saveState = true
+                                              inclusive = true
+                                          }
+                                          launchSingleTop = true
+                                          restoreState = true
+                                      }
+
+                                  } else {
+
+                                      navController.navigate(item.parentRoute){     // ???
+                                          popUpTo(currentDestination.id){
+                                              saveState = false
+                                              inclusive = true
+                                          }
+                                      }
+
+                                  }
                               },
                               label = { Text(text = item.label, modifier = Modifier.padding(1.dp)) },
                               icon = {
@@ -216,75 +261,56 @@ fun BottomNavigationBar(
 
 fun onBackArrowClick(navController: NavHostController) {
 
-        // clear view model todo
+    val curDestRoute = navController.currentDestination?.route ?: navController.graph.findStartDestination().route
 
-        val parentsList = navController.currentDestination?.route
-            ?.split(' ')!!.toMutableList()
-
-        val parentRoute = parentsList.filterIndexed{ i, s ->
-            i + 1 != parentsList.size
-        }.joinToString(separator = " ")
-
-//        val lastEntry = navController.backQueue.findLast { nbse ->
-//            nbse.destination.route == parentRoute &&
-//                    nbse.destination.route != navController.currentDestination?.route
-//        }
-
-//        val lastRoute =
-//            if (lastEntry == null) parentRoute else lastEntry.destination.route!!
-
+    if (curDestRoute == settingsRoute) {
         navController.popBackStack()
-        navController.navigate(parentRoute)
+        return
+    }
 
-        Log.d("BQ_BQ_BQ_TEST", "onBackArrowClick: ${navController.backQueue.map { it.destination.route }}")
+    val route = when(curDestRoute){
+        in listOf(searchRoute, productHomeRoute) -> homeRoute.also { homeActiveChild = homeRoute }
+        productSearchRoute -> searchRoute.also { homeActiveChild = searchRoute }
+        productCartRoute -> cartRoute.also { cartActiveChild = cartRoute }
+        in listOf(editProfileRoute, favouriteRoute, ordersRoute, productProfileRoute) -> profileRoute.also { profileActiveChild = profileRoute }
+        loginAskRoute -> askRoute
+        loginProfileRoute -> profileRoute
+        codeAskVerification -> loginAskRoute
+        codeProfileVerification -> loginProfileRoute
+            else -> curDestRoute ?: homeRoute
+    }
+
+    navController.navigate(route = route){
+        popUpTo(navController.currentDestination?.id ?:
+        navController.graph.findStartDestination().id){
+            saveState = true
+            inclusive = true
+        }
+        launchSingleTop = true
+        restoreState = true
+    }
+
+//        // clear view model todo
+//
+//        val parentsList = navController.currentDestination?.route
+//            ?.split(' ')!!.toMutableList()
+//
+//        val parentRoute = parentsList.filterIndexed{ i, s ->
+//            i + 1 != parentsList.size
+//        }.joinToString(separator = " ")
+//
+////        val lastEntry = navController.backQueue.findLast { nbse ->
+////            nbse.destination.route == parentRoute &&
+////                    nbse.destination.route != navController.currentDestination?.route
+////        }
+//
+////        val lastRoute =
+////            if (lastEntry == null) parentRoute else lastEntry.destination.route!!
+//
+//        navController.popBackStack()
+//        navController.navigate(parentRoute)
+//
+//        Log.d("BQ_BQ_BQ_TEST", "onBackArrowClick: ${navController.backQueue.map { it.destination.route }}")
 
 
     }
-
-
-fun onBottomBarButtonClick(navController: NavHostController,
-                           parentRoute : String){
-//
-//
-//    Log.d("TEST_NAV_TEST", currentNestedGraph?.route.toString() + " " +
-//            currentNestedGraph?.startDestinationRoute.toString())
-
-//
-//    when (parentRoute){
-//        homeRoute -> navController.navigateToHomeGraph()
-//        cartRoute -> navController.navigateToCartGraph()
-//        profileRoute -> navController.navigateToProfileGraph()
-//    }
-
-//    Log.d("TEST_NAV_TEST", currentNestedGraph?.route.toString() + " " +
-//            currentNestedGraph?.startDestinationRoute.toString())
-
-
-        if (navController.currentDestination?.route?.startsWith(parentRoute) == true) {
-            navController.navigate(parentRoute)
-            return
-        }
-
-        val lastEntry = navController.backQueue.findLast { nbse ->
-            nbse.destination.route?.startsWith(parentRoute) == true
-        }
-
-        val lastRoute =
-            if (lastEntry == null) parentRoute else lastEntry.destination.route!!
-
-
-
-        navController.navigate(lastRoute)
-
-        Log.d("BQ_BQ_BQ_TEST", "onBackArrowClick: ${navController.backQueue.map { it.destination.route }}")
-
-
-        val showBackIcon = navController.currentDestination?.route !in listOf(
-            homeRoute, cartRoute, profileRoute
-        )
-
-        val showSettingsIcon = navController.currentDestination?.route in listOf(
-            homeRoute, cartRoute, profileRoute
-        )
-
-}

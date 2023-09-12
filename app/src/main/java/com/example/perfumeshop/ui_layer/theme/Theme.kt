@@ -1,4 +1,4 @@
-package com.example.perfumeshop.ui.theme
+package com.example.perfumeshop.ui_layer.theme
 
 import android.app.Activity
 import android.os.Build

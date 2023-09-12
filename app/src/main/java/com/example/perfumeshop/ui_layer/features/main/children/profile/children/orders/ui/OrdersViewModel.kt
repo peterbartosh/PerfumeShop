@@ -6,6 +6,7 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.example.perfumeshop.data_layer.models.Order
 import com.example.perfumeshop.data_layer.models.Product
 import com.example.perfumeshop.data_layer.repositories.FireRepository
 import com.example.perfumeshop.data_layer.utils.QueryType
@@ -20,40 +21,40 @@ import javax.inject.Inject
 @HiltViewModel
 class OrdersViewModel @Inject constructor(private val repository: FireRepository) : ViewModel() {
 
-    private var _searchList = MutableStateFlow<List<Product>>(emptyList())
-    var searchList : StateFlow<List<Product>> = _searchList
+    private var _ordersList = MutableStateFlow<MutableList<Order>>(mutableListOf())
+    var ordersList : StateFlow<List<Order>> = _ordersList
 
     var isLoading  by mutableStateOf(false)
     var isSuccess  by mutableStateOf(false)
     var isFailure  by mutableStateOf(false)
-    var isInitialized  by mutableStateOf(false)
-
-    var initSearchQuery by mutableStateOf(true)
 
     fun clear(){
         super.onCleared()
     }
 
+    init {
+        getUserOrders()
+    }
 
-    fun searchQuery(query : String, queryType: QueryType) = viewModelScope.launch {
-        isInitialized = true
+
+    private fun getUserOrders() = viewModelScope.launch {
         isFailure = false
         isLoading = true
-        repository.getQueryProducts(query, queryType)
+        repository.getUserOrders()
             .catch {
                     e -> Log.d("ERROR_ERROR", "searchQuery: ${e.message}")
                 isFailure = true
             }.collect {
-                _searchList.value = it
+                _ordersList.value.add(it)
             }
 
-        searchList = _searchList
+        ordersList = _ordersList
 
         isLoading = false
 
-        if (_searchList.value.isEmpty()) Log.d("EMPTY_EMPTY", "searchQuery: EMPTY")
+        if (_ordersList.value.isEmpty()) Log.d("EMPTY_EMPTY", "searchQuery: EMPTY")
 
-        if (_searchList.value.isEmpty() || isFailure)
+        if (_ordersList.value.isEmpty() || isFailure)
             isFailure = true
         else
             isSuccess = true

@@ -7,14 +7,15 @@ import androidx.navigation.NavOptions
 import androidx.navigation.compose.composable
 import com.example.perfumeshop.ui_layer.features.main.children.profile.children.edit_profile.ui.EditProfileScreen
 import com.example.perfumeshop.ui_layer.features.main.children.profile.children.edit_profile.ui.EditProfileViewModel
+import com.example.perfumeshop.ui_layer.features.main.children.profile.navigation.profileActiveChild
 
 
-
-const val editProfileRoute = "profile editProfile"
+const val editProfileRoute = "edit"
 
 
 fun NavController.navigateToEditProfileRoute(navOptions: NavOptions? = null) {
-    this.navigate(editProfileRoute, navOptions)
+    profileActiveChild = editProfileRoute
+    this.navigate(route = editProfileRoute, navOptions = navOptions)
 }
 
 fun NavGraphBuilder.editProfileScreen(onClick : () -> Unit) {

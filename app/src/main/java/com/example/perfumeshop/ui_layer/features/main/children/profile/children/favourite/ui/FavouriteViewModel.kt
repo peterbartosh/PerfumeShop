@@ -21,47 +21,66 @@ import javax.inject.Inject
 @HiltViewModel
 class FavouriteViewModel @Inject constructor(private val repository: FireRepository) : ViewModel() {
 
-    private var _searchList = MutableStateFlow<List<Product>>(emptyList())
-    var searchList : StateFlow<List<Product>> = _searchList
+    private var _userProducts = MutableStateFlow<MutableList<Product>>(value = mutableListOf())
+    var userProducts: StateFlow<List<Product>> = _userProducts
+
 
     var isLoading  by mutableStateOf(false)
     var isSuccess  by mutableStateOf(false)
     var isFailure  by mutableStateOf(false)
-    var isInitialized  by mutableStateOf(false)
+    //var isInitialized  by mutableStateOf(false)
 
-    var initSearchQuery by mutableStateOf(true)
+    //var initSearchQuery by mutableStateOf(true)
 
     fun clear(){
         super.onCleared()
     }
 
+    fun addToFavourite(product: Product){
+        _userProducts.value.add(product)
+        userProducts = _userProducts
 
-    fun searchQuery(query : String, queryType: QueryType) = viewModelScope.launch {
-        isInitialized = true
-        isFailure = false
-        isLoading = true
-        repository.getQueryProducts(query, queryType)
-            .catch {
-                    e -> Log.d("ERROR_ERROR", "searchQuery: ${e.message}")
-                isFailure = true
-            }.collect {
-                _searchList.value = it
-            }
-
-        searchList = _searchList
-
-        isLoading = false
-
-        if (_searchList.value.isEmpty()) Log.d("EMPTY_EMPTY", "searchQuery: EMPTY")
-
-        if (_searchList.value.isEmpty() || isFailure)
-            isFailure = true
-        else
-            isSuccess = true
-
-        // Log.d("VIEW_MODEL_REQ", "searchQuery: REQ ENDED ${_searchList.size}  ${searchList.size}")
-
+        //updateInDatabase() lazily todo
     }
+
+    fun removeFromFavourite(productId: String){
+        _userProducts.value.removeIf { p -> p.id == productId }
+        userProducts = _userProducts
+
+        //updateInDatabase() lazily todo
+    }
+
+    fun isInFavourite(productId : String) : Boolean =
+        _userProducts.value.find { p -> p.id!! == productId } != null
+
+
+
+//    fun searchQuery(query : String, queryType: QueryType) = viewModelScope.launch {
+//        isInitialized = true
+//        isFailure = false
+//        isLoading = true
+//        repository.getQueryProducts(query, queryType)
+//            .catch {
+//                    e -> Log.d("ERROR_ERROR", "searchQuery: ${e.message}")
+//                isFailure = true
+//            }.collect {
+//                _userProducts.value = it.toMutableList()
+//            }
+//
+//        userProducts = _userProducts
+//
+//        isLoading = false
+//
+//        if (_userProducts.value.isEmpty()) Log.d("EMPTY_EMPTY", "searchQuery: EMPTY")
+//
+//        if (_userProducts.value.isEmpty() || isFailure)
+//            isFailure = true
+//        else
+//            isSuccess = true
+//
+//        // Log.d("VIEW_MODEL_REQ", "searchQuery: REQ ENDED ${_searchList.size}  ${searchList.size}")
+//
+//    }
 
 
 

@@ -115,7 +115,7 @@ fun OptionRow(option : Option = Option(
 fun OptionsSection(
     sectionTitle : String = "Личные данные",
     options : List<Option> =  listOf(
-        Option("Вход / регистрация", OptionType.Auth, null, Icons.Outlined.ArrowForward),
+        Option("Вход / регистрация", OptionType.Edit, null, Icons.Outlined.ArrowForward),
         Option("Понравившиеся", OptionType.Favourite, null, Icons.Outlined.ArrowForward),
         Option("Заказы", OptionType.Orders, null, Icons.Outlined.ArrowForward)
     )

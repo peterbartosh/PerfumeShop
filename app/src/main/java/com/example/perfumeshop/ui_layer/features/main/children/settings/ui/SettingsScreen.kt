@@ -1,5 +1,7 @@
 package com.example.perfumeshop.ui_layer.features.main.children.settings.ui
 
+import androidx.compose.foundation.BorderStroke
+import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -14,20 +16,31 @@ import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Icon
 import androidx.compose.material3.Surface
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.painter.Painter
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.unit.dp
 import com.example.perfumeshop.R
-import com.example.perfumeshop.ui.theme.DarkPurple
-import com.example.perfumeshop.ui.theme.Gold
+import com.example.perfumeshop.ui_layer.theme.DarkPurple
+import com.example.perfumeshop.ui_layer.theme.Gold
+import com.example.perfumeshop.ui_layer.theme_handler.PreferencesManager
 
 
 @Composable
 fun SettingsScreen(onThemeChange : (Boolean) -> Unit) {
 
+    val preferencesManager = PreferencesManager(LocalContext.current)
+
+    var chosenTheme by remember {
+        mutableStateOf(preferencesManager.getData(false))
+    }
 
     Surface(modifier = Modifier.fillMaxSize()) {
 
@@ -36,13 +49,31 @@ fun SettingsScreen(onThemeChange : (Boolean) -> Unit) {
             Spacer(modifier = Modifier.height(100.dp))
 
             Row(horizontalArrangement = Arrangement.Center) {
-                ThemeButton(onClick = { onThemeChange(true) }, color = DarkPurple,
+
+                ThemeButton(onClick = {
+                                        onThemeChange(true)
+                                        chosenTheme = !chosenTheme
+                                      },
+                            border = if (chosenTheme)
+                                            BorderStroke(width = 7.dp, color = Color.Red)
+                                        else
+                                            BorderStroke(width = 1.dp, color = Color.LightGray),
+                            color = DarkPurple,
                             painter = painterResource(id = R.drawable.night))
 
                 Spacer(modifier = Modifier.width(30.dp))
 
-                ThemeButton(onClick = { onThemeChange(false) }, color = Gold,
-                            painter = painterResource(id = R.drawable.sun))
+                ThemeButton(
+                    onClick = {
+                        onThemeChange(false)
+                        chosenTheme = !chosenTheme
+                              },
+                    border = if (!chosenTheme)
+                                BorderStroke(width = 7.dp, color = Color.Red)
+                            else
+                                BorderStroke(width = 1.dp, color = Color.LightGray),
+                    color = Gold,
+                    painter = painterResource(id = R.drawable.sun))
             }
 
             //SettingsSections(isDarkTheme = isDarkTheme)
@@ -53,10 +84,12 @@ fun SettingsScreen(onThemeChange : (Boolean) -> Unit) {
 }
 
 @Composable
-fun ThemeButton(onClick : () -> Unit, color : Color, painter : Painter) {
+fun ThemeButton(onClick : () -> Unit, border : BorderStroke,
+                color : Color, painter : Painter) {
     Button(
         onClick = onClick,
            enabled = true,
+        border = border,
         colors = ButtonDefaults.buttonColors(containerColor = color),
         shape = RoundedCornerShape(10.dp),
         modifier = Modifier.size(100.dp)

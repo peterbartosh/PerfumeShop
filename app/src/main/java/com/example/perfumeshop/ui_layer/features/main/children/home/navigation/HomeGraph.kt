@@ -1,38 +1,37 @@
 package com.example.perfumeshop.ui_layer.features.main.children.home.navigation
 
+import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
-import androidx.navigation.NavController
+import androidx.compose.runtime.setValue
 import androidx.navigation.NavGraphBuilder
-import androidx.navigation.navigation
-import com.example.perfumeshop.data_layer.utils.homeGraphR
-import com.example.perfumeshop.data_layer.utils.navigateToGraph
+import com.example.perfumeshop.data_layer.utils.QueryType
+import com.example.perfumeshop.ui_layer.features.main.children.cart.children.cart.ui.CartViewModel
 import com.example.perfumeshop.ui_layer.features.main.children.home.children.home.navigation.homeRoute
 import com.example.perfumeshop.ui_layer.features.main.children.home.children.home.navigation.homeScreen
-import com.example.perfumeshop.ui_layer.features.main.children.home.children.product_home.navigation.productHomeScreen
 import com.example.perfumeshop.ui_layer.features.main.children.home.children.search.navigation.searchScreen
+import com.example.perfumeshop.ui_layer.features.main.children.product.navigation.productScreen
+import com.example.perfumeshop.ui_layer.features.main.children.profile.children.favourite.ui.FavouriteViewModel
 
-const val homeGraphRoute = "homeGraph"
-
-var homeGraphStartDestination = mutableStateOf(homeRoute)
-
-//fun NavController.navigateToHomeGraph(){
-//    this.navigateToGraph(graphRoute = homeGraphRoute, saveStartDest = true) {
-//
-//    }
-//}
+var homeActiveChild by mutableStateOf(homeRoute)
 
 fun NavGraphBuilder.homeGraph(
-    onSearchClick: () -> Unit,
-    onProductHomeClick: () -> Unit,
+    onSearchClick: (String, QueryType) -> Unit,
+    onProductClick: (String) -> Unit,
+    cartViewModel: CartViewModel,
+    favouriteViewModel: FavouriteViewModel,
 ){
-   // navigation(startDestination = homeGraphStartDestination.value, route = homeGraphRoute){
+        homeScreen(
+            cartViewModel = cartViewModel,
+            favouriteViewModel = favouriteViewModel,
+            onSearchClick = onSearchClick,
+                   onProductClick = onProductClick)
 
+        searchScreen(cartViewModel = cartViewModel,
+                     favouriteViewModel = favouriteViewModel,
+                     onProductClick = onProductClick)
 
-        homeScreen(onSearchClick = onSearchClick, onProductHomeClick =  onProductHomeClick )
+        productScreen(cartViewModel = cartViewModel,
+                      favouriteViewModel = favouriteViewModel,
+                      onClick = {})
 
-        searchScreen(onProductHomeClick = onProductHomeClick)
-
-        productHomeScreen()
-
-   // }
 }

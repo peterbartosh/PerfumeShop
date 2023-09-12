@@ -22,17 +22,4 @@ data class Product(
     @get:PropertyName("photo_links")
     @set:PropertyName("photo_links")
     var photoLinks : List<String>?  = null
-) {
-
-// fun toMap(): MutableMap<String, Any> {
-//  return mutableMapOf("product_id" to this.id,
-//                      "product_type" to this.type,
-//                      "product_brand" to this.brand,
-//                      "product_brand_collection" to this.brandCollection,
-//                      "product_volume" to this.volume,
-//                      "product_price" to this.price,
-//                      "product_sex" to this.sex,
-//                      "product_is_on_hand" to this.isOnHand)
-//
-// }
-}
+)

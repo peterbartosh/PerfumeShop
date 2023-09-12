@@ -2,6 +2,7 @@ package com.example.perfumeshop.ui_layer.features.main.children.settings.navigat
 
 import androidx.navigation.NavController
 import androidx.navigation.NavGraphBuilder
+import androidx.navigation.NavHostController
 import androidx.navigation.NavOptions
 import androidx.navigation.compose.composable
 import com.example.perfumeshop.ui_layer.features.main.children.cart.children.cart.navigation.cartRoute
@@ -10,32 +11,18 @@ import com.example.perfumeshop.ui_layer.features.main.children.profile.children.
 import com.example.perfumeshop.ui_layer.features.main.children.settings.ui.SettingsScreen
 
 
-const val settingsHomeRoute = "home settings"
-const val settingsCartRoute = "cart settings"
-const val settingsProfileRoute = "profile settings"
+const val settingsRoute = "settings"
+
 
 
 fun NavController.navigateToSettings(navOptions: NavOptions? = null) {
-    val route = when (this.currentDestination?.route.toString()) {
-        homeRoute -> settingsHomeRoute
-        cartRoute -> settingsCartRoute
-        profileRoute -> settingsProfileRoute
-        else -> ""
-    }
-    if (route.isNotEmpty())
-        this.navigate(route = route, navOptions)
+    this.navigate(route = settingsRoute, navOptions)
 }
 
-fun NavGraphBuilder.settingsScreen(onClick : () -> Unit = {}, onThemeChange : (Boolean) -> Unit) {
-    composable(route = settingsHomeRoute) {
-        SettingsScreen(onThemeChange = onThemeChange)
-    }
-
-    composable(route = settingsCartRoute) {
-        SettingsScreen(onThemeChange = onThemeChange)
-    }
-
-    composable(route = settingsProfileRoute) {
+fun NavGraphBuilder.settingsScreen(
+    onClick: () -> Unit = {},
+    onThemeChange: (Boolean) -> Unit) {
+    composable(route = settingsRoute) {
         SettingsScreen(onThemeChange = onThemeChange)
     }
 }

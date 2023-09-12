@@ -1,4 +1,4 @@
-package com.example.perfumeshop.ui_layer.features.auth.children.login_register.ui
+package com.example.perfumeshop.ui_layer.features.auth.children.code_verif.ui
 
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
@@ -16,6 +16,8 @@ import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
+import com.example.perfumeshop.ui_layer.features.auth.children.login_register.ui.AuthViewModel
+import com.example.perfumeshop.ui_layer.features.auth.children.login_register.ui.InputField
 
 //@Preview(showBackground = true)
 @Composable

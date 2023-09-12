@@ -2,12 +2,14 @@ package com.example.perfumeshop.data_layer.repositories
 
 
 import android.util.Log
+import com.example.perfumeshop.data_layer.models.Order
 import com.example.perfumeshop.data_layer.models.Product
 import com.example.perfumeshop.data_layer.models.Review
 import com.example.perfumeshop.data_layer.models.User
 import com.example.perfumeshop.data_layer.utils.QueryType
-import com.google.firebase.firestore.CollectionReference
+import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.firestore.Query
+import com.google.firebase.firestore.ktx.toObject
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.asFlow
 import kotlinx.coroutines.flow.first
@@ -16,13 +18,62 @@ import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.toList
 import kotlinx.coroutines.tasks.await
 import javax.inject.Inject
+    fun Query.filterPrice(range : ClosedFloatingPointRange<Float>) : Query {
+        return this
+            .whereGreaterThan("price", range.start)
+            .whereLessThan("price", range.endInclusive)
+    }
+
+    fun Query.filterInOnHand() : Query {
+        return this.whereIn("is_on_hand", listOf(true))
+    }
+
+    fun Query.filterVolume(list : List<Int>) : Query {
+        return this.whereIn("volume", list)
+    }
 
 
 class FireRepository @Inject constructor(
     private val queryProducts: Query,
     private val queryUsers: Query,
-    private val queryReview: Query
+    private val queryReview: Query,
+    private val queryOrders : Query,
+    private val queryHot : Query,
 ) {
+
+    suspend fun getUserOrders() : Flow<Order> = flow {
+        queryOrders.whereIn("user_id", listOf(FirebaseAuth.getInstance().uid))
+            .get().await().documents.forEach{ ds ->
+                ds.toObject(Order::class.java)?.let { emit(it) }
+        }
+    }
+
+    suspend fun getHotCollection() : Flow<Product> = flow {
+        queryHot.get().await().documents.forEach { ds ->
+            ds.toObject(Product::class.java)?.let { emit(it) }
+        }
+    }
+
+
+    suspend fun getProductsWithFilter(
+        minValue : Float? = null,
+        maxValue : Float? = null,
+        isOnHand : Boolean? = null,
+        volumes : List<Int>? = null
+    ) : Flow<List<Product>?> = flow{
+
+        queryProducts.let { q ->
+            if (maxValue != null || minValue != null)
+                q.filterPrice((minValue ?: 0f)..(maxValue ?: 10000f))
+            if (isOnHand != null)
+                q.filterInOnHand()
+            if (volumes != null)
+                q.filterVolume(volumes)
+
+            emit(q.get().await().documents.map { ds -> ds.toObject(Product::class.java)!! })
+        }
+
+    }
 
     suspend fun getProductReviews(productId : String) : Flow<List<Review>> = flow {
         emit(
@@ -31,20 +82,6 @@ class FireRepository @Inject constructor(
         )
     }
 
-//    suspend fun getUserProductsFromDatabase(userId : String): Flow<Product> {
-////
-////        val userProductsCollection =  queryUserProducts.get().await().documents.filter {
-////            it.get("userId")?.equals(userId) ?: false
-////        }
-////
-////        return queryProducts.get().await().documents.asFlow()
-////            .filter {doc ->
-////                userProductsCollection.find { it.get("product_id")?.equals(doc.get("product_id")) == true } != null
-////            }
-////            .map { documentSnapshot ->
-////                documentSnapshot.toObject(Product::class.java)!!
-////            }
-//    }
 
     suspend fun getAllProductsFromDatabase() : Flow<Product> {
         return queryProducts.get().await().documents.asFlow().map { ds -> ds.toObject(Product::class.java)!! }
@@ -89,12 +126,6 @@ class FireRepository @Inject constructor(
                  .get().await().documents.asFlow().map {
                 ds -> ds.toObject(Product::class.java)!!
         }.toList())
-//        return queryProducts.get().await().documents.asFlow()
-//            .map {
-//                    ds -> ds.toObject(Product::class.java)!!
-//            }.filter {pr ->
-//                getPredicateByQuery(queryType = queryType, query = query).test(pr)
-//            }
     }
 
 

@@ -7,12 +7,14 @@ import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.example.perfumeshop.data_layer.models.User
 import com.google.firebase.FirebaseException
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.auth.FirebaseAuthInvalidCredentialsException
 import com.google.firebase.auth.PhoneAuthCredential
 import com.google.firebase.auth.PhoneAuthOptions
 import com.google.firebase.auth.PhoneAuthProvider
+import com.google.firebase.firestore.FirebaseFirestore
 import kotlinx.coroutines.launch
 import java.util.concurrent.TimeUnit
 
@@ -20,20 +22,21 @@ class AuthViewModel : ViewModel() {
     //val loadingState = MutableStateFlow(LoadingState.IDLE)
 
 
-
     private val _loading = MutableLiveData(false)
     val loading: LiveData<Boolean> = _loading
 
     private val _auth = FirebaseAuth.getInstance()
-    var storedVerificationId : String = ""
+    var storedVerificationId: String = ""
 
-    fun clear(){
+    fun clear() {
         super.onCleared()
     }
 
-    fun onLoginClicked(phoneNumber: String,
-                       onCodeSent: () -> Unit,
-                       onSuccess: () -> Unit)  = viewModelScope.launch {
+    fun onLoginClicked(
+        phoneNumber: String,
+        onCodeSent: () -> Unit,
+        onSuccess: () -> Unit
+    ) = viewModelScope.launch {
 
         _auth.setLanguageCode("ru")
 
@@ -57,8 +60,8 @@ class AuthViewModel : ViewModel() {
                 storedVerificationId = verificationId
                 onCodeSent()
             }
-
         }
+
         val options =
             PhoneAuthOptions.newBuilder(_auth)
                 .setPhoneNumber("+375$phoneNumber")
@@ -73,22 +76,26 @@ class AuthViewModel : ViewModel() {
     }
 
 
-     fun verifyPhoneNumberWithCode(code: String, onSuccess : () -> Unit)  = viewModelScope.launch {
+    fun verifyPhoneNumberWithCode(code: String, onSuccess: () -> Unit) = viewModelScope.launch {
         val credential = PhoneAuthProvider.getCredential(storedVerificationId, code)
         signInWithPhoneAuthCredential(credential, onSuccess)
     }
 
 
-
-    private suspend fun signInWithPhoneAuthCredential(credential: PhoneAuthCredential,
-                                              onSuccess : () -> Unit) {
+    private suspend fun signInWithPhoneAuthCredential(
+        credential: PhoneAuthCredential,
+        onSuccess: () -> Unit
+    ) {
 
         _auth.signInWithCredential(credential)
             .addOnCompleteListener { task ->
                 if (task.isSuccessful) {
-                    // Sign in success, update UI with the signed-in user's information
+
+                    //if (user )
                     val user = task.result?.user
-                    onSuccess.invoke()
+                    //val myUser = User()
+
+                    onSuccess()
                     Log.d("phoneBook", "logged in")
                 } else {
                     // Sign in failed, display a message and update the UI
@@ -101,10 +108,19 @@ class AuthViewModel : ViewModel() {
             }
     }
 
+//    private suspend fun createUser(user: User) {
+//        val id = _auth.uid
+//        if (id != null)
+//            FirebaseFirestore.getInstance()
+//                .collection("users")
+//                .document(id)
+//                .set(user)
+//                .addOnSuccessListener { Log.d("AUTH_CREATE_USER", "createUser: SUCCESS") }
+//                .addOnFailureListener { Log.d("AUTH_CREATE_USER", "createUser: FAILED") }
+//    }
 
 
-
-    }
+}
 
 
 

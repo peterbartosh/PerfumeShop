@@ -1,4 +1,4 @@
-package com.example.perfumeshop.ui.theme
+package com.example.perfumeshop.ui_layer.theme
 
 import androidx.compose.ui.graphics.Color
 
@@ -11,5 +11,7 @@ val PurpleGrey40 = Color(0xFF625b71)
 val Pink40 = Color(0xFF7D5260)
 
 val Gold = Color(0xFFFFBF00)
+
+val Pink = Color(0xFFFFC0CB)
 
 val DarkPurple = Color(0xFF020035)

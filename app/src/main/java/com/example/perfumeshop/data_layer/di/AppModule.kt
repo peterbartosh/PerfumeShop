@@ -19,7 +19,9 @@ object AppModule {
     fun provideFireRepository()
             = FireRepository(queryReview = FirebaseFirestore.getInstance().collection("reviews"),
                             queryProducts = FirebaseFirestore.getInstance().collection("products"),
-                            queryUsers = FirebaseFirestore.getInstance().collection("users"))
+                            queryUsers = FirebaseFirestore.getInstance().collection("users"),
+                             queryOrders = FirebaseFirestore.getInstance().collection("orders"),
+                             queryHot = FirebaseFirestore.getInstance().collection("hot"))
 
 //    @Composable
 //    @Singleton
