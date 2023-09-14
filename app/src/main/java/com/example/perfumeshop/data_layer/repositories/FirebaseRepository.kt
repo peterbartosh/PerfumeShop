@@ -7,6 +7,7 @@ import com.example.perfumeshop.data_layer.models.Review
 import com.example.perfumeshop.data_layer.models.User
 import com.example.perfumeshop.data_layer.utils.QueryType
 import com.google.firebase.auth.FirebaseAuth
+import com.google.firebase.firestore.FirebaseFirestore
 import com.google.firebase.firestore.Query
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.flow
@@ -84,6 +85,16 @@ class FireRepository @Inject constructor(
             .get().await().documents.forEach{ ds ->
                 ds.toObject(Review::class.java)?.let { emit(it) }
             }
+    }
+
+    suspend fun getProduct(productId: String) : Product? {
+        return try {
+            queryProducts.whereIn("id", listOf(productId))
+                .get().await().first().toObject(Product::class.java)
+        } catch (e : Exception) {
+            Log.d("ERROR_ERROR", "getProduct: ${e.message}")
+            null
+        }
     }
 
     suspend fun getUserFavouriteProducts(userId : String) : Flow<Product> = flow {

@@ -6,24 +6,22 @@ import androidx.navigation.NavHostController
 import androidx.navigation.compose.NavHost
 import androidx.navigation.navOptions
 import com.example.perfumeshop.data_layer.utils.OptionType
-import com.example.perfumeshop.ui_layer.features.auth.children.code_verif.navigation.navigateToCodeVerification
-import com.example.perfumeshop.ui_layer.features.auth.children.login_register.navigation.navigateToLogin
-import com.example.perfumeshop.ui_layer.features.auth.navigation.authGraph
-import com.example.perfumeshop.ui_layer.features.main.children.cart.children.cart.ui.CartViewModel
-import com.example.perfumeshop.ui_layer.features.main.children.home.children.home.navigation.navigateToHome
-import com.example.perfumeshop.ui_layer.features.main.children.home.children.home.ui.HomeViewModel
-import com.example.perfumeshop.ui_layer.features.main.children.home.children.search.navigation.navigateToSearch
-import com.example.perfumeshop.ui_layer.features.main.children.home.children.search.navigation.searchRoute
-import com.example.perfumeshop.ui_layer.features.main.children.home.navigation.homeActiveChild
-import com.example.perfumeshop.ui_layer.features.main.children.profile.children.edit_profile.navigation.navigateToEditProfileRoute
-import com.example.perfumeshop.ui_layer.features.main.children.profile.children.favourite.navigation.navigateToFavouritesRoute
-import com.example.perfumeshop.ui_layer.features.main.children.profile.children.orders.navigation.navigateToOrders
-import com.example.perfumeshop.ui_layer.features.main.navigation.mainGraph
-import com.example.perfumeshop.ui_layer.features.main.children.product.navigation.navigateToProduct
-import com.example.perfumeshop.ui_layer.features.main.children.profile.children.favourite.ui.FavouriteViewModel
-import com.example.perfumeshop.ui_layer.features.start.children.ask.navigation.navigateToAsk
-import com.example.perfumeshop.ui_layer.features.start.children.splash.navigation.splashRoute
-import com.example.perfumeshop.ui_layer.features.start.navigation.startGraph
+import com.example.perfumeshop.ui_layer.features.auth.code_verification_feature.navigation.navigateToCodeVerification
+import com.example.perfumeshop.ui_layer.features.auth.login_register_feature.navigation.navigateToLogin
+import com.example.perfumeshop.ui_layer.features.auth.authGraph
+import com.example.perfumeshop.ui_layer.features.main.cart_feature.ui.CartViewModel
+import com.example.perfumeshop.ui_layer.features.main.mainGraph
+import com.example.perfumeshop.ui_layer.features.main.home_feature.home.navigation.navigateToHome
+import com.example.perfumeshop.ui_layer.features.main.home_feature.home.ui.HomeViewModel
+import com.example.perfumeshop.ui_layer.features.main.home_feature.search.navigation.navigateToSearch
+import com.example.perfumeshop.ui_layer.features.main.product_feature.navigation.navigateToProduct
+import com.example.perfumeshop.ui_layer.features.main.profile_feature.edit_profile.navigation.navigateToEditProfileRoute
+import com.example.perfumeshop.ui_layer.features.main.profile_feature.favourite.navigation.navigateToFavouritesRoute
+import com.example.perfumeshop.ui_layer.features.main.profile_feature.favourite.ui.FavouriteViewModel
+import com.example.perfumeshop.ui_layer.features.main.profile_feature.orders.navigation.navigateToOrders
+import com.example.perfumeshop.ui_layer.features.start.ask_feature.navigation.navigateToAsk
+import com.example.perfumeshop.ui_layer.features.start.splash_feature.navigation.splashRoute
+import com.example.perfumeshop.ui_layer.features.start.startGraph
 
 
 

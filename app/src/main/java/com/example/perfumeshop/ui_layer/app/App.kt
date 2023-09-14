@@ -22,28 +22,28 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.compose.rememberNavController
 import com.example.perfumeshop.ui_layer.app.navigation.AppNavHost
-import com.example.perfumeshop.ui_layer.features.auth.children.code_verif.navigation.codeVerificationRoute
-import com.example.perfumeshop.ui_layer.features.auth.children.login_register.navigation.loginRoute
-import com.example.perfumeshop.ui_layer.features.main.children.cart.children.cart.navigation.cartRoute
-import com.example.perfumeshop.ui_layer.features.main.children.cart.children.cart.ui.CartViewModel
-import com.example.perfumeshop.ui_layer.features.main.children.cart.navigation.cartActiveChild
-import com.example.perfumeshop.ui_layer.features.main.children.home.children.home.navigation.homeRoute
-import com.example.perfumeshop.ui_layer.features.main.children.home.children.home.ui.HomeViewModel
-import com.example.perfumeshop.ui_layer.features.main.children.home.children.search.navigation.searchRoute
-import com.example.perfumeshop.ui_layer.features.main.children.home.navigation.homeActiveChild
-import com.example.perfumeshop.ui_layer.features.main.children.product.navigation.productCartRoute
-import com.example.perfumeshop.ui_layer.features.main.children.product.navigation.productHomeRoute
-import com.example.perfumeshop.ui_layer.features.main.children.product.navigation.productSearchRoute
-import com.example.perfumeshop.ui_layer.features.main.children.profile.children.edit_profile.navigation.editProfileRoute
-import com.example.perfumeshop.ui_layer.features.main.children.profile.children.favourite.navigation.favouriteRoute
-import com.example.perfumeshop.ui_layer.features.main.children.profile.children.favourite.ui.FavouriteViewModel
-import com.example.perfumeshop.ui_layer.features.main.children.profile.children.orders.navigation.ordersRoute
-import com.example.perfumeshop.ui_layer.features.main.children.profile.children.profile.navigation.profileRoute
-import com.example.perfumeshop.ui_layer.features.main.children.profile.navigation.profileActiveChild
-import com.example.perfumeshop.ui_layer.features.main.children.settings.navigation.navigateToSettings
-import com.example.perfumeshop.ui_layer.features.main.children.settings.navigation.settingsRoute
-import com.example.perfumeshop.ui_layer.features.start.children.ask.navigation.askRoute
-import com.example.perfumeshop.ui_layer.features.start.children.splash.navigation.splashRoute
+import com.example.perfumeshop.ui_layer.features.auth.code_verification_feature.navigation.codeVerificationRoute
+import com.example.perfumeshop.ui_layer.features.auth.login_register_feature.navigation.loginRoute
+import com.example.perfumeshop.ui_layer.features.main.cart_feature.navigation.cartActiveChild
+import com.example.perfumeshop.ui_layer.features.main.cart_feature.navigation.cartRoute
+import com.example.perfumeshop.ui_layer.features.main.cart_feature.ui.CartViewModel
+import com.example.perfumeshop.ui_layer.features.main.home_feature.home.navigation.homeRoute
+import com.example.perfumeshop.ui_layer.features.main.home_feature.home.ui.HomeViewModel
+import com.example.perfumeshop.ui_layer.features.main.home_feature.homeActiveChild
+import com.example.perfumeshop.ui_layer.features.main.home_feature.search.navigation.searchRoute
+import com.example.perfumeshop.ui_layer.features.main.product_feature.navigation.productCartRoute
+import com.example.perfumeshop.ui_layer.features.main.product_feature.navigation.productHomeRoute
+import com.example.perfumeshop.ui_layer.features.main.product_feature.navigation.productSearchRoute
+import com.example.perfumeshop.ui_layer.features.main.profile_feature.edit_profile.navigation.editProfileRoute
+import com.example.perfumeshop.ui_layer.features.main.profile_feature.favourite.navigation.favouriteRoute
+import com.example.perfumeshop.ui_layer.features.main.profile_feature.favourite.ui.FavouriteViewModel
+import com.example.perfumeshop.ui_layer.features.main.profile_feature.orders.navigation.ordersRoute
+import com.example.perfumeshop.ui_layer.features.main.profile_feature.profile.navigation.profileRoute
+import com.example.perfumeshop.ui_layer.features.main.profile_feature.profileActiveChild
+import com.example.perfumeshop.ui_layer.features.main.settings_feature.navigation.navigateToSettings
+import com.example.perfumeshop.ui_layer.features.main.settings_feature.navigation.settingsRoute
+import com.example.perfumeshop.ui_layer.features.start.ask_feature.navigation.askRoute
+import com.example.perfumeshop.ui_layer.features.start.splash_feature.navigation.splashRoute
 import com.example.perfumeshop.ui_layer.theme.PerfumeShopTheme
 import com.example.perfumeshop.ui_layer.theme.PreferencesManager
 import com.google.firebase.auth.FirebaseAuth
@@ -86,7 +86,7 @@ fun App() {
             Log.d("YHHJD", "APP: ${FirebaseAuth.getInstance().currentUser?.displayName}")
 
             Log.d("ACTIVE_CHILD_TEST",
-                  "Home child: $homeActiveChild Cart child: $cartActiveChild Profile child: $profileActiveChild"
+                  "Home child: ${homeActiveChild} Cart child: $cartActiveChild Profile child: $profileActiveChild"
             )
 
             Log.d("BQ_TEST", "${controller.backQueue.map { it.destination.route }}")
@@ -99,8 +99,9 @@ fun App() {
                     listOf(homeRoute, cartRoute, profileRoute)
 
             showBottomBar = dest.route !in
-                    listOf(splashRoute, askRoute, loginRoute, codeVerificationRoute,
-                           settingsRoute)
+                    listOf(
+                        splashRoute, askRoute, loginRoute, codeVerificationRoute,
+                        settingsRoute)
 
             bottomBarSelectedIndex = when(dest.route){
                 in listOf(homeRoute, searchRoute, productHomeRoute, productSearchRoute) -> 0

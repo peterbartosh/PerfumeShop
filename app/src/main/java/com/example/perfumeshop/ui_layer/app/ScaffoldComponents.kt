@@ -41,25 +41,24 @@ import androidx.navigation.NavGraph.Companion.findStartDestination
 import androidx.navigation.NavHostController
 import androidx.navigation.compose.currentBackStackEntryAsState
 import com.example.perfumeshop.data_layer.utils.getWidthPercent
-import com.example.perfumeshop.ui_layer.features.auth.children.code_verif.navigation.codeVerificationRoute
-import com.example.perfumeshop.ui_layer.features.auth.children.login_register.navigation.loginParentRoute
-import com.example.perfumeshop.ui_layer.features.auth.children.login_register.navigation.loginRoute
-import com.example.perfumeshop.ui_layer.features.main.children.cart.children.cart.navigation.cartRoute
-import com.example.perfumeshop.ui_layer.features.main.children.cart.navigation.cartActiveChild
-import com.example.perfumeshop.ui_layer.features.main.children.home.children.home.navigation.homeRoute
-import com.example.perfumeshop.ui_layer.features.main.children.home.children.search.navigation.searchRoute
-import com.example.perfumeshop.ui_layer.features.main.children.home.navigation.homeActiveChild
-import com.example.perfumeshop.ui_layer.features.main.children.product.navigation.productCartRoute
-import com.example.perfumeshop.ui_layer.features.main.children.product.navigation.productHomeRoute
-import com.example.perfumeshop.ui_layer.features.main.children.product.navigation.productProfileRoute
-import com.example.perfumeshop.ui_layer.features.main.children.product.navigation.productSearchRoute
-import com.example.perfumeshop.ui_layer.features.main.children.profile.children.edit_profile.navigation.editProfileRoute
-import com.example.perfumeshop.ui_layer.features.main.children.profile.children.favourite.navigation.favouriteRoute
-import com.example.perfumeshop.ui_layer.features.main.children.profile.children.orders.navigation.ordersRoute
-import com.example.perfumeshop.ui_layer.features.main.children.profile.children.profile.navigation.profileRoute
-import com.example.perfumeshop.ui_layer.features.main.children.profile.navigation.profileActiveChild
-import com.example.perfumeshop.ui_layer.features.main.children.settings.navigation.settingsRoute
-import com.example.perfumeshop.ui_layer.features.main.navigation.getActiveChild
+import com.example.perfumeshop.ui_layer.features.auth.code_verification_feature.navigation.codeVerificationRoute
+import com.example.perfumeshop.ui_layer.features.auth.login_register_feature.navigation.loginParentRoute
+import com.example.perfumeshop.ui_layer.features.auth.login_register_feature.navigation.loginRoute
+import com.example.perfumeshop.ui_layer.features.main.cart_feature.navigation.cartActiveChild
+import com.example.perfumeshop.ui_layer.features.main.cart_feature.navigation.cartRoute
+import com.example.perfumeshop.ui_layer.features.main.getActiveChild
+import com.example.perfumeshop.ui_layer.features.main.home_feature.home.navigation.homeRoute
+import com.example.perfumeshop.ui_layer.features.main.home_feature.search.navigation.searchRoute
+import com.example.perfumeshop.ui_layer.features.main.product_feature.navigation.productCartRoute
+import com.example.perfumeshop.ui_layer.features.main.product_feature.navigation.productHomeRoute
+import com.example.perfumeshop.ui_layer.features.main.product_feature.navigation.productProfileRoute
+import com.example.perfumeshop.ui_layer.features.main.product_feature.navigation.productSearchRoute
+import com.example.perfumeshop.ui_layer.features.main.profile_feature.edit_profile.navigation.editProfileRoute
+import com.example.perfumeshop.ui_layer.features.main.profile_feature.favourite.navigation.favouriteRoute
+import com.example.perfumeshop.ui_layer.features.main.profile_feature.orders.navigation.ordersRoute
+import com.example.perfumeshop.ui_layer.features.main.profile_feature.profile.navigation.profileRoute
+import com.example.perfumeshop.ui_layer.features.main.profile_feature.profileActiveChild
+import com.example.perfumeshop.ui_layer.features.main.settings_feature.navigation.settingsRoute
 
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -269,8 +268,8 @@ fun onBackArrowClick(navController: NavHostController) {
     }
 
     val route = when(curDestRoute){
-        in listOf(searchRoute, productHomeRoute) -> homeRoute.also { homeActiveChild = homeRoute }
-        productSearchRoute -> searchRoute.also { homeActiveChild = searchRoute }
+        in listOf(searchRoute, productHomeRoute) -> homeRoute.also { com.example.perfumeshop.ui_layer.features.main.home_feature.homeActiveChild = homeRoute }
+        productSearchRoute -> searchRoute.also { com.example.perfumeshop.ui_layer.features.main.home_feature.homeActiveChild = searchRoute }
         productCartRoute -> cartRoute.also { cartActiveChild = cartRoute }
         in listOf(editProfileRoute, favouriteRoute, ordersRoute, productProfileRoute) -> profileRoute.also { profileActiveChild = profileRoute }
         loginRoute -> loginParentRoute
