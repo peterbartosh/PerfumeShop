@@ -20,7 +20,7 @@ import javax.inject.Inject
 @HiltViewModel
 class SearchViewModel @Inject constructor(private val repository: FireRepository) : ViewModel() {
 
-    private var _searchList = MutableStateFlow<List<Product>>(emptyList())
+    private var _searchList = MutableStateFlow<MutableList<Product>>(mutableListOf())
     var searchList : StateFlow<List<Product>> = _searchList
 
     var isLoading by mutableStateOf(false)
@@ -32,7 +32,6 @@ class SearchViewModel @Inject constructor(private val repository: FireRepository
     fun clear(){
         super.onCleared()
     }
-
 
     fun searchQuery(
         query : String,
@@ -49,7 +48,7 @@ class SearchViewModel @Inject constructor(private val repository: FireRepository
         isSuccess = false
         initSearchQuery = false
 
-        _searchList.value = emptyList()
+        _searchList.value = mutableListOf()
 
         if (applyFilter)
             repository.getProductsWithFilter(
@@ -60,17 +59,16 @@ class SearchViewModel @Inject constructor(private val repository: FireRepository
             ).catch {
                     e -> Log.d("ERROR_ERROR", "searchQuery: ${e.message}")
                 isFailure = true
-            }.collect{ productList ->
-                Log.d("PRODUCT_ID_TEST", productList?.map { it.id }.toString())
-                _searchList.value = productList ?: emptyList()
+            }.collect{ product ->
+                _searchList.value.add(product)
             }
         else
             repository.getQueryProducts(query, queryType)
                 .catch {
                         e -> Log.d("ERROR_ERROR", "searchQuery: ${e.message}")
                     isFailure = true
-                }.collect {
-                    _searchList.value = it
+                }.collect { product ->
+                    _searchList.value.add(product)
             }
 
         searchList = _searchList
@@ -88,12 +86,5 @@ class SearchViewModel @Inject constructor(private val repository: FireRepository
 
         Log.d("DATA_TEST", "searchQuery: ${searchList.value}")
 
-
-
-        // Log.d("VIEW_MODEL_REQ", "searchQuery: REQ ENDED ${_searchList.size}  ${searchList.size}")
-
     }
-
-
-
 }

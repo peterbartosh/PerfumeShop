@@ -18,9 +18,13 @@ fun NavController.navigateToFavouritesRoute(navOptions: NavOptions? = null) {
     this.navigate(route = favouriteRoute, navOptions = navOptions)
 }
 
-fun NavGraphBuilder.favouriteScreen(onProductClick: (String) -> Unit, cartViewModel: CartViewModel) {
+fun NavGraphBuilder.favouriteScreen(onProductClick: (String) -> Unit,
+                                    favouriteViewModel : FavouriteViewModel,
+                                    cartViewModel: CartViewModel) {
     composable(route = favouriteRoute) {
-        val favouriteViewModel = hiltViewModel<FavouriteViewModel>()
+        favouriteViewModel.isFailure = false
+        favouriteViewModel.isSuccess = false
+        favouriteViewModel.isLoading = false
         FavouriteScreen(cartViewModel = cartViewModel, favouriteViewModel = favouriteViewModel, onProductClick = onProductClick)
     }
 }

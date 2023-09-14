@@ -41,10 +41,9 @@ import androidx.navigation.NavGraph.Companion.findStartDestination
 import androidx.navigation.NavHostController
 import androidx.navigation.compose.currentBackStackEntryAsState
 import com.example.perfumeshop.data_layer.utils.getWidthPercent
-import com.example.perfumeshop.ui_layer.features.auth.children.code_verif.navigation.codeAskVerification
-import com.example.perfumeshop.ui_layer.features.auth.children.code_verif.navigation.codeProfileVerification
-import com.example.perfumeshop.ui_layer.features.auth.children.login_register.navigation.loginAskRoute
-import com.example.perfumeshop.ui_layer.features.auth.children.login_register.navigation.loginProfileRoute
+import com.example.perfumeshop.ui_layer.features.auth.children.code_verif.navigation.codeVerificationRoute
+import com.example.perfumeshop.ui_layer.features.auth.children.login_register.navigation.loginParentRoute
+import com.example.perfumeshop.ui_layer.features.auth.children.login_register.navigation.loginRoute
 import com.example.perfumeshop.ui_layer.features.main.children.cart.children.cart.navigation.cartRoute
 import com.example.perfumeshop.ui_layer.features.main.children.cart.navigation.cartActiveChild
 import com.example.perfumeshop.ui_layer.features.main.children.home.children.home.navigation.homeRoute
@@ -61,7 +60,6 @@ import com.example.perfumeshop.ui_layer.features.main.children.profile.children.
 import com.example.perfumeshop.ui_layer.features.main.children.profile.navigation.profileActiveChild
 import com.example.perfumeshop.ui_layer.features.main.children.settings.navigation.settingsRoute
 import com.example.perfumeshop.ui_layer.features.main.navigation.getActiveChild
-import com.example.perfumeshop.ui_layer.features.start.children.ask.navigation.askRoute
 
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -233,11 +231,13 @@ fun BottomNavigationBar(
 
                                   } else {
 
-                                      navController.navigate(item.parentRoute){     // ???
+                                      navController.navigate(item.parentRoute){
                                           popUpTo(currentDestination.id){
                                               saveState = false
                                               inclusive = true
                                           }
+                                          launchSingleTop = true
+                                          restoreState = true
                                       }
 
                                   }
@@ -273,10 +273,8 @@ fun onBackArrowClick(navController: NavHostController) {
         productSearchRoute -> searchRoute.also { homeActiveChild = searchRoute }
         productCartRoute -> cartRoute.also { cartActiveChild = cartRoute }
         in listOf(editProfileRoute, favouriteRoute, ordersRoute, productProfileRoute) -> profileRoute.also { profileActiveChild = profileRoute }
-        loginAskRoute -> askRoute
-        loginProfileRoute -> profileRoute
-        codeAskVerification -> loginAskRoute
-        codeProfileVerification -> loginProfileRoute
+        loginRoute -> loginParentRoute
+        codeVerificationRoute -> loginRoute
             else -> curDestRoute ?: homeRoute
     }
 

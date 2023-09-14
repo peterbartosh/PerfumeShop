@@ -30,7 +30,7 @@ import androidx.compose.ui.unit.dp
 import com.example.perfumeshop.R
 import com.example.perfumeshop.ui_layer.theme.DarkPurple
 import com.example.perfumeshop.ui_layer.theme.Gold
-import com.example.perfumeshop.ui_layer.theme_handler.PreferencesManager
+import com.example.perfumeshop.ui_layer.theme.PreferencesManager
 
 
 @Composable

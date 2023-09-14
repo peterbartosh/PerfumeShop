@@ -10,6 +10,7 @@ import com.example.perfumeshop.ui_layer.features.main.children.cart.children.car
 import com.example.perfumeshop.ui_layer.features.main.children.cart.navigation.cartActiveChild
 import com.example.perfumeshop.ui_layer.features.main.children.cart.navigation.cartGraph
 import com.example.perfumeshop.ui_layer.features.main.children.home.children.home.navigation.homeRoute
+import com.example.perfumeshop.ui_layer.features.main.children.home.children.home.ui.HomeViewModel
 import com.example.perfumeshop.ui_layer.features.main.children.home.navigation.homeActiveChild
 import com.example.perfumeshop.ui_layer.features.main.children.home.navigation.homeGraph
 import com.example.perfumeshop.ui_layer.features.main.children.profile.children.favourite.ui.FavouriteViewModel
@@ -33,6 +34,7 @@ fun NavGraphBuilder.mainGraph(
     navigateSearch: (String, QueryType) -> Unit,
     navigateOption: (OptionType) -> Unit,
     navigateProduct: (String) -> Unit,
+    homeViewModel: HomeViewModel,
     cartViewModel: CartViewModel,
     favouriteViewModel: FavouriteViewModel
 ){
@@ -40,6 +42,7 @@ fun NavGraphBuilder.mainGraph(
         homeGraph(cartViewModel = cartViewModel,
                   favouriteViewModel = favouriteViewModel,
                   onSearchClick = navigateSearch,
+                  homeViewModel = homeViewModel,
                   onProductClick = navigateProduct)
 
         cartGraph(cartViewModel = cartViewModel,

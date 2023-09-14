@@ -64,6 +64,7 @@ import androidx.compose.ui.unit.sp
 import androidx.compose.ui.window.Dialog
 import com.example.perfumeshop.R
 import com.example.perfumeshop.data_layer.models.Product
+import com.example.perfumeshop.ui_layer.components.showToast
 import com.example.perfumeshop.ui_layer.theme.Gold
 import com.example.perfumeshop.ui_layer.features.auth.children.login_register.ui.InputField
 import com.google.firebase.auth.FirebaseAuth
@@ -120,6 +121,8 @@ fun LazyProductList(
 ) {
 
     val scrollState = rememberLazyStaggeredGridState()
+
+    Log.d("LIST_SIZE", "LazyProductList: ${listOfProducts.size}")
 
     LazyVerticalStaggeredGrid(
         contentPadding = PaddingValues(3.dp),
@@ -218,8 +221,7 @@ fun ProductCard(
                         modifier = Modifier.size(20.dp),
                         onClick = {
                             if (FirebaseAuth.getInstance().currentUser?.isAnonymous == true)
-                                Toast.makeText(context, "Вы не авторизованы!", Toast.LENGTH_SHORT)
-                                    .show()
+                                showToast(context, "Вы не авторизованы")
                             else {
                                 if (isInFavourite.value) onRemoveFromFavouriteClick(product.id!!)
                                 else onAddToFavouriteClick(product)
@@ -240,13 +242,11 @@ fun ProductCard(
                         modifier = Modifier.size(20.dp),
                         onClick = {
                             if (FirebaseAuth.getInstance().currentUser?.isAnonymous == true)
-                                Toast.makeText(context, "Вы не авторизованы!", Toast.LENGTH_SHORT)
-                                    .show()
+                           // Log.d("CLICK_TEST", "ProductCard: click")
+                                showToast(context, "Вы не авторизованы")
                             else {
-                                if (isInCart.value)
-                                    onRemoveFromCartClick(product.id!!)
-                                else
-                                    onAddToCartClick(product)
+                                if (isInCart.value) onRemoveFromCartClick(product.id!!)
+                                else onAddToCartClick(product)
                                 isInCart.value = !isInCart.value
                             }
                         }) {

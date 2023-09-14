@@ -20,22 +20,19 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.hilt.navigation.compose.hiltViewModel
-import androidx.navigation.NavGraph.Companion.findStartDestination
 import androidx.navigation.compose.rememberNavController
-import androidx.navigation.navOptions
-import com.example.perfumeshop.ui_layer.theme.PerfumeShopTheme
 import com.example.perfumeshop.ui_layer.app.navigation.AppNavHost
-import com.example.perfumeshop.ui_layer.features.auth.children.login_register.navigation.loginAskRoute
-import com.example.perfumeshop.ui_layer.features.auth.children.login_register.navigation.loginProfileRoute
+import com.example.perfumeshop.ui_layer.features.auth.children.code_verif.navigation.codeVerificationRoute
+import com.example.perfumeshop.ui_layer.features.auth.children.login_register.navigation.loginRoute
 import com.example.perfumeshop.ui_layer.features.main.children.cart.children.cart.navigation.cartRoute
 import com.example.perfumeshop.ui_layer.features.main.children.cart.children.cart.ui.CartViewModel
 import com.example.perfumeshop.ui_layer.features.main.children.cart.navigation.cartActiveChild
 import com.example.perfumeshop.ui_layer.features.main.children.home.children.home.navigation.homeRoute
+import com.example.perfumeshop.ui_layer.features.main.children.home.children.home.ui.HomeViewModel
 import com.example.perfumeshop.ui_layer.features.main.children.home.children.search.navigation.searchRoute
 import com.example.perfumeshop.ui_layer.features.main.children.home.navigation.homeActiveChild
 import com.example.perfumeshop.ui_layer.features.main.children.product.navigation.productCartRoute
 import com.example.perfumeshop.ui_layer.features.main.children.product.navigation.productHomeRoute
-import com.example.perfumeshop.ui_layer.features.main.children.product.navigation.productProfileRoute
 import com.example.perfumeshop.ui_layer.features.main.children.product.navigation.productSearchRoute
 import com.example.perfumeshop.ui_layer.features.main.children.profile.children.edit_profile.navigation.editProfileRoute
 import com.example.perfumeshop.ui_layer.features.main.children.profile.children.favourite.navigation.favouriteRoute
@@ -47,9 +44,10 @@ import com.example.perfumeshop.ui_layer.features.main.children.settings.navigati
 import com.example.perfumeshop.ui_layer.features.main.children.settings.navigation.settingsRoute
 import com.example.perfumeshop.ui_layer.features.start.children.ask.navigation.askRoute
 import com.example.perfumeshop.ui_layer.features.start.children.splash.navigation.splashRoute
-import com.example.perfumeshop.ui_layer.theme_handler.PreferencesManager
+import com.example.perfumeshop.ui_layer.theme.PerfumeShopTheme
+import com.example.perfumeshop.ui_layer.theme.PreferencesManager
+import com.google.firebase.auth.FirebaseAuth
 
-var saveData by mutableStateOf(false)
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -85,6 +83,8 @@ fun App() {
 
         navController.addOnDestinationChangedListener{ controller, dest, args ->
 
+            Log.d("YHHJD", "APP: ${FirebaseAuth.getInstance().currentUser?.displayName}")
+
             Log.d("ACTIVE_CHILD_TEST",
                   "Home child: $homeActiveChild Cart child: $cartActiveChild Profile child: $profileActiveChild"
             )
@@ -99,7 +99,7 @@ fun App() {
                     listOf(homeRoute, cartRoute, profileRoute)
 
             showBottomBar = dest.route !in
-                    listOf(splashRoute, askRoute, loginAskRoute, loginProfileRoute,
+                    listOf(splashRoute, askRoute, loginRoute, codeVerificationRoute,
                            settingsRoute)
 
             bottomBarSelectedIndex = when(dest.route){
@@ -112,11 +112,7 @@ fun App() {
 
         val cartViewModel = hiltViewModel<CartViewModel>()
         val favouriteViewModel = hiltViewModel<FavouriteViewModel>()
-
-        //if (saveData) {
-           // cartViewModel.updateCartInDatabase()
-            //favouriteViewModel.updateFavouritesInDatabase()
-        //}
+        val homeViewModel = hiltViewModel<HomeViewModel>()
 
         Scaffold(
             topBar = {
@@ -149,6 +145,7 @@ fun App() {
             ) {
 
                 AppNavHost(
+                    homeViewModel = homeViewModel,
                     cartViewModel = cartViewModel,
                     favouriteViewModel = favouriteViewModel,
                     navController = navController,

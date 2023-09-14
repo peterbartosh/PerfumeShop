@@ -11,6 +11,7 @@ import com.example.perfumeshop.ui_layer.features.auth.children.login_register.na
 import com.example.perfumeshop.ui_layer.features.auth.navigation.authGraph
 import com.example.perfumeshop.ui_layer.features.main.children.cart.children.cart.ui.CartViewModel
 import com.example.perfumeshop.ui_layer.features.main.children.home.children.home.navigation.navigateToHome
+import com.example.perfumeshop.ui_layer.features.main.children.home.children.home.ui.HomeViewModel
 import com.example.perfumeshop.ui_layer.features.main.children.home.children.search.navigation.navigateToSearch
 import com.example.perfumeshop.ui_layer.features.main.children.home.children.search.navigation.searchRoute
 import com.example.perfumeshop.ui_layer.features.main.children.home.navigation.homeActiveChild
@@ -30,6 +31,7 @@ import com.example.perfumeshop.ui_layer.features.start.navigation.startGraph
 fun AppNavHost(
     navController: NavHostController,
     onThemeChange: (Boolean) -> Unit,
+    homeViewModel : HomeViewModel,
     cartViewModel: CartViewModel,
     favouriteViewModel: FavouriteViewModel
 ) {
@@ -41,11 +43,13 @@ fun AppNavHost(
                    navigateAuth = navController::navigateToLogin)
 
         authGraph(
+            navController = navController,
             navigateCodeVerification = navController::navigateToCodeVerification,
             navigateMain = navController::navigateToHome
         )
 
         mainGraph(
+            homeViewModel = homeViewModel,
             cartViewModel = cartViewModel,
             favouriteViewModel = favouriteViewModel,
             onThemeChange = onThemeChange,
@@ -57,7 +61,7 @@ fun AppNavHost(
                         inclusive = true
                     }
                     launchSingleTop = true
-                    restoreState = homeActiveChild == searchRoute
+                    restoreState = true
                 }) },
             navigateOption = { optionType ->
                 when(optionType){

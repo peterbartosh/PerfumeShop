@@ -1,6 +1,7 @@
 package com.example.perfumeshop.ui_layer.features.auth.navigation
 
 import androidx.navigation.NavGraphBuilder
+import androidx.navigation.NavHostController
 import com.example.perfumeshop.ui_layer.features.auth.children.code_verif.navigation.codeVerificationScreen
 import com.example.perfumeshop.ui_layer.features.auth.children.login_register.navigation.loginScreen
 
@@ -12,16 +13,20 @@ import com.example.perfumeshop.ui_layer.features.auth.children.login_register.na
 //}
 
 
-fun NavGraphBuilder.authGraph(navigateCodeVerification : () -> Unit, navigateMain : () -> Unit){
+fun NavGraphBuilder.authGraph(
+        navigateCodeVerification: () -> Unit,
+        navigateMain: () -> Unit,
+        navController: NavHostController
+){
 
 
     //navigation(startDestination = loginAskRoute, route = authRoute) {
 
-        //setCurrentNestedGraph(build())
+        loginScreen(onCodeSent = navigateCodeVerification,
+                    onSuccess = navigateMain)
 
-        loginScreen(onCodeSent = navigateCodeVerification, onSuccess = navigateMain)
-
-        codeVerificationScreen(onSuccess = navigateMain)
+        codeVerificationScreen(navController = navController,
+                               onSuccess = navigateMain)
 
     //}
 

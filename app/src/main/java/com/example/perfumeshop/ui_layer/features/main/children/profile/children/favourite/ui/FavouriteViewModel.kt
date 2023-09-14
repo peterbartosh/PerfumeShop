@@ -10,13 +10,15 @@ import androidx.lifecycle.viewModelScope
 import com.example.perfumeshop.data_layer.models.Product
 import com.example.perfumeshop.data_layer.repositories.FireRepository
 import com.example.perfumeshop.data_layer.utils.QueryType
+import com.example.perfumeshop.data_layer.utils.updateFieldInDatabase
+import com.google.firebase.auth.FirebaseAuth
+import com.google.firebase.firestore.FirebaseFirestore
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.catch
 import kotlinx.coroutines.launch
 import javax.inject.Inject
-
 
 @HiltViewModel
 class FavouriteViewModel @Inject constructor(private val repository: FireRepository) : ViewModel() {
@@ -32,6 +34,10 @@ class FavouriteViewModel @Inject constructor(private val repository: FireReposit
 
     //var initSearchQuery by mutableStateOf(true)
 
+    init {
+        loadUserProducts()
+    }
+
     fun clear(){
         super.onCleared()
     }
@@ -39,49 +45,58 @@ class FavouriteViewModel @Inject constructor(private val repository: FireReposit
     fun addToFavourite(product: Product){
         _userProducts.value.add(product)
         userProducts = _userProducts
+        updateFavouriteInDatabase()
 
-        //updateInDatabase() lazily todo
+        //Log.d("USER_PRODS_TEST", userProducts.value.toString())
     }
 
     fun removeFromFavourite(productId: String){
         _userProducts.value.removeIf { p -> p.id == productId }
         userProducts = _userProducts
+        updateFavouriteInDatabase()
+        //Log.d("USER_PRODS_TEST", userProducts.value.toString())
 
-        //updateInDatabase() lazily todo
     }
 
     fun isInFavourite(productId : String) : Boolean =
         _userProducts.value.find { p -> p.id!! == productId } != null
 
+    fun updateFavouriteInDatabase() = viewModelScope.launch {
+        val id = FirebaseAuth.getInstance().uid
+        if (!id.isNullOrEmpty())
+            updateFieldInDatabase(
+                collectionPath = "users",
+                id = id,
+                fieldPath = "favourite",
+                updatedValue = _userProducts.value.map { it.id }
+            )
+    }
 
+    private fun loadUserProducts() {
+        val auth = FirebaseAuth.getInstance()
+        val id = auth.uid
 
-//    fun searchQuery(query : String, queryType: QueryType) = viewModelScope.launch {
-//        isInitialized = true
-//        isFailure = false
-//        isLoading = true
-//        repository.getQueryProducts(query, queryType)
-//            .catch {
-//                    e -> Log.d("ERROR_ERROR", "searchQuery: ${e.message}")
-//                isFailure = true
-//            }.collect {
-//                _userProducts.value = it.toMutableList()
-//            }
-//
-//        userProducts = _userProducts
-//
-//        isLoading = false
-//
-//        if (_userProducts.value.isEmpty()) Log.d("EMPTY_EMPTY", "searchQuery: EMPTY")
-//
-//        if (_userProducts.value.isEmpty() || isFailure)
-//            isFailure = true
-//        else
-//            isSuccess = true
-//
-//        // Log.d("VIEW_MODEL_REQ", "searchQuery: REQ ENDED ${_searchList.size}  ${searchList.size}")
-//
-//    }
+        if (auth.currentUser?.isAnonymous != true && !id.isNullOrEmpty())
+            viewModelScope.launch {
+                isFailure = false
+                isLoading = true
 
+                repository.getUserFavouriteProducts(id).catch { e ->
+                        Log.d("ERROR_ERROR", "searchQuery: ${e.message}")
+                        isFailure = true
+                    }.collect { product ->
+                        _userProducts.value.add(product)
+                    }
 
+                userProducts = _userProducts
 
+                isLoading = false
+
+                if (_userProducts.value.isEmpty() || isFailure)
+                    isFailure = true
+                else
+                    isSuccess = true
+
+            }
+    }
 }

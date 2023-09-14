@@ -29,7 +29,9 @@ fun NavGraphBuilder.profileGraph(
 
         editProfileScreen(onClick = {})
 
-        favouriteScreen(onProductClick = onProductClick, cartViewModel = cartViewModel)
+        favouriteScreen(onProductClick = onProductClick,
+                        favouriteViewModel = favouriteViewModel,
+                        cartViewModel = cartViewModel)
 
         ordersScreen(onProductClick = onProductClick)
 

@@ -1,11 +1,13 @@
 package com.example.perfumeshop.ui_layer.features.auth.children.login_register.ui
 
 
+import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
@@ -15,9 +17,11 @@ import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.layout.wrapContentHeight
 import androidx.compose.foundation.layout.wrapContentWidth
 import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material3.Button
+import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.OutlinedTextField
@@ -25,6 +29,7 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.MutableState
 import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
@@ -40,7 +45,10 @@ import androidx.compose.ui.text.input.TransformedText
 import androidx.compose.ui.text.input.VisualTransformation
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import com.example.perfumeshop.R
+import com.example.perfumeshop.ui_layer.components.LoadingIndicator
+import com.example.perfumeshop.ui_layer.theme.Gold
 
 
 //@Composable
@@ -86,6 +94,39 @@ fun InputField(
     )
 }
 
+@Composable
+fun SexPicker(selectedInd : MutableState<Int>) {
+    val sexes = listOf("Мужской", "Женский", "Не задано")
+
+    Row(modifier = Modifier.fillMaxWidth()) {
+        Text(text = "Пол:")
+
+        Spacer(modifier = Modifier.width(10.dp))
+        repeat(3){ ind ->
+            SelectButton(text = sexes[ind], ind = ind, selectedInd = selectedInd)
+            Spacer(modifier = Modifier.width(7.dp))
+        }
+    }
+}
+
+@Composable
+fun SelectButton(text : String, ind : Int, selectedInd : MutableState<Int>) {
+
+    Button(
+        onClick = { selectedInd.value = ind },
+        shape = RoundedCornerShape(10.dp),
+        colors = ButtonDefaults.buttonColors(containerColor = Color.White),
+        border = BorderStroke(width = 1.dp, color = if (selectedInd.value == ind) Gold else Color.LightGray),
+        contentPadding = ButtonDefaults.ContentPadding,
+        modifier = Modifier
+            .wrapContentWidth()
+            .wrapContentHeight()
+    ) {
+
+        Text(text = text, fontSize = 10.sp, color = Color.Black)
+    }
+}
+
 
 @Preview(showBackground = true)
 @Composable
@@ -120,7 +161,10 @@ fun PhoneInput(
                 Image(
                     painter = painterResource(id = R.drawable.belarus_flag),
                     contentDescription = "bel flag image",
-                    modifier = Modifier.padding(start = 2.dp).height(20.dp).width(30.dp)
+                    modifier = Modifier
+                        .padding(start = 2.dp)
+                        .height(20.dp)
+                        .width(30.dp)
                 )
 
                 Text(text = "+375", modifier = Modifier.padding(end = 5.dp))
@@ -191,7 +235,7 @@ private class PhoneOffsetMapper(val mask: String, val numberChar: Char) : Offset
 }
 
 @Composable
-fun SubmitButton(textId: String,
+fun SubmitButton(text: String,
                  loading: Boolean,
                  validInputs: Boolean,
                  onClick: () -> Unit) {
@@ -205,8 +249,8 @@ fun SubmitButton(textId: String,
         enabled = !loading && validInputs,
         shape = CircleShape
     ) {
-        if (loading) CircularProgressIndicator(modifier = Modifier.size(25.dp))
-        else Text(text = textId, modifier = Modifier.padding(5.dp))
+        if (loading) LoadingIndicator()
+        else Text(text = text, modifier = Modifier.padding(5.dp))
 
     }
 

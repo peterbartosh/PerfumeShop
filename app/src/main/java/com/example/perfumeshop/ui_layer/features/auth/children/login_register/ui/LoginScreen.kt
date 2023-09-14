@@ -14,6 +14,7 @@ import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.ExperimentalComposeUiApi
@@ -46,18 +47,14 @@ fun LoginScreen(
 
 
             if (showLoginForm.value)
-                UserForm(loading = false, isCreateAccount = false) { f, s, p ->
-
-                    viewModel.onLoginClicked(p, onCodeSent = onCodeSent, onSuccess = onSuccess)
-
-//                    viewModel.signInWithEmailAndPassword(email = e, password = p){
-//                        onAuthButtonClick.invoke()
-//                    }
+                UserForm(loading = false, isCreateAccount = false) { fn, sn, ph, sexInd ->
+                    viewModel.onLoginClicked(displayName = "$fn $sn", sexInd = sexInd,
+                                             phoneNumber = ph, onCodeSent = onCodeSent, onSuccess = onSuccess)
                 }
             else
-                UserForm(loading = false, isCreateAccount = true) { f, s, p ->
-
-                    viewModel.onLoginClicked(p, onCodeSent = onCodeSent, onSuccess = onSuccess)
+                UserForm(loading = false, isCreateAccount = true) { fn, sn, ph, sexInd ->
+                    viewModel.onLoginClicked(displayName = "$fn $sn", sexInd = sexInd,
+                                             phoneNumber = ph, onCodeSent = onCodeSent, onSuccess = onSuccess)
                 }
 
             Spacer(modifier = Modifier.height(15.dp))
@@ -88,15 +85,17 @@ fun LoginScreen(
 @Composable
 fun UserForm(loading: Boolean,
              isCreateAccount: Boolean,
-             onDone: (String, String, String) -> Unit = {f, s, e -> }
+             onDone: (String, String, String, Int) -> Unit = {f, s, e, sex -> }
 ){
-    val firstName = rememberSaveable { mutableStateOf("") }
-    val secondName = rememberSaveable { mutableStateOf("") }
-    val phoneNumber =  rememberSaveable { mutableStateOf("") }
+    val firstName = remember { mutableStateOf("") }
+    val secondName = remember { mutableStateOf("") }
+    val phoneNumber =  remember { mutableStateOf("") }
+    val sexSelectedInd = remember { mutableStateOf(2) }
 
     val keyboardController = LocalSoftwareKeyboardController.current
 
     Column(modifier = Modifier, horizontalAlignment = Alignment.CenterHorizontally) {
+
 
         if (isCreateAccount) {
             Text(
@@ -114,10 +113,12 @@ fun UserForm(loading: Boolean,
                        keyboardActions = KeyboardActions {
                            FocusRequester.Default
                        })
+
+            SexPicker(selectedInd = sexSelectedInd)
         }
 
         PhoneInput(phone = phoneNumber,
-                   mask = "+375 (00) 000-00-00",
+                   mask = "(00) 000-00-00",
                    maskNumber = '0',
                    enabled = !loading,
                    onPhoneChanged = {
@@ -125,14 +126,15 @@ fun UserForm(loading: Boolean,
                        Log.d("PHONE_PHONE", "UserForm: ${phoneNumber.value}")
                    })
 
+
         SubmitButton(
-            textId = if (isCreateAccount) "Create Account" else "Login",
+            text = if (isCreateAccount) "Create Account" else "Login",
             loading = loading,
             validInputs = true
         ){
             onDone.invoke(firstName.value.trim(),
                           secondName.value.trim(),
-                             "+375${phoneNumber.value.trim()}")
+                             "+375${phoneNumber.value.trim()}", sexSelectedInd.value)
 
             keyboardController?.hide()
         }

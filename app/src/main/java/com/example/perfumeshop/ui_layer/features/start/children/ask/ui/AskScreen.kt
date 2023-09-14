@@ -61,7 +61,7 @@ fun AskLoginScreen(onLoginClick: () -> Unit, onSkipClick: () -> Unit) {
 
             Row(modifier = Modifier.wrapContentHeight()) {
 
-                Button(onClick = { onLoginClick.invoke() },
+                Button(onClick = onLoginClick,
                        modifier = Modifier
                            .wrapContentHeight()
                            .width(120.dp),

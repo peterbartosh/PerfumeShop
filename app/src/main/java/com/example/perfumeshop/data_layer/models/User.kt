@@ -7,9 +7,9 @@ data class User(
     @Exclude
     var id: String? = null,
 
-    @get:PropertyName("user_auth_id")
-    @set:PropertyName("user_auth_id")
-    var userAuthId: String? = null,
+//    @get:PropertyName("user_auth_id")
+//    @set:PropertyName("user_auth_id")
+//    var userAuthId: String? = null,
 
     @get:PropertyName("first_name")
     @set:PropertyName("first_name")
@@ -26,7 +26,8 @@ data class User(
     var email : String? = null,
     var sex: String? = null,
     var country : String? = null,
-    var products : List<String>? = null         // rename to cart todo
+    var cart : List<String>? = null,         // rename to cart todo
+    var favourite : List<String>? = null
                     ){
 //    fun toMap(): MutableMap<String, Any> {
 //        return mutableMapOf("user_id" to this.userId,
