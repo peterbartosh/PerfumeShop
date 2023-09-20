@@ -2,6 +2,7 @@ package com.example.perfumeshop.data_layer.di
 
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.platform.LocalContext
+import com.example.perfumeshop.data_layer.mail.EmailSender
 import com.example.perfumeshop.data_layer.repositories.FireRepository
 import com.google.firebase.firestore.FirebaseFirestore
 import dagger.Module
@@ -23,6 +24,10 @@ object AppModule {
                              queryOrders = FirebaseFirestore.getInstance().collection("orders"),
                              queryHot = FirebaseFirestore.getInstance().collection("hot"))
 
+    @Singleton
+    @Provides
+    fun provideEmailSender()
+            = EmailSender()
 //    @Composable
 //    @Singleton
 //    @Provides

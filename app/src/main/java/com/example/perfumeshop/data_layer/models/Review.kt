@@ -1,9 +1,8 @@
 package com.example.perfumeshop.data_layer.models
 
-import com.example.perfumeshop.data_layer.utils.Sex
-import com.google.firebase.Timestamp
 import com.google.firebase.firestore.Exclude
 import com.google.firebase.firestore.PropertyName
+import java.sql.Timestamp
 
 data class Review(
     @Exclude var id : String? = null,
@@ -18,7 +17,9 @@ data class Review(
 
     var content : String? = null,
 
-    var rating : String? = null,
+    var authorName : String? = null,
+
+    var rating : Int? = null,
 
     var date : Timestamp?  = null
 

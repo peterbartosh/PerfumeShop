@@ -9,7 +9,6 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.perfumeshop.data_layer.models.Product
 import com.example.perfumeshop.data_layer.repositories.FireRepository
-import com.example.perfumeshop.data_layer.utils.updateFieldInDatabase
 import com.google.firebase.auth.FirebaseAuth
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -33,11 +32,17 @@ class FavouriteViewModel @Inject constructor(private val repository: FireReposit
     //var initSearchQuery by mutableStateOf(true)
 
     init {
-        loadUserProducts()
+        if (FirebaseAuth.getInstance().currentUser?.isAnonymous == false)
+            loadUserProducts()
     }
 
     fun clear(){
         super.onCleared()
+    }
+
+    fun clearContent(){
+        _userProducts.value.clear()
+        userProducts = _userProducts
     }
 
     fun addToFavourite(product: Product){
@@ -62,7 +67,7 @@ class FavouriteViewModel @Inject constructor(private val repository: FireReposit
     private fun updateFavouriteInDatabase() = viewModelScope.launch {
         val id = FirebaseAuth.getInstance().uid
         if (!id.isNullOrEmpty())
-            updateFieldInDatabase(
+            repository.updateFieldInDatabase(
                 collectionPath = "users",
                 id = id,
                 fieldPath = "favourite",
@@ -70,7 +75,7 @@ class FavouriteViewModel @Inject constructor(private val repository: FireReposit
             )
     }
 
-    private fun loadUserProducts() {
+    fun loadUserProducts() {
         val auth = FirebaseAuth.getInstance()
         val id = auth.uid
 

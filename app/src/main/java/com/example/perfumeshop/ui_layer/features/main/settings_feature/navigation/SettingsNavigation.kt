@@ -9,8 +9,6 @@ import com.example.perfumeshop.ui_layer.features.main.settings_feature.ui.Settin
 
 const val settingsRoute = "settings"
 
-
-
 fun NavController.navigateToSettings(navOptions: NavOptions? = null) {
     this.navigate(route = settingsRoute, navOptions)
 }

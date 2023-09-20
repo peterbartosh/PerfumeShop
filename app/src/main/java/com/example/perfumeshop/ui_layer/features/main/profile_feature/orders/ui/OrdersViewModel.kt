@@ -22,9 +22,10 @@ class OrdersViewModel @Inject constructor(private val repository: FireRepository
     private var _ordersList = MutableStateFlow<MutableList<Order>>(mutableListOf())
     var ordersList : StateFlow<List<Order>> = _ordersList
 
-    var isLoading  by mutableStateOf(false)
-    var isSuccess  by mutableStateOf(false)
-    var isFailure  by mutableStateOf(false)
+    var isLoading by mutableStateOf(false)
+    var isSuccess by mutableStateOf(false)
+    var isFailure by mutableStateOf(false)
+    //var initOrdersQuery by mutableStateOf(false)
 
     fun clear(){
         super.onCleared()
@@ -36,11 +37,13 @@ class OrdersViewModel @Inject constructor(private val repository: FireRepository
 
 
     private fun getUserOrders() = viewModelScope.launch {
+        isSuccess = false
         isFailure = false
         isLoading = true
+       // initOrdersQuery = false
         repository.getUserOrders()
             .catch {
-                    e -> Log.d("ERROR_ERROR", "searchQuery: ${e.message}")
+                    e -> Log.d("ERROR_ERROR", "getUserOrders: ${e.message}")
                 isFailure = true
             }.collect {
                 _ordersList.value.add(it)
@@ -50,7 +53,7 @@ class OrdersViewModel @Inject constructor(private val repository: FireRepository
 
         isLoading = false
 
-        if (_ordersList.value.isEmpty()) Log.d("EMPTY_EMPTY", "searchQuery: EMPTY")
+        if (_ordersList.value.isEmpty()) Log.d("EMPTY_EMPTY", "getUserOrders: EMPTY")
 
         if (_ordersList.value.isEmpty() || isFailure)
             isFailure = true

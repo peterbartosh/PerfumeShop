@@ -5,7 +5,7 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
 import androidx.navigation.NavGraphBuilder
 import com.example.perfumeshop.data_layer.utils.OptionType
-import com.example.perfumeshop.ui_layer.features.main.cart_feature.ui.CartViewModel
+import com.example.perfumeshop.ui_layer.features.main.cart_feature.cart.ui.CartViewModel
 import com.example.perfumeshop.ui_layer.features.main.profile_feature.edit_profile.navigation.editProfileScreen
 import com.example.perfumeshop.ui_layer.features.main.profile_feature.favourite.navigation.favouriteScreen
 import com.example.perfumeshop.ui_layer.features.main.profile_feature.favourite.ui.FavouriteViewModel
@@ -24,7 +24,7 @@ fun NavGraphBuilder.profileGraph(
     cartViewModel: CartViewModel,
     favouriteViewModel: FavouriteViewModel
 ){
-        profileScreen(onOptionClick = onOptionClick)
+        profileScreen(onOptionClick = onOptionClick, cartViewModel = cartViewModel, favouriteViewModel = favouriteViewModel)
 
         editProfileScreen(onClick = {})
 

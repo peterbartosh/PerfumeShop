@@ -4,7 +4,7 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import com.example.perfumeshop.ui_layer.components.LoadingIndicator
-import com.example.perfumeshop.ui_layer.features.main.cart_feature.ui.CartViewModel
+import com.example.perfumeshop.ui_layer.features.main.cart_feature.cart.ui.CartViewModel
 import com.example.perfumeshop.ui_layer.features.main.home_feature.search.ui.LazyProductList
 
 @Composable

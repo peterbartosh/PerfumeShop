@@ -22,57 +22,64 @@ import kotlinx.coroutines.launch
 import java.util.concurrent.TimeUnit
 
 class AuthViewModel : ViewModel() {
-    //val loadingState = MutableStateFlow(LoadingState.IDLE)
 
 
-    private val _loading = MutableLiveData(false)
-    val loading: LiveData<Boolean> = _loading
+//    private val _loading = MutableLiveData(false)
+//    val loading: LiveData<Boolean> = _loading
+
+    var isLoading by mutableStateOf(false)
 
     private val _auth = FirebaseAuth.getInstance()
     var storedVerificationId: String = ""
-    private var firstAndSecondName by mutableStateOf("")
-    private var sexP by mutableStateOf(2)
+
+
+    private var firstNameState by mutableStateOf("")
+    private var secondNameState by mutableStateOf("")
+    private var sexState by mutableStateOf(2)
 
     fun clear() {
         super.onCleared()
     }
 
     fun onLoginClicked(
-        displayName : String,
+        firstName : String,
+        secondName : String,
         sexInd : Int,
         phoneNumber: String,
         onCodeSent: () -> Unit,
         onSuccess: () -> Unit
     ) = viewModelScope.launch {
 
+        isLoading = true
+
         _auth.setLanguageCode("ru")
 
-        firstAndSecondName = displayName
-        sexP = sexInd
+        firstNameState = firstName
+        secondNameState = secondName
+        sexState = sexInd
 
         val callback = object : PhoneAuthProvider.OnVerificationStateChangedCallbacks() {
             override fun onVerificationCompleted(credential: PhoneAuthCredential) {
-                Log.d("phoneBook", "verification completed")
+                Log.d("PHONE_AUTH_TEST", "verification completed")
                 viewModelScope.launch {
                     signInWithPhoneAuthCredential(credential, onSuccess)
                 }
             }
 
             override fun onVerificationFailed(p0: FirebaseException) {
-                Log.d("phoneBook", "verification failed" + p0)
+                Log.d("PHONE_AUTH_TEST", "verification failed" + p0)
             }
 
             override fun onCodeSent(
                 verificationId: String,
                 token: PhoneAuthProvider.ForceResendingToken
             ) {
-                Log.d("phoneBook", "code sent $verificationId")
+                Log.d("PHONE_AUTH_TEST", "code sent $verificationId")
                 storedVerificationId = verificationId
                 onCodeSent()
+                isLoading = false
             }
         }
-
-        Log.d("PHONE_TEST", "onLoginClicked: $phoneNumber")
 
         val options =
             PhoneAuthOptions.newBuilder(_auth)
@@ -82,41 +89,36 @@ class AuthViewModel : ViewModel() {
                 .build()
 
         if (options != null) {
-            Log.d("phoneBook", options.toString())
+            Log.d("PHONE_AUTH_TEST", options.toString())
             PhoneAuthProvider.verifyPhoneNumber(options)
         }
     }
 
 
     fun verifyPhoneNumberWithCode(code: String, onSuccess: () -> Unit) = viewModelScope.launch {
-        Log.d("PHONE_TEST", "verifyPhoneNumberWithCode: $storedVerificationId")
         val credential = PhoneAuthProvider.getCredential(storedVerificationId, code)
         signInWithPhoneAuthCredential(credential, onSuccess)
     }
 
 
-    private suspend fun signInWithPhoneAuthCredential(
+    private fun signInWithPhoneAuthCredential(
         credential: PhoneAuthCredential,
         onSuccess: () -> Unit
     ) {
 
         viewModelScope.launch {
-
-
             _auth.signInWithCredential(credential)
                 .addOnCompleteListener { task ->
                     if (task.isSuccessful) {
-                        Log.d("DISP_NAME_TEST", FirebaseAuth.getInstance().currentUser?.displayName.toString())
 
-                        if (firstAndSecondName.trim().isNotEmpty())
+                        if (firstNameState.isNotEmpty() && secondNameState.isNotEmpty())
                             _auth.currentUser?.updateProfile(
                                 UserProfileChangeRequest.Builder()
-                                    .setDisplayName("$firstAndSecondName|$sexP").build()
-                        )
+                                    .setDisplayName("$firstNameState,$secondNameState,$sexState,,,").build())
+
 //                    if (_auth.currentUser?.phoneNumber?.isNullOrEmpty() == true)
 //                        _auth.currentUser?.updatePhoneNumber(credential.)
                         onSuccess()
-                        Log.d("DISP_NAME_TEST", FirebaseAuth.getInstance().currentUser?.displayName.toString())
 
                     } else Log.d(
                         "ERROR_ERROR",

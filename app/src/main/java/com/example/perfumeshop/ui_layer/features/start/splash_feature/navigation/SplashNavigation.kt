@@ -17,8 +17,6 @@ fun NavGraphBuilder.splashScreen(
     navigateAsk: () -> Unit,
     navigateMain: () -> Unit
 ) {
-        // TODO: Handle back stack for each top-level destination. At the moment each top-level
-        // destination may have own search screen's back stack.
         composable(route = splashRoute) {
             SplashScreen(navigateAsk = navigateAsk, navigateMain = navigateMain)
         }

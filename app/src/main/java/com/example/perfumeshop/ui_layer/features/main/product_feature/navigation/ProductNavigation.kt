@@ -5,9 +5,9 @@ import androidx.navigation.NavController
 import androidx.navigation.NavGraphBuilder
 import androidx.navigation.NavOptions
 import androidx.navigation.compose.composable
-import com.example.perfumeshop.ui_layer.features.main.cart_feature.navigation.cartActiveChild
-import com.example.perfumeshop.ui_layer.features.main.cart_feature.navigation.cartRoute
-import com.example.perfumeshop.ui_layer.features.main.cart_feature.ui.CartViewModel
+import com.example.perfumeshop.ui_layer.features.main.cart_feature.cart.navigation.cartRoute
+import com.example.perfumeshop.ui_layer.features.main.cart_feature.cartActiveChild
+import com.example.perfumeshop.ui_layer.features.main.cart_feature.cart.ui.CartViewModel
 import com.example.perfumeshop.ui_layer.features.main.home_feature.home.navigation.homeRoute
 import com.example.perfumeshop.ui_layer.features.main.home_feature.homeActiveChild
 import com.example.perfumeshop.ui_layer.features.main.home_feature.search.navigation.searchRoute

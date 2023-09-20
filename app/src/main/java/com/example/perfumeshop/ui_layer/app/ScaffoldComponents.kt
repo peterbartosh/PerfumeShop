@@ -1,5 +1,6 @@
 package com.example.perfumeshop.ui_layer.app
 
+import android.util.Log
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.isSystemInDarkTheme
@@ -44,10 +45,12 @@ import com.example.perfumeshop.data_layer.utils.getWidthPercent
 import com.example.perfumeshop.ui_layer.features.auth.code_verification_feature.navigation.codeVerificationRoute
 import com.example.perfumeshop.ui_layer.features.auth.login_register_feature.navigation.loginParentRoute
 import com.example.perfumeshop.ui_layer.features.auth.login_register_feature.navigation.loginRoute
-import com.example.perfumeshop.ui_layer.features.main.cart_feature.navigation.cartActiveChild
-import com.example.perfumeshop.ui_layer.features.main.cart_feature.navigation.cartRoute
+import com.example.perfumeshop.ui_layer.features.main.cart_feature.cart.navigation.cartRoute
+import com.example.perfumeshop.ui_layer.features.main.cart_feature.cartActiveChild
+import com.example.perfumeshop.ui_layer.features.main.cart_feature.order_making.navigation.orderMakingRoute
 import com.example.perfumeshop.ui_layer.features.main.getActiveChild
 import com.example.perfumeshop.ui_layer.features.main.home_feature.home.navigation.homeRoute
+import com.example.perfumeshop.ui_layer.features.main.home_feature.homeActiveChild
 import com.example.perfumeshop.ui_layer.features.main.home_feature.search.navigation.searchRoute
 import com.example.perfumeshop.ui_layer.features.main.product_feature.navigation.productCartRoute
 import com.example.perfumeshop.ui_layer.features.main.product_feature.navigation.productHomeRoute
@@ -69,16 +72,18 @@ fun MyTopAppBar(
     onSettingsClick : () -> Unit,
     onBackArrowClick : () -> Unit
 ){
-    val shape = RoundedCornerShape(30.dp)
+    //val shape = RoundedCornerShape(30.dp)
     CenterAlignedTopAppBar(
         modifier = Modifier
             //.height(50.dp)
-            .padding(top = 5.dp)
+            .padding(bottom = 5.dp)
             .shadow(
                 elevation = 10.dp,
-                shape = shape
+              //  shape = shape
             )
-            .background(color = Color.White, shape = shape),
+            .background(color = Color.White,
+                        //shape = shape
+            ),
         title = {
             Column(modifier = Modifier.fillMaxHeight(),
                    verticalArrangement = Arrangement.Center){
@@ -96,7 +101,7 @@ fun MyTopAppBar(
                          tint = Color.Black,
                          modifier = Modifier
                              .size(30.dp)
-                             .clickable { onBackArrowClick.invoke() })
+                             .clickable { onBackArrowClick() })
                 }
         },
         actions = {
@@ -203,8 +208,9 @@ fun BottomNavigationBar(
 
     NavigationBar(modifier = Modifier
         //.height(60.dp)
-        .shadow(elevation = 10.dp)
-        .background(color = Color.White)) {
+        .shadow(elevation = 10.dp),
+                  containerColor = Color.LightGray
+    ) {
 
         items.forEachIndexed { index, item ->
 
@@ -219,6 +225,7 @@ fun BottomNavigationBar(
                                   if (item.parentRoute != currentDestination?.route) {
 
                                       val route = getActiveChild(item.parentRoute)
+                                      Log.d("ROUTE_CH_TEST", "BottomNavigationBar: $route")
                                       navController.navigate(route = route){
                                           popUpTo(currentDestination?.id ?: navController.graph.findStartDestination().id){
                                               saveState = true
@@ -268,9 +275,10 @@ fun onBackArrowClick(navController: NavHostController) {
     }
 
     val route = when(curDestRoute){
-        in listOf(searchRoute, productHomeRoute) -> homeRoute.also { com.example.perfumeshop.ui_layer.features.main.home_feature.homeActiveChild = homeRoute }
-        productSearchRoute -> searchRoute.also { com.example.perfumeshop.ui_layer.features.main.home_feature.homeActiveChild = searchRoute }
+        in listOf(searchRoute, productHomeRoute) -> homeRoute.also { homeActiveChild = homeRoute }
+        productSearchRoute -> searchRoute.also { homeActiveChild = searchRoute }
         productCartRoute -> cartRoute.also { cartActiveChild = cartRoute }
+        orderMakingRoute -> cartRoute.also { cartActiveChild = cartRoute }
         in listOf(editProfileRoute, favouriteRoute, ordersRoute, productProfileRoute) -> profileRoute.also { profileActiveChild = profileRoute }
         loginRoute -> loginParentRoute
         codeVerificationRoute -> loginRoute
@@ -280,7 +288,7 @@ fun onBackArrowClick(navController: NavHostController) {
     navController.navigate(route = route){
         popUpTo(navController.currentDestination?.id ?:
         navController.graph.findStartDestination().id){
-            saveState = true
+            //saveState = true
             inclusive = true
         }
         launchSingleTop = true

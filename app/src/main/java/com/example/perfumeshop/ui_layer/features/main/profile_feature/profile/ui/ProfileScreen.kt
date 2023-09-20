@@ -14,11 +14,21 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import com.example.perfumeshop.R
 import com.example.perfumeshop.data_layer.utils.OptionType
+import com.example.perfumeshop.ui_layer.features.main.cart_feature.cart.ui.CartViewModel
+import com.example.perfumeshop.ui_layer.features.main.profile_feature.favourite.ui.FavouriteViewModel
 import com.google.firebase.auth.FirebaseAuth
 
 
 @Composable
-fun ProfileScreen(onOptionClick: (OptionType) -> Unit) {
+fun ProfileScreen(
+    onOptionClick: (OptionType) -> Unit,
+    cartViewModel: CartViewModel,
+    favouriteViewModel: FavouriteViewModel
+) {
+
+//  FirebaseAuth.getInstance().signOut()
+//    FirebaseAuth.getInstance().signInAnonymously()
+
 
     val isAnonymous = remember {
         mutableStateOf(FirebaseAuth.getInstance().currentUser?.isAnonymous == true)
@@ -30,15 +40,16 @@ fun ProfileScreen(onOptionClick: (OptionType) -> Unit) {
             if (isAnonymous.value)
                 NotRegisteredSection(onOptionClick = onOptionClick)
             else
-                RegisteredSection(onOptionClick = onOptionClick) { isAnonymous.value = true }
-
-//            ProfileSection(onEditProfileClick = { onOptionClick.invoke(OptionType.Edit) })
-//            NotRegisteredSection(onOptionClick = onOptionClick)
+                RegisteredSection(onOptionClick = onOptionClick, onSignOutClick = {
+                    FirebaseAuth.getInstance().signOut()
+                    FirebaseAuth.getInstance().signInAnonymously()
+                    isAnonymous.value = true
+                    cartViewModel.clearContent()
+                    favouriteViewModel.clearContent()
+                })
 
         }
-
     }
-
 }
 
 @Composable
@@ -57,30 +68,31 @@ fun RegisteredSection(onOptionClick: (OptionType) -> Unit, onSignOutClick: () ->
     )
 
     OptionsSection(
+
         sectionTitle = "Контакты", listOf(
             Option(
                 "Телефон",
                 OptionType.PhoneNumber,
                 Icons.Default.Phone,
-                "+111111111111_link"
+                "+375 (44) 575-43-25"
             ),
             Option(
                 "E-mail",
                 OptionType.Gmail,
                 Icons.Default.Email,
-                "goldpardum@gmail.com_link"
+                "goldappsender@gmail.com"
             ),
             Option(
                 "Telegram",
                 OptionType.Telegram,
                 R.drawable.telegram_icon,
-                "telegram_link"
+                "@n_garkavaia"
             ),
             Option(
                 "WhatsApp",
                 OptionType.WhatsApp,
                 R.drawable.whatsapp_icon,
-                "whatsapp_link"
+                "+74951506463"
             )
         ), onOptionClick = onOptionClick
     )

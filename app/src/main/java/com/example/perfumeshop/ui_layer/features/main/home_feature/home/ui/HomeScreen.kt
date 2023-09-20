@@ -19,7 +19,7 @@ import com.example.perfumeshop.data_layer.utils.QueryType
 import com.example.perfumeshop.ui_layer.theme.Gold
 import com.example.perfumeshop.ui_layer.theme.Pink
 import com.example.perfumeshop.ui_layer.components.LoadingIndicator
-import com.example.perfumeshop.ui_layer.features.main.cart_feature.ui.CartViewModel
+import com.example.perfumeshop.ui_layer.features.main.cart_feature.cart.ui.CartViewModel
 import com.example.perfumeshop.ui_layer.features.main.home_feature.search.ui.LazyProductList
 import com.example.perfumeshop.ui_layer.features.main.home_feature.search.ui.SearchForm
 import com.example.perfumeshop.ui_layer.features.main.profile_feature.favourite.ui.FavouriteViewModel

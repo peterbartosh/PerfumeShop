@@ -5,7 +5,7 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
 import androidx.navigation.NavGraphBuilder
 import com.example.perfumeshop.data_layer.utils.QueryType
-import com.example.perfumeshop.ui_layer.features.main.cart_feature.ui.CartViewModel
+import com.example.perfumeshop.ui_layer.features.main.cart_feature.cart.ui.CartViewModel
 import com.example.perfumeshop.ui_layer.features.main.home_feature.home.navigation.homeRoute
 import com.example.perfumeshop.ui_layer.features.main.home_feature.home.navigation.homeScreen
 import com.example.perfumeshop.ui_layer.features.main.home_feature.home.ui.HomeViewModel

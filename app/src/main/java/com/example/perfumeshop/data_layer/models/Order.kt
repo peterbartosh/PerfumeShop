@@ -14,19 +14,23 @@ sealed class Status(){
 }
 
 data class Order(
-    @Exclude var id : String? = null,
+    @Exclude var id: String? = null,
+
+    var number: String? = null,
 
     @get:PropertyName("user_id")
     @set:PropertyName("user_id")
-    var userId : String? = null,
+    var userId: String? = null,
 
     @get:PropertyName("product_id")
     @set:PropertyName("product_id")
-    var productId : String? = null,
+    var productIds: List<Map<String, Int>>? = null,
 
-    var amount : Int? = null,
+   // var amount : Int? = null,
 
-    var date : Timestamp?  = null,
+    var address: String? = null,
 
-    var status : Status
+    var date: Timestamp?  = null,
+
+   // var status : Status
 )

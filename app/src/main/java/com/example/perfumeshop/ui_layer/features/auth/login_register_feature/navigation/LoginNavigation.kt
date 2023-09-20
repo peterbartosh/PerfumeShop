@@ -25,7 +25,7 @@ fun NavGraphBuilder.loginScreen(
 ) {
     composable(route = loginRoute) {
         val viewModel = hiltViewModel<AuthViewModel>()
-        LoginScreen(viewModel = viewModel,onCodeSent = onCodeSent, onSuccess = onSuccess)
+        LoginScreen(authViewModel = viewModel, onCodeSent = onCodeSent, onSuccess = onSuccess)
     }
 
 

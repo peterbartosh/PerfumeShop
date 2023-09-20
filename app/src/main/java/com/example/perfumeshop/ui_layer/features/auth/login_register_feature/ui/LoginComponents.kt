@@ -31,6 +31,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.RectangleShape
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.AnnotatedString
 import androidx.compose.ui.text.TextStyle
@@ -45,6 +46,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.example.perfumeshop.R
 import com.example.perfumeshop.ui_layer.components.LoadingIndicator
+import com.example.perfumeshop.ui_layer.components.showToast
 import com.example.perfumeshop.ui_layer.theme.Gold
 
 
@@ -60,7 +62,7 @@ import com.example.perfumeshop.ui_layer.theme.Gold
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun InputField(
-    modifier: Modifier = Modifier,
+    modifier: Modifier = Modifier.padding(5.dp).fillMaxWidth(),
     valueState: MutableState<String>,
     onValueChange : (String) -> Unit = { valueState.value = it},
     labelId: String,
@@ -80,9 +82,7 @@ fun InputField(
                       label = { Text(text = labelId)},
                       singleLine = isSingleLine,
                       textStyle = textStyle,
-                      modifier = modifier
-                          .padding(5.dp)
-                          .fillMaxWidth(),
+                      modifier = modifier.height(63.dp),
                       enabled = enabled,
                       keyboardOptions = KeyboardOptions(keyboardType = keyboardType, imeAction = imeAction),
                       keyboardActions = keyboardActions,
@@ -95,7 +95,10 @@ fun InputField(
 fun SexPicker(selectedInd : MutableState<Int>) {
     val sexes = listOf("Мужской", "Женский", "Не задано")
 
-    Row(modifier = Modifier.fillMaxWidth()) {
+    Row(
+        modifier = Modifier.fillMaxWidth(),
+        verticalAlignment = Alignment.CenterVertically
+    ) {
         Text(text = "Пол:")
 
         Spacer(modifier = Modifier.width(10.dp))
@@ -231,27 +234,6 @@ private class PhoneOffsetMapper(val mask: String, val numberChar: Char) : Offset
         offset - mask.take(offset).count { it != numberChar }
 }
 
-@Composable
-fun SubmitButton(text: String,
-                 loading: Boolean,
-                 validInputs: Boolean,
-                 onClick: () -> Unit) {
-    Button(
-        onClick = {
-            onClick.invoke()
-        },
-        modifier = Modifier
-            .padding(3.dp)
-            .fillMaxWidth(),
-        enabled = !loading && validInputs,
-        shape = CircleShape
-    ) {
-        if (loading) LoadingIndicator()
-        else Text(text = text, modifier = Modifier.padding(5.dp))
-
-    }
-
-}
 
 
 

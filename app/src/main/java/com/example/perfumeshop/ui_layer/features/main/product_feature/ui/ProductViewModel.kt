@@ -26,13 +26,10 @@ open class ProductViewModel @Inject constructor(private val repository: FireRepo
     var isLoading by mutableStateOf(false)
     var isSuccess by mutableStateOf(false)
     var isFailure by mutableStateOf(false)
-    var isInitialized by mutableStateOf(false)
 
     fun clear(){
         super.onCleared()
     }
-
-
 
     fun loadProduct(productId: String) = viewModelScope.launch {
         product = repository.getProduct(productId)
@@ -40,7 +37,6 @@ open class ProductViewModel @Inject constructor(private val repository: FireRepo
     }
 
     private fun loadProductReviews(productId : String) = viewModelScope.launch {
-        isInitialized = true
         isFailure = false
         isLoading = true
         repository.getProductReviews(productId).catch {

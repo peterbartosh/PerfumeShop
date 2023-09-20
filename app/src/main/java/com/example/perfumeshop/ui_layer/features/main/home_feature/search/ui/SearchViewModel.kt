@@ -26,9 +26,12 @@ class SearchViewModel @Inject constructor(private val repository: FireRepository
     var isSuccess by mutableStateOf(false)
     var isFailure by mutableStateOf(false)
 
-    var initSearchQuery by mutableStateOf(true)
-
     fun clear(){
+        super.onCleared()
+    }
+
+    override fun onCleared() {
+        Log.d("SEARCH_VM_CLEARED", "onCleared: DONE")
         super.onCleared()
     }
 
@@ -42,10 +45,12 @@ class SearchViewModel @Inject constructor(private val repository: FireRepository
         volume : List<Int>? = null
     ) = viewModelScope.launch {
 
+        Log.d("SE_QUE_TEST", "searchQuery: DONE")
+
         isFailure = false
         isLoading = true
         isSuccess = false
-        initSearchQuery = false
+        //initSearchQuery = false
 
         _searchList.value = mutableListOf()
 

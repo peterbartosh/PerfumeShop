@@ -22,15 +22,15 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.focus.FocusRequester
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalSoftwareKeyboardController
-import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
-import com.example.perfumeshop.R
+import com.example.perfumeshop.ui_layer.components.LoadingIndicator
+import com.example.perfumeshop.ui_layer.components.SubmitButton
 
 @Composable
 fun LoginScreen(
-    viewModel: AuthViewModel, onCodeSent : () -> Unit, onSuccess : () -> Unit
+    authViewModel: AuthViewModel, onCodeSent : () -> Unit, onSuccess : () -> Unit
 ) {
 
     val showLoginForm = rememberSaveable {
@@ -42,19 +42,18 @@ fun LoginScreen(
             verticalArrangement = Arrangement.Top,
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
-            //ReaderLogo()
-
-
 
             if (showLoginForm.value)
-                UserForm(loading = false, isCreateAccount = false) { fn, sn, ph, sexInd ->
-                    viewModel.onLoginClicked(displayName = "$fn $sn", sexInd = sexInd,
-                                             phoneNumber = ph, onCodeSent = onCodeSent, onSuccess = onSuccess)
+                UserForm(isCreateAccount = false) { fn, sn, ph, sexInd ->
+                    authViewModel.onLoginClicked(firstName = fn, secondName = sn,
+                                                 sexInd = sexInd, phoneNumber = ph,
+                                                 onCodeSent = onCodeSent, onSuccess = onSuccess)
                 }
             else
-                UserForm(loading = false, isCreateAccount = true) { fn, sn, ph, sexInd ->
-                    viewModel.onLoginClicked(displayName = "$fn $sn", sexInd = sexInd,
-                                             phoneNumber = ph, onCodeSent = onCodeSent, onSuccess = onSuccess)
+                UserForm(isCreateAccount = true) { fn, sn, ph, sexInd ->
+                    authViewModel.onLoginClicked(firstName = fn, secondName = sn,
+                                                 sexInd = sexInd, phoneNumber = ph,
+                                                 onCodeSent = onCodeSent, onSuccess = onSuccess)
                 }
 
             Spacer(modifier = Modifier.height(15.dp))
@@ -65,8 +64,8 @@ fun LoginScreen(
                 verticalAlignment = Alignment.CenterVertically
             ) {
 
-                val askText = if (showLoginForm.value) "New user?" else "Already have an account?"
-                val clickableText = if (showLoginForm.value) "Sign up " else "Login "
+                val askText = if (showLoginForm.value) "Впервые здесь? " else "Есть аккаунт? "
+                val clickableText = if (showLoginForm.value) "Регистрация " else "Вход "
 
                 Text(text = askText)
                 Text(text = clickableText,
@@ -75,6 +74,10 @@ fun LoginScreen(
                          showLoginForm.value = !showLoginForm.value
                      })
             }
+
+            if (authViewModel.isLoading)
+                LoadingIndicator()
+
         }
     }
 }
@@ -83,9 +86,9 @@ fun LoginScreen(
 
 @OptIn(ExperimentalComposeUiApi::class)
 @Composable
-fun UserForm(loading: Boolean,
-             isCreateAccount: Boolean,
-             onDone: (String, String, String, Int) -> Unit = {f, s, e, sex -> }
+fun UserForm(
+    isCreateAccount: Boolean,
+    onDone: (String, String, String, Int) -> Unit = { f, s, e, sex -> }
 ){
     val firstName = remember { mutableStateOf("") }
     val secondName = remember { mutableStateOf("") }
@@ -94,22 +97,28 @@ fun UserForm(loading: Boolean,
 
     val keyboardController = LocalSoftwareKeyboardController.current
 
+    val validInputsState = remember(firstName.value, secondName.value, phoneNumber.value) {
+        mutableStateOf(
+            if (isCreateAccount)
+            firstName.value.trim().isNotEmpty() &&
+                    secondName.value.trim().isNotEmpty() &&
+                    phoneNumber.value.length == 9
+            else
+                phoneNumber.value.length == 9
+        )
+    }
+
     Column(modifier = Modifier, horizontalAlignment = Alignment.CenterHorizontally) {
 
 
         if (isCreateAccount) {
-            Text(
-                text = stringResource(id = R.string.create_acct),
-                modifier = Modifier.padding(4.dp)
-            )
 
-
-            InputField(valueState = firstName, labelId = "Имя", enabled = !loading,
+            InputField(valueState = firstName, labelId = "Имя", enabled = true,
                        keyboardActions = KeyboardActions {
                            FocusRequester.Default
                        })
 
-            InputField(valueState = secondName, labelId = "Фамилия", enabled = !loading,
+            InputField(valueState = secondName, labelId = "Фамилия", enabled = true,
                        keyboardActions = KeyboardActions {
                            FocusRequester.Default
                        })
@@ -120,7 +129,7 @@ fun UserForm(loading: Boolean,
         PhoneInput(phone = phoneNumber,
                    mask = "(00) 000-00-00",
                    maskNumber = '0',
-                   enabled = !loading,
+                   enabled = true,
                    onPhoneChanged = {
                        phoneNumber.value = it
                        Log.d("PHONE_PHONE", "UserForm: ${phoneNumber.value}")
@@ -129,8 +138,7 @@ fun UserForm(loading: Boolean,
 
         SubmitButton(
             text = if (isCreateAccount) "Create Account" else "Login",
-            loading = loading,
-            validInputs = true
+            validInputsState = validInputsState
         ){
             onDone.invoke(firstName.value.trim(),
                           secondName.value.trim(),

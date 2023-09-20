@@ -148,15 +148,6 @@ fun LazyProductList(
 
 }
 
-//= Product(id = "wrjqoawWkcad",
-//brand = "Gucci",
-//collection = "Flora",
-//volume = 125,
-//price = 350.0,
-//isOnHand = true,
-//sex = Sex.Female),
-
-//@Preview(showBackground = true)
 @Composable
 fun ProductCard(
     product: Product,
@@ -257,6 +248,7 @@ fun ProductCard(
                         )
                     }
                 }
+
             }
 
             Column(horizontalAlignment = Alignment.CenterHorizontally,
@@ -305,7 +297,6 @@ fun ProductCard(
 
     }
 }
-
 
 
 @Composable

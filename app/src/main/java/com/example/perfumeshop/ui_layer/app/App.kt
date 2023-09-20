@@ -24,9 +24,10 @@ import androidx.navigation.compose.rememberNavController
 import com.example.perfumeshop.ui_layer.app.navigation.AppNavHost
 import com.example.perfumeshop.ui_layer.features.auth.code_verification_feature.navigation.codeVerificationRoute
 import com.example.perfumeshop.ui_layer.features.auth.login_register_feature.navigation.loginRoute
-import com.example.perfumeshop.ui_layer.features.main.cart_feature.navigation.cartActiveChild
-import com.example.perfumeshop.ui_layer.features.main.cart_feature.navigation.cartRoute
-import com.example.perfumeshop.ui_layer.features.main.cart_feature.ui.CartViewModel
+import com.example.perfumeshop.ui_layer.features.main.cart_feature.cart.navigation.cartRoute
+import com.example.perfumeshop.ui_layer.features.main.cart_feature.cartActiveChild
+import com.example.perfumeshop.ui_layer.features.main.cart_feature.cart.ui.CartViewModel
+import com.example.perfumeshop.ui_layer.features.main.cart_feature.order_making.navigation.orderMakingRoute
 import com.example.perfumeshop.ui_layer.features.main.home_feature.home.navigation.homeRoute
 import com.example.perfumeshop.ui_layer.features.main.home_feature.home.ui.HomeViewModel
 import com.example.perfumeshop.ui_layer.features.main.home_feature.homeActiveChild
@@ -105,7 +106,7 @@ fun App() {
 
             bottomBarSelectedIndex = when(dest.route){
                 in listOf(homeRoute, searchRoute, productHomeRoute, productSearchRoute) -> 0
-                in listOf(cartRoute, productCartRoute) -> 1
+                in listOf(cartRoute, productCartRoute, orderMakingRoute) -> 1
                 in listOf(profileRoute, editProfileRoute, favouriteRoute, ordersRoute) -> 2
                 else -> bottomBarSelectedIndex
             }

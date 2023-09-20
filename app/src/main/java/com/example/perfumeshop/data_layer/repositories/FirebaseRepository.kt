@@ -9,22 +9,25 @@ import com.example.perfumeshop.data_layer.utils.QueryType
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.firestore.FirebaseFirestore
 import com.google.firebase.firestore.Query
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Job
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.flow
+import kotlinx.coroutines.launch
 import kotlinx.coroutines.tasks.await
 import javax.inject.Inject
 
-fun Query.filterPrice(range : ClosedFloatingPointRange<Float>) : Query {
+internal fun Query.filterPrice(range : ClosedFloatingPointRange<Float>) : Query {
     return this
         .whereGreaterThan("price", range.start)
         .whereLessThan("price", range.endInclusive)
 }
 
-fun Query.filterInOnHand() : Query {
+internal fun Query.filterInOnHand() : Query {
     return this.whereIn("is_on_hand", listOf(true))
 }
 
-fun Query.filterVolume(list : List<Int>) : Query {
+internal fun Query.filterVolume(list : List<Int>) : Query {
     return this.whereIn("volume", list)
 }
 
@@ -38,6 +41,55 @@ class FireRepository @Inject constructor(
     private val queryOrders : Query,
     private val queryHot : Query,
 ) {
+
+
+    suspend fun saveToFirebase(item: Any, collectionName: String) : Pair<Boolean, Exception?> {
+        var state : Pair<Boolean, Exception?> = Pair(false, null)
+        val doc = FirebaseFirestore.getInstance().collection(collectionName)
+            .add(item)
+            .addOnFailureListener{ state = Pair(false, it)
+                Log.d("SAVE_TO_DATAB", "saveToFirebase: ${it.message}")}
+            .await()
+        doc.update("id", doc.id)
+            .addOnSuccessListener { state = Pair(true, null)
+                Log.d("SAVE_TO_DATAB", "saveToFirebase: SUCC")}
+            .addOnFailureListener{ state = Pair(false, it)
+                Log.d("SAVE_TO_DATAB", "saveToFirebase: FAIL")
+    }.await()
+        return state
+    }
+
+    fun deleteFromDatabase(id: String, collectionName: String, onSuccess: () -> Unit) {
+
+        CoroutineScope(Job()).launch {
+            FirebaseFirestore.getInstance()
+                .collection(collectionName)
+                .document(id)
+                .delete()
+                .addOnCompleteListener {
+                    if (it.isSuccessful) {
+                        onSuccess.invoke()
+                    }
+                }
+        }
+    }
+
+    fun updateFieldInDatabase(
+        collectionPath : String,
+        id : String,
+        fieldPath : String,
+        updatedValue : Any) {
+
+            FirebaseFirestore.getInstance()
+                .collection(collectionPath)
+                .document(id)
+                .update(fieldPath, updatedValue)
+                .addOnCompleteListener {
+                    Log.d("DATABASE_TASK", "updateFieldInDatabase: SUCCESS")
+                }.addOnFailureListener {
+                    Log.d("DATABASE_TASK", "updateFieldInDatabase: FAILED")
+                }
+    }
 
     suspend fun getUserOrders() : Flow<Order> = flow {
         queryOrders.whereIn("user_id", listOf(FirebaseAuth.getInstance().uid))
