@@ -11,7 +11,7 @@ data class Product(
     var brand : String? = null,
     var collection : String? = null,
 
-    var volume : Int? = null,
+    var volume: String? = null,
     var price : Double? = null, // add currency converter (BLR, USD, EUR)
     var sex : Sex? = null,
 

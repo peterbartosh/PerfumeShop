@@ -15,7 +15,9 @@ import androidx.compose.material3.Text
 import androidx.compose.ui.Modifier
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import androidx.navigation.compose.rememberNavController
 import com.example.perfumeshop.data_layer.mail.EmailSender
+import com.example.perfumeshop.ui_layer.admin.AdminNavHost
 import com.example.perfumeshop.ui_layer.app.App
 import com.google.firebase.Timestamp
 import dagger.hilt.android.AndroidEntryPoint
@@ -32,7 +34,8 @@ class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContent {
-            App()
+            val navController = rememberNavController()
+            AdminNavHost(navController = navController)
         }
     }
 

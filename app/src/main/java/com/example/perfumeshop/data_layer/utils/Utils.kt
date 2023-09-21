@@ -38,17 +38,18 @@ fun getPredicateByQuery(queryType: QueryType, query : String) : Predicate<Produc
                                 query.trim().lowercase().contains(p.brand?.trim()?.lowercase()!!)
 
                 }
-                QueryType.volume -> Predicate{ p ->
-                    p.volume in query.split('v')[0].toInt()..query.split('v')[1].toInt()
-                }
+//                QueryType.volume -> Predicate{ p ->
+//                    p.volume in query.split('v')[0].toInt()..query.split('v')[1].toInt()
+//                }
                 QueryType.price -> Predicate{ p ->
                     p.price!! >= query.split('p')[0].toDouble() &&
                             p.price!! <= query.split('p')[1].toDouble()
                 }
                 QueryType.sex -> Predicate{ p ->
-                    query.map { ch -> sexEntities[ch.digitToInt()] }.any { sex -> p.sex == sex }
+                    query.map { ch -> sexEntries[ch.digitToInt()] }.any { sex -> p.sex == sex }
                 }
                 QueryType.is_on_hand -> Predicate{ p -> p.isOnHand!! }
+                else -> Predicate{ true}
             }
         }
 //sealed class TaskState(loading : Boolean? = null, success : Boolean ? = null){

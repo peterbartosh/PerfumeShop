@@ -63,6 +63,10 @@ dependencies {
     //material icons - use with caution!
     //implementation "androidx.compose.material:material-icons-extended:1.5.0"
 
+    // poi for excel parse
+    implementation("org.apache.poi:poi:5.2.3")
+    implementation("org.apache.poi:poi-ooxml:5.2.3")
+
     // java mail
     implementation 'com.sun.mail:android-mail:1.6.6'
     implementation 'com.sun.mail:android-activation:1.6.7'

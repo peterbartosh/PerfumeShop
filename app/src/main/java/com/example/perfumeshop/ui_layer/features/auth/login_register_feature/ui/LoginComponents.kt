@@ -110,10 +110,13 @@ fun SexPicker(selectedInd : MutableState<Int>) {
 }
 
 @Composable
-fun SelectButton(text : String, ind : Int, selectedInd : MutableState<Int>) {
+fun SelectButton(text : String, ind : Int, selectedInd : MutableState<Int>, optionalOnClick : () -> Unit = {}) {
 
     Button(
-        onClick = { selectedInd.value = ind },
+        onClick = {
+            selectedInd.value = ind
+                  optionalOnClick()
+                  },
         shape = RoundedCornerShape(10.dp),
         colors = ButtonDefaults.buttonColors(containerColor = Color.White),
         border = BorderStroke(width = 1.dp, color = if (selectedInd.value == ind) Gold else Color.LightGray),

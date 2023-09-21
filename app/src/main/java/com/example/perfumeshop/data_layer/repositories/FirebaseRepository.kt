@@ -5,16 +5,20 @@ import com.example.perfumeshop.data_layer.models.Order
 import com.example.perfumeshop.data_layer.models.Product
 import com.example.perfumeshop.data_layer.models.Review
 import com.example.perfumeshop.data_layer.models.User
+import com.example.perfumeshop.data_layer.utils.ProductType
 import com.example.perfumeshop.data_layer.utils.QueryType
+import com.google.common.collect.ImmutableList
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.firestore.FirebaseFirestore
 import com.google.firebase.firestore.Query
 import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.tasks.await
+import kotlinx.coroutines.withContext
 import javax.inject.Inject
 
 internal fun Query.filterPrice(range : ClosedFloatingPointRange<Float>) : Query {
@@ -23,7 +27,7 @@ internal fun Query.filterPrice(range : ClosedFloatingPointRange<Float>) : Query 
         .whereLessThan("price", range.endInclusive)
 }
 
-internal fun Query.filterInOnHand() : Query {
+internal fun Query.filterIsOnHand() : Query {
     return this.whereIn("is_on_hand", listOf(true))
 }
 
@@ -71,6 +75,37 @@ class FireRepository @Inject constructor(
                         onSuccess.invoke()
                     }
                 }
+        }
+    }
+
+    suspend fun deleteProducts(
+        productType: ProductType,
+        volumes : ImmutableList<Int>,
+        onSuccess: () -> Unit) = withContext(Dispatchers.IO){
+
+            val productsCollection = FirebaseFirestore.getInstance()
+                .collection("products")
+
+            val docIds = productsCollection
+                .whereIn("type", listOf(productType.name))
+                .apply {
+                    if (volumes.isNotEmpty())
+                        this.whereIn("volume", volumes)
+                    else
+                        this
+                }
+                .get().await().documents.map { it.id }
+
+            for (id in docIds) productsCollection.document(id).delete()
+    }
+
+    suspend fun createProducts(products: ImmutableList<Product>) = withContext(Dispatchers.IO){
+        val productsCollection = FirebaseFirestore.getInstance()
+            .collection("products")
+
+        for (product in products) {
+            val id = product.id
+            if (id != null) productsCollection.document(id).set(product)
         }
     }
 
@@ -123,7 +158,7 @@ class FireRepository @Inject constructor(
             if (maxValue != null || minValue != null)
                 q.filterPrice((minValue ?: 0f)..(maxValue ?: 10000f))
             if (isOnHand != null)
-                q.filterInOnHand()
+                q.filterIsOnHand()
             if (volumes != null)
                 q.filterVolume(volumes)
             q.get().await().documents.forEach { ds ->
