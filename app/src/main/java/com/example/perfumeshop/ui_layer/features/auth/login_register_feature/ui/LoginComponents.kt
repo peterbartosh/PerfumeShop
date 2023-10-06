@@ -15,13 +15,16 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.layout.wrapContentHeight
 import androidx.compose.foundation.layout.wrapContentWidth
-import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.foundation.text.KeyboardOptions
+import androidx.compose.material.icons.Icons
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -31,7 +34,6 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.RectangleShape
-import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.AnnotatedString
 import androidx.compose.ui.text.TextStyle
@@ -39,25 +41,68 @@ import androidx.compose.ui.text.buildAnnotatedString
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.input.OffsetMapping
+import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.text.input.TransformedText
 import androidx.compose.ui.text.input.VisualTransformation
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.example.perfumeshop.R
-import com.example.perfumeshop.ui_layer.components.LoadingIndicator
-import com.example.perfumeshop.ui_layer.components.showToast
 import com.example.perfumeshop.ui_layer.theme.Gold
 
 
-//@Composable
-//fun ReaderLogo(modifier: Modifier = Modifier) {
-//    Text(
-//        modifier = modifier.padding(16.dp),
-//        text = "Reader App", style =
-//        TextStyle(color = Color.Red, fontSize = 25.sp, fontStyle = FontStyle.Italic)
-//    )
-//}
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+fun PasswordInput(
+    modifier: Modifier = Modifier,
+    passwordState: MutableState<String>,
+    label: String,
+    enabled: Boolean = true,
+    passwordVisibility: MutableState<Boolean>,
+    imeAction: ImeAction = ImeAction.Done,
+    onAction: KeyboardActions = KeyboardActions.Default,
+) {
+
+    val visualTransformation =
+        if (passwordVisibility.value)
+            VisualTransformation.None
+        else
+            PasswordVisualTransformation()
+
+    OutlinedTextField(value = passwordState.value,
+                      onValueChange = { passwordState.value = it },
+                      label = { Text(text = label) },
+                      singleLine = true,
+                      textStyle = TextStyle(fontSize = 18.sp, color = MaterialTheme.colorScheme.onBackground),
+                      modifier = modifier
+                          .padding(bottom = 10.dp, start = 10.dp, end = 10.dp)
+                          .fillMaxWidth(),
+                      enabled = enabled,
+                      keyboardOptions = KeyboardOptions(
+                          keyboardType = KeyboardType.Password,
+                          imeAction = imeAction),
+                      visualTransformation = visualTransformation,
+                      trailingIcon = { PasswordVisibility(passwordVisibility = passwordVisibility) },
+                      keyboardActions = onAction)
+
+}
+
+@Composable
+fun PasswordVisibility(passwordVisibility: MutableState<Boolean>) {
+    IconButton(onClick = { passwordVisibility.value = !passwordVisibility.value}) {
+        Icon(
+            painter = painterResource(id =
+              if (passwordVisibility.value)
+                    R.drawable.hide_password
+              else
+                  R.drawable.show_password
+            ),
+            contentDescription = "show / hide pwd"
+        )
+
+    }
+
+}
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -65,7 +110,7 @@ fun InputField(
     modifier: Modifier = Modifier.padding(5.dp).fillMaxWidth(),
     valueState: MutableState<String>,
     onValueChange : (String) -> Unit = { valueState.value = it},
-    labelId: String,
+    label: String,
     enabled: Boolean,
     isSingleLine: Boolean = true,
     imeAction: ImeAction = ImeAction.Next,
@@ -79,7 +124,7 @@ fun InputField(
 
     OutlinedTextField(value = valueState.value,
                       onValueChange = onValueChange,
-                      label = { Text(text = labelId)},
+                      label = { Text(text = label)},
                       singleLine = isSingleLine,
                       textStyle = textStyle,
                       modifier = modifier.height(63.dp),
@@ -114,8 +159,13 @@ fun SelectButton(text : String, ind : Int, selectedInd : MutableState<Int>, opti
 
     Button(
         onClick = {
-            selectedInd.value = ind
+            if (selectedInd.value == ind)
+                selectedInd.value = -1
+            else {
+                selectedInd.value = ind
+            }
                   optionalOnClick()
+
                   },
         shape = RoundedCornerShape(10.dp),
         colors = ButtonDefaults.buttonColors(containerColor = Color.White),
@@ -178,7 +228,7 @@ fun PhoneInput(
             modifier = modifier,
             valueState = phone,
             onValueChange = { onPhoneChanged(it.take(mask.count { it == maskNumber })) },
-            labelId = "Телефон",
+            label = "Телефон",
             enabled = enabled,
             keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
             visualTransformation = PhoneVisualTransformation(mask, maskNumber)

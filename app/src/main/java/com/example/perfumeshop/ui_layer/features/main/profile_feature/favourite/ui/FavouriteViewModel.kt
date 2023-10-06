@@ -5,6 +5,8 @@ import android.util.Log
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
+import androidx.lifecycle.LiveData
+import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.perfumeshop.data_layer.models.Product
@@ -23,13 +25,12 @@ class FavouriteViewModel @Inject constructor(private val repository: FireReposit
     private var _userProducts = MutableStateFlow<MutableList<Product>>(value = mutableListOf())
     var userProducts: StateFlow<List<Product>> = _userProducts
 
-
     var isLoading  by mutableStateOf(false)
     var isSuccess  by mutableStateOf(false)
     var isFailure  by mutableStateOf(false)
-    //var isInitialized  by mutableStateOf(false)
 
-    //var initSearchQuery by mutableStateOf(true)
+    //var isCashPrice by mutableStateOf(true)
+
 
     init {
         if (FirebaseAuth.getInstance().currentUser?.isAnonymous == false)
@@ -40,40 +41,39 @@ class FavouriteViewModel @Inject constructor(private val repository: FireReposit
         super.onCleared()
     }
 
+    override fun onCleared() {
+        Log.d("VM_LFC_TEST", "onCleared: cartVM cleared")
+        super.onCleared()
+    }
+
     fun clearContent(){
         _userProducts.value.clear()
         userProducts = _userProducts
     }
 
-    fun addToFavourite(product: Product){
+    fun addToFavourite(product: Product) = viewModelScope.launch {
         _userProducts.value.add(product)
-        userProducts = _userProducts
-        updateFavouriteInDatabase()
+        //userProducts = _userProducts
+        FirebaseAuth.getInstance().uid.let { uid ->
+            if (uid != null)
+                repository.addFavouriteObj(product.id.toString(), uid)
+        }
 
         //Log.d("USER_PRODS_TEST", userProducts.value.toString())
     }
 
-    fun removeFromFavourite(productId: String){
+    fun removeFromFavourite(productId: String) = viewModelScope.launch {
         _userProducts.value.removeIf { p -> p.id == productId }
-        userProducts = _userProducts
-        updateFavouriteInDatabase()
-        //Log.d("USER_PRODS_TEST", userProducts.value.toString())
+        //userProducts = _userProducts
+        FirebaseAuth.getInstance().uid.let { uid ->
+            if (uid != null)
+                repository.deleteFavouriteObj(productId, uid)
+        }
 
     }
 
     fun isInFavourite(productId : String) : Boolean =
         _userProducts.value.find { p -> p.id!! == productId } != null
-
-    private fun updateFavouriteInDatabase() = viewModelScope.launch {
-        val id = FirebaseAuth.getInstance().uid
-        if (!id.isNullOrEmpty())
-            repository.updateFieldInDatabase(
-                collectionPath = "users",
-                id = id,
-                fieldPath = "favourite",
-                updatedValue = _userProducts.value.map { it.id }
-            )
-    }
 
     fun loadUserProducts() {
         val auth = FirebaseAuth.getInstance()
@@ -95,10 +95,9 @@ class FavouriteViewModel @Inject constructor(private val repository: FireReposit
 
                 isLoading = false
 
-                if (_userProducts.value.isEmpty() || isFailure)
-                    isFailure = true
-                else
-                    isSuccess = true
+                if (!isFailure) isSuccess = true
+
+                //Log.d("ERROR_ERROR", "loadUserProducts: $isSuccess $isFailure $isLoading")
 
             }
     }

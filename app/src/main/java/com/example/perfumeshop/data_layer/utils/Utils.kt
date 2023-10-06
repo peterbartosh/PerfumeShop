@@ -16,42 +16,6 @@ import java.time.ZoneOffset
 import java.time.format.DateTimeFormatter
 import java.util.function.Predicate
 
-
-fun getPredicateByQuery(queryType: QueryType, query : String) : Predicate<Product> {
-            return when(queryType){
-                QueryType.collection -> Predicate{ p ->
-                    if (p.collection == null) false
-                    else
-                    p.collection?.trim()?.lowercase() == query.trim().lowercase() ||
-                            p.collection?.trim()?.lowercase()
-                                ?.contains(query.trim().lowercase()) ?: false ||
-                            query.trim().lowercase().contains(p.collection?.trim()?.lowercase()!!)
-
-                }
-                QueryType.type -> Predicate{ p -> p.type == query}
-                QueryType.brand -> Predicate{ p ->
-                    if (p.brand == null) false
-                    else
-                        p.brand?.trim()?.lowercase() == query.trim().lowercase() ||
-                                p.brand?.trim()?.lowercase()
-                                    ?.contains(query.trim().lowercase()) ?: false ||
-                                query.trim().lowercase().contains(p.brand?.trim()?.lowercase()!!)
-
-                }
-//                QueryType.volume -> Predicate{ p ->
-//                    p.volume in query.split('v')[0].toInt()..query.split('v')[1].toInt()
-//                }
-                QueryType.price -> Predicate{ p ->
-                    p.price!! >= query.split('p')[0].toDouble() &&
-                            p.price!! <= query.split('p')[1].toDouble()
-                }
-                QueryType.sex -> Predicate{ p ->
-                    query.map { ch -> sexEntries[ch.digitToInt()] }.any { sex -> p.sex == sex }
-                }
-                QueryType.is_on_hand -> Predicate{ p -> p.isOnHand!! }
-                else -> Predicate{ true}
-            }
-        }
 //sealed class TaskState(loading : Boolean? = null, success : Boolean ? = null){
 //    class Success() : TaskState()
 //    class Failed(e : Exception) : TaskState()
@@ -79,7 +43,6 @@ fun getHeightPercent(context: Context): Dp {
     val displayMetrics = context.resources.displayMetrics
     return ((displayMetrics.heightPixels / displayMetrics.density) / 100).dp
 }
-@RequiresApi(Build.VERSION_CODES.O)
 fun getDateTimeTimestamp(timestamp: Timestamp?) : Timestamp {
     if (timestamp == null)
         return Timestamp.valueOf(LocalDateTime.now().toString())

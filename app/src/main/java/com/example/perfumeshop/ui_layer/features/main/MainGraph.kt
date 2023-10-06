@@ -61,7 +61,6 @@ fun NavGraphBuilder.mainGraph(
         homeGraph(cartViewModel = cartViewModel,
                   favouriteViewModel = favouriteViewModel,
                   onSearchClick = navigateSearch,
-                  homeViewModel = homeViewModel,
                   onProductClick = navigateProduct)
 
         cartGraph(cartViewModel = cartViewModel,

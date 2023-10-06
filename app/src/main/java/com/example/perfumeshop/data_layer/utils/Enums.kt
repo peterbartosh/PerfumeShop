@@ -6,7 +6,7 @@ import okhttp3.internal.immutableListOf
 
 //@Stable
 enum class ProductType{
-    volume, tester, probe, licensed, auto, original, diffuser, lux;
+    volume, tester, probe, licensed, auto, original, diffuser, lux, notSpecified;
 
     fun toRus() : String = when (this){
         volume -> "Объемы"
@@ -17,6 +17,7 @@ enum class ProductType{
             original -> "Оригиналы"
             diffuser -> "Диффузоры"
             lux -> "Люкс"
+            notSpecified -> "Не задано"
     }
 }
 
@@ -24,7 +25,7 @@ fun getVolumes(type : ProductType) : List<String> =  when (type.name){
         ProductType.volume.name -> listOf("10", "15", "35", "45", "3x20", "80")
         ProductType.tester.name -> listOf("60", "65", "110", "115", "125")
         ProductType.probe.name -> listOf("30", "35", "55")
-        else -> emptyList()
+        else -> listOf("50")
     }
 
 //

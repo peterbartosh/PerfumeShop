@@ -15,3 +15,5 @@ val Gold = Color(0xFFFFBF00)
 val Pink = Color(0xFFFFC0CB)
 
 val DarkPurple = Color(0xFF020035)
+
+val NormalYellow = Color(0xFFFDDA0D)

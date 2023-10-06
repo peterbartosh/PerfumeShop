@@ -13,9 +13,6 @@ import com.example.perfumeshop.ui_layer.features.main.profile_feature.orders.nav
 import com.example.perfumeshop.ui_layer.features.main.profile_feature.profile.navigation.profileRoute
 import com.example.perfumeshop.ui_layer.features.main.profile_feature.profile.navigation.profileScreen
 
-
-//const val profileGraphRoute = "profileGraph"
-
 var profileActiveChild by mutableStateOf(profileRoute)
 
 fun NavGraphBuilder.profileGraph(
@@ -28,9 +25,7 @@ fun NavGraphBuilder.profileGraph(
 
         editProfileScreen(onClick = {})
 
-        favouriteScreen(onProductClick = onProductClick,
-                        favouriteViewModel = favouriteViewModel,
-                        cartViewModel = cartViewModel)
+        favouriteScreen(onProductClick = onProductClick, favouriteViewModel = favouriteViewModel)
 
         ordersScreen(onProductClick = onProductClick)
 

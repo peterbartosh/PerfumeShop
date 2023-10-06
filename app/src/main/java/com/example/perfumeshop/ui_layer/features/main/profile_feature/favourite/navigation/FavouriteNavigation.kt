@@ -18,13 +18,8 @@ fun NavController.navigateToFavouritesRoute(navOptions: NavOptions? = null) {
 }
 
 fun NavGraphBuilder.favouriteScreen(onProductClick: (String) -> Unit,
-                                    favouriteViewModel : FavouriteViewModel,
-                                    cartViewModel: CartViewModel
-) {
+                                    favouriteViewModel : FavouriteViewModel) {
     composable(route = favouriteRoute) {
-        favouriteViewModel.isFailure = false
-        favouriteViewModel.isSuccess = false
-        favouriteViewModel.isLoading = false
-        FavouriteScreen(cartViewModel = cartViewModel, favouriteViewModel = favouriteViewModel, onProductClick = onProductClick)
+        FavouriteScreen(favouriteViewModel = favouriteViewModel, onProductClick = onProductClick)
     }
 }

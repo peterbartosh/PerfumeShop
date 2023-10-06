@@ -2,11 +2,10 @@ package com.example.perfumeshop.ui_layer.features.main.home_feature.search.ui
 
 import android.util.Log
 import androidx.compose.foundation.BorderStroke
-import androidx.compose.foundation.ExperimentalFoundationApi
-import androidx.compose.foundation.Image
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
@@ -19,12 +18,14 @@ import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.layout.wrapContentHeight
 import androidx.compose.foundation.layout.wrapContentSize
 import androidx.compose.foundation.layout.wrapContentWidth
-import androidx.compose.foundation.lazy.staggeredgrid.LazyVerticalStaggeredGrid
-import androidx.compose.foundation.lazy.staggeredgrid.StaggeredGridCells
-import androidx.compose.foundation.lazy.staggeredgrid.items
-import androidx.compose.foundation.lazy.staggeredgrid.rememberLazyStaggeredGridState
+import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.itemsIndexed
+import androidx.compose.foundation.lazy.rememberLazyListState
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.text.BasicTextField
 import androidx.compose.foundation.text.KeyboardActions
+import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ShoppingCart
 import androidx.compose.material.icons.outlined.Favorite
@@ -34,41 +35,50 @@ import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
-import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.Divider
+import androidx.compose.material3.DropdownMenu
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.RadioButton
-import androidx.compose.material3.RangeSlider
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.MutableState
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.saveable.rememberSaveable
+import androidx.compose.runtime.snapshots.SnapshotStateList
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.ExperimentalComposeUiApi
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalSoftwareKeyboardController
 import androidx.compose.ui.res.painterResource
-import androidx.compose.ui.text.font.FontStyle
-import androidx.compose.ui.text.style.TextOverflow
+import androidx.compose.ui.text.TextStyle
+import androidx.compose.ui.text.input.ImeAction
+import androidx.compose.ui.text.input.KeyboardType
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.window.Dialog
+import androidx.core.text.isDigitsOnly
 import com.example.perfumeshop.R
 import com.example.perfumeshop.data_layer.models.Product
+import com.example.perfumeshop.data_layer.models.ProductWithAmount
+import com.example.perfumeshop.data_layer.utils.getWidthPercent
+import com.example.perfumeshop.ui_layer.components.LoadingIndicator
 import com.example.perfumeshop.ui_layer.components.showToast
-import com.example.perfumeshop.ui_layer.theme.Gold
 import com.example.perfumeshop.ui_layer.features.auth.login_register_feature.ui.InputField
+import com.example.perfumeshop.ui_layer.theme.Gold
 import com.google.firebase.auth.FirebaseAuth
-import kotlin.random.Random
 
 
-@OptIn(ExperimentalComposeUiApi::class, ExperimentalFoundationApi::class)
+@OptIn(ExperimentalComposeUiApi::class)
 @Composable
 fun SearchForm(
     modifier: Modifier = Modifier,
@@ -88,7 +98,7 @@ fun SearchForm(
         }
 
         InputField(valueState = searchQueryState,
-                   labelId = hint,
+                   label = hint,
                    enabled = !loading,
                    keyboardActions = KeyboardActions {
                        if (!valid) return@KeyboardActions
@@ -102,218 +112,587 @@ fun SearchForm(
 
 }
 
-@OptIn(ExperimentalFoundationApi::class)
+
+@Composable
+fun UploadMoreButton(searchViewModel: SearchViewModel) {
+    Spacer(modifier = Modifier.height(15.dp))
+    Row(
+        horizontalArrangement = Arrangement.Center,
+        verticalAlignment = Alignment.CenterVertically,
+        modifier = Modifier
+            .fillMaxWidth()
+            .wrapContentHeight()
+    ) {
+        if (searchViewModel.searchProducts.size
+            == (searchViewModel.uploadsAmount + 1) * N)
+        if (!searchViewModel.uploadingMore)
+            Button(
+                onClick = {
+                    searchViewModel.uploadMore()
+                },
+                contentPadding = PaddingValues(3.dp),
+                shape = RoundedCornerShape(50.dp),
+                modifier = Modifier
+                    .height(30.dp)
+                    .width(70.dp)
+            ) {
+                Text(text = "Ещё")
+            }
+        else
+            LoadingIndicator()
+    }
+}
+
 @Composable
 fun LazyProductList(
     modifier: Modifier = Modifier,
-    listOfProducts : List<Product>,
+    listOfProductsWithAmounts : List<ProductWithAmount>,
     onProductClick : (String) -> Unit,
     onAddToFavouriteClick : (Product) -> Unit,
-    onAddToCartClick : (Product) -> Unit,
+    onAddToCartClick : (ProductWithAmount) -> Unit,
     onRemoveFromFavouriteClick : (String) -> Unit,
     onRemoveFromCartClick : (String) -> Unit,
     isInFavouriteCheck : (String) -> Boolean,
     isInCartCheck : (String) -> Boolean,
-    userScrollEnabled : Boolean = true
+    priceTypeState : MutableState<Boolean>,
+    userScrollEnabled : Boolean = true,
+    UploadMoreButton :  @Composable () -> Unit = { Box{} }
 ) {
 
-    val scrollState = rememberLazyStaggeredGridState()
+    Log.d("LazyProductList", "LazyProductList: $listOfProductsWithAmounts")
 
-    Log.d("LIST_SIZE", "LazyProductList: ${listOfProducts.size}")
 
-    LazyVerticalStaggeredGrid(
+    LazyColumn(
         contentPadding = PaddingValues(3.dp),
-        modifier = modifier.height(155.dp * (listOfProducts.size/2 + 1)),
-        state = scrollState,
+        modifier = modifier
+            .fillMaxWidth()
+            .wrapContentHeight(),
+        state = rememberLazyListState(),
         userScrollEnabled = userScrollEnabled,
-        columns = StaggeredGridCells.Adaptive(minSize = 150.dp)){
-        items(items = listOfProducts,
-              //key = { product -> product.id!! }
-        ){ product ->
+    ) {
+        Log.d("LazyProductList", "LazyProductList: $listOfProductsWithAmounts")
 
-            ProductCard(
-                product = product,
+        itemsIndexed(listOfProductsWithAmounts,
+                     key = {i, p -> p.product?.id ?: i}) { ind, productWithAmount ->
+            Log.d("LazyProductList", "LazyProductList: $productWithAmount")
+            ProductRow(
+                productWithAmount = productWithAmount,
                 onProductClick = onProductClick,
                 onAddToFavouriteClick = onAddToFavouriteClick,
                 onAddToCartClick = onAddToCartClick,
                 onRemoveFromFavouriteClick = onRemoveFromFavouriteClick,
                 onRemoveFromCartClick = onRemoveFromCartClick,
                 isInFavouriteCheck = isInFavouriteCheck,
-                isInCartCheck = isInCartCheck
-
+                isInCartCheck = isInCartCheck,
+                priceTypeState = priceTypeState
             )
         }
 
+        item {
+            UploadMoreButton()
+        }
     }
-
 }
 
 @Composable
-fun ProductCard(
-    product: Product,
+fun ProductRow(
+    productWithAmount: ProductWithAmount,
     onProductClick : (String) -> Unit,
     onAddToFavouriteClick : (Product) -> Unit,
-    onAddToCartClick : (Product) -> Unit,
+    onAddToCartClick : (ProductWithAmount) -> Unit,
     onRemoveFromFavouriteClick : (String) -> Unit,
     onRemoveFromCartClick : (String) -> Unit,
     isInFavouriteCheck : (String) -> Boolean,
-    isInCartCheck : (String) -> Boolean) {
+    isInCartCheck : (String) -> Boolean,
+    priceTypeState : MutableState<Boolean>,
+) {
 
     val context = LocalContext.current
 
     val isInCart = remember {
-        mutableStateOf(isInCartCheck(product.id ?: Random(35).toString()))
+        mutableStateOf(isInCartCheck(productWithAmount.product?.id ?: ""))
     }
 
     val isInFavourite = remember {
-        mutableStateOf(isInFavouriteCheck(product.id ?: Random(44).toString()))
+        mutableStateOf(isInFavouriteCheck(productWithAmount.product?.id ?: ""))
     }
 
-    Log.d("IS_IN_TEST", "${isInCart.value}  ${isInFavourite.value}")
+    Card(
+        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.background),
+        shape = RoundedCornerShape(10.dp),
+        border = BorderStroke(1.dp, Color.LightGray),
+        modifier = Modifier
+            .fillMaxWidth()
+            .wrapContentHeight()
+    ) {
 
-    Card(modifier = Modifier
-        .clickable { onProductClick.invoke(product.id.toString()) }
-        .width(150.dp)
-        .height(150.dp)
-        .padding(3.dp),
-         colors = CardDefaults.cardColors(containerColor = Color.White),
-         border = BorderStroke(width = 1.dp, color = Color.LightGray),
-         shape = RoundedCornerShape(5.dp),
-         elevation = CardDefaults.cardElevation(7.dp)) {
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .wrapContentHeight()
+                .clickable { onProductClick(productWithAmount.product?.id.toString()) },
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.SpaceBetween
+        ) {
 
-        Column(modifier = Modifier
-            .padding(5.dp)
-            .fillMaxWidth(),
-               verticalArrangement = Arrangement.Top,
-        horizontalAlignment = Alignment.CenterHorizontally) {
 
-            Row(horizontalArrangement = Arrangement.Center,
-            modifier = Modifier.wrapContentWidth()) {
+            Column(
+                modifier = Modifier
+                    .fillMaxWidth(0.55f)
+                    .wrapContentHeight()
+                    .padding(start = 10.dp)
+            ) {
+                Text(text = productWithAmount.product?.brand.toString(), fontSize = 13.sp)
 
-                Image(
-                    painter = painterResource(id = R.drawable.gucci_flora),
-                    contentDescription = "perfume image",
-                    modifier = Modifier
-                        .border(width = 1.dp, color = Color.LightGray)
-                        .height(100.dp)
-                        .width(100.dp)
-                        .padding(5.dp)
-                )
-                //Spacer(modifier = Modifier.width(40.dp))
+                Text(text = productWithAmount.product?.volume.toString(), fontSize = 10.sp)
 
-                Column(modifier = Modifier.wrapContentSize()) {
+                Divider()
 
-                    Spacer(modifier = Modifier.height(10.dp))
+                Text(text = if (!priceTypeState.value)
+                    productWithAmount.product?.cashPrice.toString()
+                else
+                    productWithAmount.product?.cashlessPrice.toString(),
+                fontSize = 12.sp)
+            }
 
-                    IconButton(
-                        modifier = Modifier.size(20.dp),
-                        onClick = {
-                            if (FirebaseAuth.getInstance().currentUser?.isAnonymous == true)
-                                showToast(context, "Вы не авторизованы")
-                            else {
-                                if (isInFavourite.value) onRemoveFromFavouriteClick(product.id!!)
-                                else onAddToFavouriteClick(product)
-                                isInFavourite.value = !isInFavourite.value
-                            }
-                        }
-                    ) {
-                        Icon(
-                            imageVector = if (isInFavourite.value) Icons.Outlined.Favorite else Icons.Outlined.FavoriteBorder,
-                            contentDescription = "fav icon",
-                            tint = if (isInFavourite.value) Gold else Color.Black
-                        )
-                    }
 
-                    Spacer(modifier = Modifier.height(5.dp))
-
-                    IconButton(
-                        modifier = Modifier.size(20.dp),
-                        onClick = {
-                            if (FirebaseAuth.getInstance().currentUser?.isAnonymous == true)
-                           // Log.d("CLICK_TEST", "ProductCard: click")
-                                showToast(context, "Вы не авторизованы")
-                            else {
-                                if (isInCart.value) onRemoveFromCartClick(product.id!!)
-                                else onAddToCartClick(product)
-                                isInCart.value = !isInCart.value
-                            }
-                        }) {
-                        Icon(
-                            imageVector = if (isInCart.value)
-                                Icons.Filled.ShoppingCart
+            Row(modifier = Modifier
+                .fillMaxWidth()
+                .wrapContentHeight()
+                .padding(end = 10.dp),
+                //verticalAlignment = Alignment.CenterVertically
+            ) {
+                IconButton(
+                    modifier = Modifier.size(20.dp),
+                    onClick = {
+                        if (FirebaseAuth.getInstance().currentUser?.isAnonymous == true)
+                            showToast(context, "Вы не авторизованы")
+                        else {
+                            if (isInFavourite.value)
+                                onRemoveFromFavouriteClick(productWithAmount.product?.id!!)
                             else
-                                Icons.Outlined.ShoppingCart,
-                            contentDescription = "cart icon",
-                            tint = if (isInCart.value) Gold else Color.Black
-                        )
+                                onAddToFavouriteClick(productWithAmount.product ?: Product())
+                            isInFavourite.value = !isInFavourite.value
+                        }
+                    }
+                ) {
+                    Icon(
+                        imageVector = if (isInFavourite.value)
+                            Icons.Outlined.Favorite
+                        else
+                            Icons.Outlined.FavoriteBorder,
+                        contentDescription = "fav icon",
+                        tint = if (isInFavourite.value) Gold else Color.Black
+                    )
+                }
+
+                Spacer(modifier = Modifier.width(5.dp))
+
+                IconButton(
+                    modifier = Modifier.size(20.dp),
+                    onClick = {
+                        if (FirebaseAuth.getInstance().currentUser?.isAnonymous == true)
+                            showToast(context, "Вы не авторизованы")
+                        else {
+                            if (isInCart.value) onRemoveFromCartClick(productWithAmount.product?.id!!)
+                            else onAddToCartClick(productWithAmount)
+                            isInCart.value = !isInCart.value
+                        }
+                    }) {
+                    Icon(
+                        imageVector = if (isInCart.value)
+                            Icons.Filled.ShoppingCart
+                        else
+                            Icons.Outlined.ShoppingCart,
+                        contentDescription = "cart icon",
+                        tint = if (isInCart.value) Gold else Color.Black
+                    )
+                }
+
+                if (true) {
+                    Spacer(modifier = Modifier.width(5.dp))
+
+                    PlusMinus(initValue = productWithAmount.amount ?: 1) { value ->
+                        productWithAmount.amount = value
                     }
                 }
 
-            }
-
-            Column(horizontalAlignment = Alignment.CenterHorizontally,
-            modifier = Modifier.wrapContentHeight()) {
-
-                Text(text = product.id.toString(),
-                     overflow = TextOverflow.Ellipsis, fontSize = 10.sp)
-
-                Text(
-                    text = "Коллекция: ${product.collection}",
-                    overflow = TextOverflow.Clip,
-                    fontStyle = FontStyle.Italic,
-                    fontSize = 7.sp,
-                    //style = MaterialTheme.typography.bodyMedium
-                )
-
-                Text(
-                    text = "Пол: ${product.sex}",
-                    overflow = TextOverflow.Clip,
-                    fontStyle = FontStyle.Italic,
-                    fontSize = 7.sp,
-                   // style = MaterialTheme.typography.bodyMedium
-                )
-
-                Text(
-                    text = "Объем: ${product.volume}",
-                    overflow = TextOverflow.Clip,
-                    fontStyle = FontStyle.Italic,
-                    fontSize = 7.sp,
-                 //   style = MaterialTheme.typography.bodyMedium
-                )
 
             }
+        }
+    }
+}
 
-//            Image(painter = rememberAsyncImagePainter(model =
-//                                                      "https://www.google.com/url?sa=i&url=https%3A%2F%2Fvanille.by%2Fgucci-flora-by-gucci-gracious-tuberose&psig=AOvVaw1E9yBoCNg_-1U0HlIRKQ7l&ust=1692929272446000&source=images&cd=vfe&opi=89978449&ved=0CBAQjRxqFwoTCPDipJGb9IADFQAAAAAdAAAAABAE"),
-//                  contentDescription = "image book",
-//                  modifier = Modifier
-//                      .height(30.dp)
-//                      .width(30.dp)
-//                      .padding(end = 5.dp))
+//
+//@Composable
+//fun PlusMinus(amountState : MutableState<Int>) {
+//
+//
+//    val valueState = remember(amountState.value) {
+//        mutableStateOf(amountState.value.toString())
+//    }
+//    Row(modifier = Modifier.wrapContentHeight()) {
+//        IconButton(
+//            modifier = Modifier
+//                .size(15.dp)
+//                .clip(CircleShape),
+//            onClick = {
+//                if (amountState.value > 1) amountState.value--
+//            }
+//        ) {
+//            Icon(
+//                painter = painterResource(id = R.drawable.minus_icon),
+//                contentDescription = "minus icon"
+//            )
+//        }
+//
+//        BasicTextField(
+////        colors = TextFieldDefaults.textFieldColors(containerColor = MaterialTheme.colorScheme.background),
+////        shape = RectangleShape,
+//            textStyle = TextStyle(fontSize = 15.sp, textAlign = TextAlign.Center),
+//            modifier = Modifier
+//                .width(50.dp)
+//                .height(30.dp)
+//                .border(BorderStroke(width = 1.dp, color = Color.Black)),
+//            value = valueState.value,
+//            onValueChange = {
+//                if (it.isDigitsOnly() || it.isEmpty())
+//                    valueState.value = it
+//                try {
+//                    amountState.value = it.toInt()
+//                } catch (e : Exception) {}
+//            },
+//            keyboardOptions = KeyboardOptions(
+//                keyboardType = KeyboardType.Number,
+//                imeAction = ImeAction.Done
+//            )
+//        )
+//
+//
+////    TextField(
+////        colors = TextFieldDefaults.textFieldColors(containerColor = MaterialTheme.colorScheme.background),
+////        shape = RectangleShape,
+////        textStyle = TextStyle(fontSize = 10.sp),
+////        modifier = Modifier
+////            .width(50.dp)
+////            .height(40.dp)
+////            .border(BorderStroke(width = 1.dp, color = Color.Black)),
+////        value = amountState.value.toString(),
+////        onValueChange = {
+////            try {
+////                val newVal = it.toInt()
+////                amountState.value = newVal
+////            } catch (e : Exception){}
+////        },
+////        keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number, imeAction = ImeAction.Default)
+////    )
+//
+//        IconButton(
+//            modifier = Modifier
+//                .size(15.dp)
+//                .clip(CircleShape),
+//            onClick = { amountState.value++ }
+//        ) {
+//            Icon(
+//                painter = painterResource(id = R.drawable.plus_icon),
+//                contentDescription = "plus icon"
+//            )
+//        }
+//    }
+//}
 
+
+@Composable
+fun PlusMinus(initValue : Int, onValueChange : (Int) -> Unit) {
+
+    val valueState = remember {
+        mutableStateOf(initValue.toString())
+    }
+
+    Row(modifier = Modifier.wrapContentHeight()) {
+        IconButton(
+            modifier = Modifier
+                .size(20.dp)
+                .clip(CircleShape),
+            onClick = {
+
+                try {
+                    var amount = valueState.value.toInt()
+                    if (amount > 1) amount--
+                    valueState.value = amount.toString()
+                    onValueChange(amount)
+
+                } catch (_: Exception) {}
+            }
+        ) {
+            Icon(
+                painter = painterResource(id = R.drawable.minus_icon),
+                contentDescription = "minus icon"
+            )
+        }
+
+        BasicTextField(
+//        colors = TextFieldDefaults.textFieldColors(containerColor = MaterialTheme.colorScheme.background),
+//        shape = RectangleShape,
+            textStyle = TextStyle(fontSize = 15.sp, textAlign = TextAlign.Center),
+            modifier = Modifier
+                .width(50.dp)
+                .height(30.dp)
+                .border(BorderStroke(width = 1.dp, color = Color.Black)),
+            value = valueState.value,
+            onValueChange = {
+                if (it.isDigitsOnly() || it.isEmpty())
+                    valueState.value = it
+                try {
+                    val amount = it.toInt()
+                    onValueChange(amount)
+                } catch (_ : Exception) {}
+            },
+            keyboardOptions = KeyboardOptions(
+                keyboardType = KeyboardType.Number,
+                imeAction = ImeAction.Done
+            )
+        )
+
+
+        IconButton(
+            modifier = Modifier
+                .size(20.dp)
+                .clip(CircleShape),
+            onClick = {
+                try {
+                    var amount = valueState.value.toInt()
+                    amount++
+                    valueState.value = amount.toString()
+                    onValueChange(amount)
+                } catch (_: Exception) {}
+            }
+        ) {
+            Icon(
+                painter = painterResource(id = R.drawable.plus_icon),
+                contentDescription = "plus icon"
+            )
+        }
+    }
+}
+
+
+
+//@Preview(showBackground = true)
+@Composable
+fun SearchOption(
+        text : String,
+        iconId : Int,
+        showState : MutableState<Boolean>
+    ) {
+
+    val context = LocalContext.current
+
+    val wp = getWidthPercent(context = context)
+
+    Card(modifier = Modifier
+        .wrapContentHeight()
+        .width(wp * 31)
+        .clickable { showState.value = !showState.value },
+         shape = RoundedCornerShape(50.dp),
+         colors = CardDefaults.cardColors(containerColor = Color.White, contentColor = Gold),
+         border = BorderStroke(width = 2.dp, color = Gold)
+    ) {
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(5.dp),
+            //horizontalArrangement = Arrangement.SpaceBetween,
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+
+            Icon(
+                 painter = painterResource(id = iconId),
+                 contentDescription = null,
+                 modifier = Modifier
+                     .size(20.dp)
+                     .padding(start = 5.dp)
+            )
+
+            Spacer(modifier = Modifier.width(1.dp))
+
+
+            //Divider(Modifier.width(1.dp))
+
+            Text(
+                text = text,
+                fontSize = 13.sp,
+                modifier = Modifier.padding(end = 5.dp),
+                textAlign = TextAlign.Center
+            )
 
 
         }
 
     }
+
 }
 
+@Composable
+fun PriceDropDownMenu(
+    expanded: MutableState<Boolean>,
+    selected: MutableState<Boolean>
+) {
+    DropdownMenu(expanded = expanded.value, onDismissRequest = { expanded.value = !expanded.value }) {
+
+
+            val width = 100.dp
+            val selectedBorderStroke = BorderStroke(width = 3.dp, color = Gold)
+            val notSelectedBorderStroke = BorderStroke(width = 1.dp, color = Color.LightGray)
+            Row(
+                modifier = Modifier
+                    .width(width)
+                    .border(
+                        if (!selected.value) selectedBorderStroke else notSelectedBorderStroke
+                    )
+                    .clickable {
+                        selected.value = false
+                    },
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.Center
+            ) {
+                Text(text = "Нал.", fontSize = 20.sp,
+                     modifier = Modifier.padding(5.dp),
+                     textAlign = TextAlign.Center)
+            }
+            Row(
+                modifier = Modifier
+                    .width(width)
+                    .border(
+                        if (selected.value) selectedBorderStroke else notSelectedBorderStroke
+                    )
+                    .clickable {
+                        selected.value = true
+                    },
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.Center
+            ) {
+                Text(text = "Безнал.", fontSize = 20.sp,
+                     modifier = Modifier.padding(5.dp),
+                     textAlign = TextAlign.Center)
+            }
+        //}
+    }
+}
 
 @Composable
-fun FilterList(
-    rangeSliderState: MutableState<ClosedFloatingPointRange<Float>>,
+fun SortDialog(
     showDialog: MutableState<Boolean>,
-    selected: MutableState<Boolean>,
-    listOfButtonsStates: List<Pair<MutableState<Boolean>, Int>>,
-    onApplyButtonClick : () -> Unit
+    states: SnapshotStateList<Boolean>,
+    priorities: SnapshotStateList<Int>,
+    isAscending: MutableState<Boolean>,
+    onApplyButtonClick: () -> Unit
 ) {
+
+    val labels = listOf("Цене", "Объёму")
+
+    if (showDialog.value)
+        Dialog(onDismissRequest = { showDialog.value = false }) {
+            Surface(color = Color.White, modifier = Modifier.wrapContentSize()) {
+                Column(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .height(400.dp)
+                ) {
+
+                    Text(text = "Сортировать по:")
+
+                    repeat(2){ ind ->
+                        Row {
+                            Spacer(modifier = Modifier.width(10.dp))
+                            CustomRadioButton(ind = ind, states = states, priorities = priorities) {
+                                states[ind] = !states[ind]
+                                if (states[ind])
+                                    priorities.add(ind)
+                                else
+                                    priorities.remove(ind)
+                            }
+                            Spacer(modifier = Modifier.width(10.dp))
+                            Text(text = labels[ind])
+                        }
+                    }
+
+                    Spacer(modifier = Modifier.height(20.dp))
+
+                    Row {
+                       RadioButton(
+                           selected = isAscending.value,
+                           onClick = { isAscending.value = !isAscending.value }
+                       )
+                        Spacer(modifier = Modifier.width(10.dp))
+
+                        Text(text = if (isAscending.value) "По возрастанию" else "По убыванию")
+                    }
+
+                    Spacer(modifier = Modifier.height(50.dp))
+
+
+                    Button(
+                        onClick = onApplyButtonClick,
+                        shape = RoundedCornerShape(10.dp),
+                        colors = ButtonDefaults.buttonColors(containerColor = Color.White),
+                        border = BorderStroke(width = 1.dp, color = Gold),
+                        modifier = Modifier.wrapContentSize(),
+                        contentPadding = ButtonDefaults.ContentPadding
+                    ) {
+                        Text(text = "Применить", fontSize = 18.sp, color = Color.Black)
+                    }
+                }
+
+            }
+        }
+}
+//@Preview(showBackground = true)
+@Composable
+fun CustomRadioButton(
+    ind: Int,
+    states : SnapshotStateList<Boolean>,
+    priorities : SnapshotStateList<Int>,
+    onClick: () -> Unit
+) {
+
+    TextButton(
+        onClick = onClick,
+        modifier = Modifier.size(20.dp),
+        shape = CircleShape,
+        border = BorderStroke(width = 1.dp, color = Color.LightGray),
+        colors = ButtonDefaults.buttonColors(containerColor =
+                                             if (states[ind])
+                                                 Color.Green
+                                             else
+                                                 MaterialTheme.colorScheme.background),
+        contentPadding = PaddingValues(0.dp)
+    ) {
+        val text = if (states[ind]) (priorities.indexOf(ind) + 1).toString() else ""
+        Text(textAlign = TextAlign.Center, text = text)
+    }
+
+}
+
+@Composable
+fun FilterDialog(
+    //rangeSliderState: MutableState<ClosedFloatingPointRange<Float>>,
+    moreThanState: MutableState<String>,
+    lessThanState: MutableState<String>,
+    showDialog: MutableState<Boolean>,
+    isOnHandSelected: MutableState<Boolean>,
+    states: SnapshotStateList<Boolean>,
+    volumes : List<String>,
+    onApplyButtonClick: () -> Unit
+) {
+
 
     if (showDialog.value)
          Dialog(onDismissRequest = { showDialog.value = false}) {
 
         Surface(color = Color.White, modifier = Modifier.wrapContentSize()) {
 
-            Row() {
+           // Row() {
 
                 // Spacer(modifier = Modifier.width(250.dp))
 
@@ -324,16 +703,25 @@ fun FilterList(
                         .height(400.dp)
                 ) {
 
-                    FilterOption(text = "Только в наличии", height = 50.dp, selected = selected)
+                    FilterOption(text = "Только в наличии", height = 50.dp, selected = isOnHandSelected)
 
-                    PriceSlider(
-                        maxValue = 10f,
-                        text = "Цена: ",
-                        height = 50.dp,
-                        rangeSliderState = rangeSliderState
-                    )
+                    Row {
+                        InputField(
+                            modifier = Modifier.width(80.dp),
+                            valueState = moreThanState,
+                            label = "От",
+                            enabled = true
+                        )
+                        Spacer(modifier = Modifier.width(20.dp))
+                        InputField(
+                            modifier = Modifier.width(80.dp),
+                            valueState = lessThanState,
+                            label = "До",
+                            enabled = true
+                        )
+                    }
 
-                    VolumeOption(listOfButtonsStates = listOfButtonsStates)
+                    VolumeOption(states = states, volumes = volumes)
 
                     Spacer(modifier = Modifier.height(50.dp))
 
@@ -350,12 +738,12 @@ fun FilterList(
 
                 }
             }
-        }
+    //    }
     }
 }
 
 @Composable
-fun VolumeOption (listOfButtonsStates:  List<Pair<MutableState<Boolean>, Int>>) {
+fun VolumeOption (states:  SnapshotStateList<Boolean>, volumes : List<String>) {
     Row(modifier = Modifier
         .fillMaxWidth()
         .wrapContentSize()) {
@@ -364,14 +752,41 @@ fun VolumeOption (listOfButtonsStates:  List<Pair<MutableState<Boolean>, Int>>) 
 
         Spacer(modifier = Modifier.width(30.dp))
 
-        listOfButtonsStates.forEach{ buttonState ->
-            ValueButton(text = "${buttonState.second} мл", buttonState.first)
-        }
+        for (ind in states.indices)
+            ValueButton(ind = ind, text = "${volumes[ind]} мл", states = states)
+
+//        states.forEachIndexed{ ind, buttonState ->
+//            ValueButton(ind = ind, text = "$volume мл", states)
+//        }
     }
 }
 
 @Composable
-fun ValueButton(text : String, clicked : MutableState<Boolean>) {
+fun ValueButton(
+    ind : Int,
+    text : String,
+    states : SnapshotStateList<Boolean>
+) {
+
+    Button(
+        onClick = { states[ind] = !states[ind] },
+        shape = RoundedCornerShape(10.dp),
+        colors = ButtonDefaults.buttonColors(containerColor = Color.White),
+        border = BorderStroke(width = 1.dp, color = if (states[ind]) Gold else Color.LightGray),
+        contentPadding = ButtonDefaults.ContentPadding,
+        modifier = Modifier
+            .wrapContentWidth()
+            .wrapContentHeight()
+    ) {
+
+        Text(text = text, fontSize = 10.sp, color = Color.Black)
+    }
+}
+@Composable
+fun ValueButton(
+    text : String,
+    clicked : MutableState<Boolean>
+) {
 
     Button(
         onClick = { clicked.value = !clicked.value },
@@ -399,25 +814,4 @@ fun FilterOption(selected : MutableState<Boolean>, text: String, height: Dp) {
 
         Text(text = text)
     }
-}
-
-@OptIn(ExperimentalMaterial3Api::class)
-@Composable
-fun PriceSlider(rangeSliderState: MutableState<ClosedFloatingPointRange<Float>>, maxValue: Float, text: String, height: Dp) {
-
-
-
-    Row(modifier = Modifier
-        .fillMaxWidth()
-        .height(height))  {
-
-        Text(text = text)
-
-        Spacer(modifier = Modifier.width(30.dp))
-
-        RangeSlider(value = rangeSliderState.value, onValueChange = { rangeSliderState.value = it },
-                    modifier = Modifier.fillMaxWidth())
-
-    }
-
 }

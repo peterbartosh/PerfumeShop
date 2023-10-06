@@ -5,11 +5,7 @@ import com.google.firebase.firestore.PropertyName
 
 data class User(
     @Exclude
-    var id: String? = null,
-
-//    @get:PropertyName("user_auth_id")
-//    @set:PropertyName("user_auth_id")
-//    var userAuthId: String? = null,
+    var id: String,
 
     @get:PropertyName("first_name")
     @set:PropertyName("first_name")
@@ -25,27 +21,5 @@ data class User(
 
     var email : String? = null,
     var sex: String? = null,
-    var country : String? = null,
-    var cart : List<String>? = null,         // rename to cart todo
-    var favourite : List<String>? = null
-                    ){
-//    fun toMap(): MutableMap<String, Any> {
-//        return mutableMapOf("user_id" to this.userId,
-//                            "first_name" to this.firstName,
-//                            "second_name" to this.secondName,
-//                            "email" to this.email,
-//                            "phone_number" to this.phoneNumber,
-//                            "sex" to this.sex,
-//                            "country" to this.country,
-//                            "products" to this.products)
-//    }
-
-}
-
-//user_id : Primary Key Int
-//2) first_name
-//3) second_name
-//4) email
-//5) phone_number
-//6) sex
-//7) country
+    var country : String? = null
+)

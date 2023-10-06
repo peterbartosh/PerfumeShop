@@ -8,5 +8,8 @@
     <string name="product_photo_3"> https://ee.tallink.com/documents/10192/31064102/kuidas-kanda-parfuumi-nagu-prantslannad.jpg/2499f4b3-133c-4ee3-a216-b2a7d1e0421b?t=1513763251406 </string>
     <string name="receiver_email_address"> pt.bartosh54321@gmail.com </string>
     <string name="sender_email_address"> goldappsender@gmail.com </string>
+    <string name="error_occured"> Произошла ошибка </string>
+    <string name="nothing_found"> Ничего не найдено </string>
+    <string name="password_requirements"> Пароль должен состоять как минимум из 6-ти символов. </string>
 
 </resources>

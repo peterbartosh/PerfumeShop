@@ -15,15 +15,20 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
+import com.example.perfumeshop.ui_layer.components.showToast
 import com.example.perfumeshop.ui_layer.features.auth.login_register_feature.ui.AuthViewModel
 import com.example.perfumeshop.ui_layer.features.auth.login_register_feature.ui.InputField
 
 //@Preview(showBackground = true)
 @Composable
 fun CodeVerificationScreen(
-    viewModel: AuthViewModel, onSuccess : () -> Unit
+    authViewModel: AuthViewModel, onSuccess : () -> Unit
 ) {
+
+    val context = LocalContext.current
+
     val codeState = rememberSaveable {
         mutableStateOf("")
     }
@@ -43,7 +48,7 @@ fun CodeVerificationScreen(
 
             InputField(
                 valueState = codeState, onValueChange = {codeState.value = it},
-                labelId = "Код", enabled = true
+                label = "Код", enabled = true
             )
 
             Spacer(modifier = Modifier.height(40.dp))
@@ -51,8 +56,20 @@ fun CodeVerificationScreen(
             Button(modifier = Modifier
                 .width(100.dp)
                 .height(50.dp),
-                 onClick = { viewModel.verifyPhoneNumberWithCode(codeState.value, onSuccess) }) {
-                Text(text = "Confirm")
+                 onClick = {
+                     try {
+                         if (authViewModel.verifyCode(codeState.value)){
+                             authViewModel.register()
+                             onSuccess()
+                         } else {
+                             showToast(context = context, "Неверный код")
+                         }
+                     } catch (e : Exception){
+                         showToast(context = context, "Некорректные данные")
+                     }
+
+                 }) {
+                Text(text = "Подтвердить")
             }
         }
 

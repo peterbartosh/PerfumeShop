@@ -19,6 +19,6 @@ fun NavController.navigateToCodeVerification(navOptions: NavOptions? = null) {
 fun NavGraphBuilder.codeVerificationScreen(onSuccess: () -> Unit, navController: NavHostController) {
     composable(route = codeVerificationRoute) {
         val viewModel = hiltViewModel<AuthViewModel>(viewModelStoreOwner = navController.previousBackStackEntry!!)
-        CodeVerificationScreen(viewModel = viewModel, onSuccess = onSuccess)
+        CodeVerificationScreen(authViewModel = viewModel, onSuccess = onSuccess)
     }
 }

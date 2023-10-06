@@ -18,21 +18,9 @@ fun NavController.navigateToHome(navOptions: NavOptions? = null){
 }
 
 fun NavGraphBuilder.homeScreen(
-    onSearchClick: (String, QueryType) -> Unit,
-    onProductClick: (String) -> Unit,
-    homeViewModel : HomeViewModel,
-    cartViewModel: CartViewModel,
-    favouriteViewModel: FavouriteViewModel
+    onSearchClick: (String, QueryType) -> Unit
 ) {
-
     composable(route = homeRoute) {
-        //val homeViewModel = hiltViewModel<HomeViewModel>()
-
-        HomeScreen(homeViewModel = homeViewModel,
-                   cartViewModel = cartViewModel,
-                   favouriteViewModel = favouriteViewModel,
-                   onSearchClick = onSearchClick,
-                   onProductClick = onProductClick
-        )
+        HomeScreen(onSearchClick = onSearchClick)
     }
 }

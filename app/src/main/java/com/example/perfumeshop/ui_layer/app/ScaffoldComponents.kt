@@ -62,6 +62,7 @@ import com.example.perfumeshop.ui_layer.features.main.profile_feature.orders.nav
 import com.example.perfumeshop.ui_layer.features.main.profile_feature.profile.navigation.profileRoute
 import com.example.perfumeshop.ui_layer.features.main.profile_feature.profileActiveChild
 import com.example.perfumeshop.ui_layer.features.main.settings_feature.navigation.settingsRoute
+import com.google.firebase.auth.FirebaseAuth
 
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -79,10 +80,11 @@ fun MyTopAppBar(
             .padding(bottom = 5.dp)
             .shadow(
                 elevation = 10.dp,
-              //  shape = shape
+                //  shape = shape
             )
-            .background(color = Color.White,
-                        //shape = shape
+            .background(
+                color = Color.White,
+                //shape = shape
             ),
         title = {
             Column(modifier = Modifier.fillMaxHeight(),
@@ -236,7 +238,9 @@ fun BottomNavigationBar(
                                       }
 
                                   } else {
+                                      Log.d("CUR_USER", "User: ${FirebaseAuth.getInstance().currentUser == null}")
 
+                                      Log.d("CUR_USER", "isAnon: ${FirebaseAuth.getInstance().currentUser?.isAnonymous}")
                                       navController.navigate(item.parentRoute){
                                           popUpTo(currentDestination.id){
                                               saveState = false

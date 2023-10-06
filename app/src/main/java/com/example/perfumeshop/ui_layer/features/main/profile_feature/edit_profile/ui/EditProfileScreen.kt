@@ -111,11 +111,11 @@ fun EditProfileScreen(viewModel: EditProfileViewModel, onClick : () -> Unit) {
 
         Spacer(modifier = Modifier.height(3.dp))
 
-        InputField(valueState = firstNameState, labelId = "Имя", enabled = true)
+        InputField(valueState = firstNameState, label = "Имя", enabled = true)
 
         Spacer(modifier = Modifier.height(3.dp))
 
-        InputField(valueState = secondNameState, labelId = "Фамилия", enabled = true)
+        InputField(valueState = secondNameState, label = "Фамилия", enabled = true)
 
         Spacer(modifier = Modifier.height(3.dp))
 
@@ -123,7 +123,7 @@ fun EditProfileScreen(viewModel: EditProfileViewModel, onClick : () -> Unit) {
 
         Spacer(modifier = Modifier.height(3.dp))
 
-        InputField(valueState = phoneNumberState, labelId = "Номер телефона", enabled = true)
+        InputField(valueState = phoneNumberState, label = "Номер телефона", enabled = true)
 
         Spacer(modifier = Modifier.height(7.dp))
 
@@ -140,7 +140,7 @@ fun EditProfileScreen(viewModel: EditProfileViewModel, onClick : () -> Unit) {
                     .fillMaxWidth()
                     .padding(top = 10.dp, start = 5.dp, end = 5.dp, bottom = 5.dp),
                 valueState = streetState,
-                labelId = "Улица",
+                label = "Улица",
                 enabled = true
             )
 
@@ -159,7 +159,7 @@ fun EditProfileScreen(viewModel: EditProfileViewModel, onClick : () -> Unit) {
                         .padding(5.dp),
                     keyboardType = KeyboardType.Number,
                     valueState = houseNumberState,
-                    labelId = "Дом",
+                    label = "Дом",
                     enabled = true
                 )
 
@@ -169,7 +169,7 @@ fun EditProfileScreen(viewModel: EditProfileViewModel, onClick : () -> Unit) {
                         .padding(5.dp),
                     keyboardType = KeyboardType.Number,
                     valueState = flatNumberState,
-                    labelId = "Квартира",
+                    label = "Квартира",
                     enabled = true
                 )
             }

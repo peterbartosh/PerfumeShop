@@ -75,12 +75,9 @@ fun AskLoginScreen(onLoginClick: () -> Unit, onSkipClick: () -> Unit) {
                 Spacer(modifier = Modifier.width(20.dp))
 
                 Button(onClick = {
-
-                    FirebaseAuth.getInstance().signInAnonymously()
-
-                    onSkipClick.invoke()
-
-                                 },
+                            FirebaseAuth.getInstance().signInAnonymously()
+                            onSkipClick()
+                       },
                        modifier = Modifier
                            .wrapContentHeight()
                            .width(120.dp),

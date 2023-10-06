@@ -17,16 +17,10 @@ var homeActiveChild by mutableStateOf(homeRoute)
 fun NavGraphBuilder.homeGraph(
     onSearchClick: (String, QueryType) -> Unit,
     onProductClick: (String) -> Unit,
-    homeViewModel: HomeViewModel,
     cartViewModel: CartViewModel,
     favouriteViewModel: FavouriteViewModel,
 ){
-        homeScreen(
-            cartViewModel = cartViewModel,
-            favouriteViewModel = favouriteViewModel,
-            onSearchClick = onSearchClick,
-            homeViewModel = homeViewModel,
-                   onProductClick = onProductClick)
+        homeScreen(onSearchClick = onSearchClick)
 
         searchScreen(cartViewModel = cartViewModel,
                      favouriteViewModel = favouriteViewModel,

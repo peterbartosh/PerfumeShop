@@ -7,9 +7,15 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.wrapContentHeight
 import androidx.compose.foundation.text.KeyboardActions
+import androidx.compose.foundation.text.KeyboardOptions
+import androidx.compose.material.icons.Icons
+import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -20,21 +26,30 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.ExperimentalComposeUiApi
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.focus.FocusRequester
+import androidx.compose.ui.focus.focusRequester
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalSoftwareKeyboardController
+import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
+import com.example.perfumeshop.R
 import com.example.perfumeshop.ui_layer.components.LoadingIndicator
 import com.example.perfumeshop.ui_layer.components.SubmitButton
+import com.google.firebase.auth.FirebaseAuth
+import kotlin.random.Random
 
 @Composable
 fun LoginScreen(
-    authViewModel: AuthViewModel, onCodeSent : () -> Unit, onSuccess : () -> Unit
+    authViewModel: AuthViewModel,
+    onCodeSent : () -> Unit,
+    onSuccess : () -> Unit
 ) {
 
     val showLoginForm = rememberSaveable {
-        mutableStateOf(true)
+        mutableStateOf(false)
     }
 
     Surface(modifier = Modifier.fillMaxSize()) {
@@ -44,16 +59,21 @@ fun LoginScreen(
         ) {
 
             if (showLoginForm.value)
-                UserForm(isCreateAccount = false) { fn, sn, ph, sexInd ->
-                    authViewModel.onLoginClicked(firstName = fn, secondName = sn,
-                                                 sexInd = sexInd, phoneNumber = ph,
-                                                 onCodeSent = onCodeSent, onSuccess = onSuccess)
+                UserForm(isCreateAccount = false) { fn, sn, pn, sexInd, pwd ->
+                    authViewModel.signIn(pn, pwd)
+                    onSuccess()
                 }
             else
-                UserForm(isCreateAccount = true) { fn, sn, ph, sexInd ->
-                    authViewModel.onLoginClicked(firstName = fn, secondName = sn,
-                                                 sexInd = sexInd, phoneNumber = ph,
-                                                 onCodeSent = onCodeSent, onSuccess = onSuccess)
+                UserForm(isCreateAccount = true) { fn, sn, pn, sexInd, pwd ->
+                    authViewModel.notifyAdmin(
+                        firstName = fn,
+                        secondName = sn,
+                        phoneNumber = pn,
+                        sexInd = sexInd,
+                        pwd = pwd,
+                        seed = Random.nextInt()){
+                        onCodeSent()
+                    }
                 }
 
             Spacer(modifier = Modifier.height(15.dp))
@@ -88,21 +108,30 @@ fun LoginScreen(
 @Composable
 fun UserForm(
     isCreateAccount: Boolean,
-    onDone: (String, String, String, Int) -> Unit = { f, s, e, sex -> }
+    onDone: (String, String, String, Int, String) -> Unit = { f, s, e, sex, pwd -> }
 ){
     val firstName = remember { mutableStateOf("") }
     val secondName = remember { mutableStateOf("") }
     val phoneNumber =  remember { mutableStateOf("") }
     val sexSelectedInd = remember { mutableStateOf(2) }
+    val password = remember { mutableStateOf("") }
+    val passwordVisible = remember { mutableStateOf(false) }
+    val passwordFocusRequest = FocusRequester.Default
 
     val keyboardController = LocalSoftwareKeyboardController.current
 
-    val validInputsState = remember(firstName.value, secondName.value, phoneNumber.value) {
+    val validInputsState = remember(
+        firstName.value,
+        secondName.value,
+        phoneNumber.value,
+        password.value
+    ) {
         mutableStateOf(
+            password.value.length >= 6 &&
             if (isCreateAccount)
-            firstName.value.trim().isNotEmpty() &&
-                    secondName.value.trim().isNotEmpty() &&
-                    phoneNumber.value.length == 9
+                firstName.value.trim().isNotEmpty() &&
+                secondName.value.trim().isNotEmpty() &&
+                phoneNumber.value.length == 9
             else
                 phoneNumber.value.length == 9
         )
@@ -113,12 +142,12 @@ fun UserForm(
 
         if (isCreateAccount) {
 
-            InputField(valueState = firstName, labelId = "Имя", enabled = true,
+            InputField(valueState = firstName, label = "Имя", enabled = true,
                        keyboardActions = KeyboardActions {
                            FocusRequester.Default
                        })
 
-            InputField(valueState = secondName, labelId = "Фамилия", enabled = true,
+            InputField(valueState = secondName, label = "Фамилия", enabled = true,
                        keyboardActions = KeyboardActions {
                            FocusRequester.Default
                        })
@@ -135,14 +164,39 @@ fun UserForm(
                        Log.d("PHONE_PHONE", "UserForm: ${phoneNumber.value}")
                    })
 
+        PasswordInput(
+            modifier = Modifier.focusRequester(passwordFocusRequest),
+            passwordState = password,
+            label = "Пароль",
+            enabled = true,
+            passwordVisibility = passwordVisible,
+            onAction = KeyboardActions.Default
+        )
+
+        if (isCreateAccount)
+            Row(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .wrapContentHeight(),
+                horizontalArrangement = Arrangement.Center,
+            ) {
+               Text(
+                   text = stringResource(id = R.string.password_requirements),
+                   color = Color.Red
+               )
+            }
 
         SubmitButton(
             text = if (isCreateAccount) "Create Account" else "Login",
             validInputsState = validInputsState
         ){
-            onDone.invoke(firstName.value.trim(),
-                          secondName.value.trim(),
-                             "+375${phoneNumber.value.trim()}", sexSelectedInd.value)
+            onDone.invoke(
+                firstName.value.trim(),
+                secondName.value.trim(),
+                "+375${phoneNumber.value.trim()}",
+                sexSelectedInd.value,
+                password.value
+            )
 
             keyboardController?.hide()
         }

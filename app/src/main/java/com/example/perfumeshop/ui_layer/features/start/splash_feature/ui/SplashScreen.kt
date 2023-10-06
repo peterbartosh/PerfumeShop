@@ -48,20 +48,11 @@ fun SplashScreen(navigateAsk : () -> Unit, navigateMain : () -> Unit) {
 
         val currentUser = FirebaseAuth.getInstance().currentUser
 
-        Log.d("CUR_USER", "SplashScreen: ${currentUser == null}")
+        if (currentUser?.isAnonymous == true || !currentUser?.email.isNullOrEmpty())
+            navigateMain()
+        else
+            navigateAsk()
 
-        //if (currentUser?.isAnonymous == true || currentUser?.phoneNumber.isNullOrEmpty()){
-        if (currentUser?.isAnonymous == true || !currentUser?.phoneNumber.isNullOrEmpty()){
-            navigateMain.invoke()
-            //navController.navigate(Screens.LoginScreen.name)
-        }else {
-            navigateAsk.invoke()
-            //navController.navigate(Screens.HomeScreen.name)
-        }
-        //navigateAsk.invoke()
-
-
-        //navigateFront.invoke()
 
 
 

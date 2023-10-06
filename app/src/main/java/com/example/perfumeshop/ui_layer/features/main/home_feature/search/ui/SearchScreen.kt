@@ -1,30 +1,33 @@
 package com.example.perfumeshop.ui_layer.features.main.home_feature.search.ui
 
-import android.util.Log
 import androidx.compose.foundation.layout.Column
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
-import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
-import androidx.compose.material3.Icon
+import androidx.compose.material3.Divider
 import androidx.compose.runtime.MutableState
-import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateListOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
-import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.Alignment
+import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import com.example.perfumeshop.R
 import com.example.perfumeshop.data_layer.models.Product
+import com.example.perfumeshop.data_layer.models.ProductWithAmount
 import com.example.perfumeshop.data_layer.utils.QueryType
-import com.example.perfumeshop.ui_layer.theme.Gold
 import com.example.perfumeshop.ui_layer.components.LoadingIndicator
+import com.example.perfumeshop.ui_layer.components.showToast
 import com.example.perfumeshop.ui_layer.features.main.cart_feature.cart.ui.CartViewModel
 import com.example.perfumeshop.ui_layer.features.main.profile_feature.favourite.ui.FavouriteViewModel
 
@@ -39,13 +42,21 @@ fun SearchScreen(
     queryType: QueryType,
 ) {
 
-    Log.d("QUERY_TEST", "SearchScreen: ${query + " " + queryType.name}")
+    //-------------------------------------------
+
+    // Product list states
+
+    val context = LocalContext.current
 
     val showProductList = remember {
         mutableStateOf(true)
     }
 
-    val showFilter = remember {
+    val showPriceType = remember {
+        mutableStateOf(false)
+    }
+
+    val selectedPriceType = remember {
         mutableStateOf(false)
     }
 
@@ -58,109 +69,194 @@ fun SearchScreen(
         updateQuery = false
     }
 
+    //-------------------------------------------
+
+    // Filtering states
+
+    val showFilter = remember {
+        mutableStateOf(false)
+    }
+
+    val moreThanState = remember {
+        mutableStateOf("0")
+    }
+    val lessThanState = remember {
+        mutableStateOf("0")
+    }
+
+    val isOnHandSelected = remember {
+        mutableStateOf(false)
+    }
+
+    val volumesStates = remember {
+        mutableStateListOf(false, false, false)
+    }
+
+    val volumes = listOf("35", "50", "125")
+
+    val applyFilter = remember(moreThanState.value, lessThanState.value,
+                               isOnHandSelected.value, volumesStates[0], volumesStates[1], volumesStates[2]) {
+            mutableStateOf(
+                moreThanState.value != "0" ||
+                        lessThanState.value != "0" ||
+                        isOnHandSelected.value ||
+                        volumesStates.any { it }
+        )
+    }
+
+    //-------------------------------------------
+
+    // Sorting states
+
+    val showSort = remember {
+        mutableStateOf(false)
+    }
+
+    val sortStates = remember {
+        mutableStateListOf(false, false)
+    }
+
+    val priorities = remember {
+        mutableStateListOf<Int>()
+    }
+
+    val isAscending = remember {
+        mutableStateOf(true)
+    }
+
+    //-------------------------------------------
+
+    // comps
+
     Column(modifier = Modifier) {
 
         SearchForm() { q ->
             searchViewModel.searchQuery(query = q, queryType = QueryType.brand)
-            //showProductList.value = true
-           // updateQuery = false
         }
+
+        Divider()
         
-        Row(horizontalArrangement = Arrangement.End,
+        Row(
+            horizontalArrangement = Arrangement.SpaceBetween,
+            verticalAlignment = Alignment.CenterVertically,
             modifier = Modifier
                 .fillMaxWidth()
-                .height(30.dp)) {
-            Icon(painter = painterResource(id = R.drawable.filter),
-                 tint = Gold,
-                 contentDescription = "filter icon",
-                 modifier = Modifier.clickable { showFilter.value = !showFilter.value })
+                .height(50.dp)
+        ) {
+
+            SearchOption(text = "Фильтр", iconId = R.drawable.filter, showState = showFilter)
+
+            Box {
+                SearchOption(text = "Цена", iconId = R.drawable.filter, showState = showPriceType)
+
+                PriceDropDownMenu(
+                    expanded = showPriceType,
+                    selected = selectedPriceType
+                )
+            }
+
+            SearchOption(text = "Сортировка", iconId = R.drawable.filter, showState = showSort)
         }
+
+        Divider()
+
+        Spacer(modifier = Modifier.height(5.dp))
 
         ShowProductList(
             showProductList = showProductList,
-            viewModel = searchViewModel,
+            searchViewModel = searchViewModel,
             onProductClick = onProductClick,
             onAddToCartClick = cartViewModel::addToCart,
             onAddToFavouriteClick = favouriteViewModel::addToFavourite,
             onRemoveFromCartClick = cartViewModel::removeFromCart,
             onRemoveFromFavouriteClick = favouriteViewModel::removeFromFavourite,
             isInFavouriteCheck = favouriteViewModel::isInFavourite,
+            isCashPriceState = selectedPriceType,
             isInCartCheck = cartViewModel::isInCart
         )
 
-        val rangeSliderState = remember {
-            mutableStateOf(0f..10f)
-        }
 
-        val selected = remember {
-            mutableStateOf(false)
-        }
+        FilterDialog(
+            showDialog = showFilter,
+            moreThanState = moreThanState,
+            lessThanState = lessThanState,
+            isOnHandSelected = isOnHandSelected,
+            states = volumesStates,
+            volumes = volumes
+        ) {
+            showProductList.value = true
+            showFilter.value = false
 
-        val listOfButtonsStates = remember {
-            listOf(Pair(mutableStateOf(false), 35),
-                                  Pair(mutableStateOf(false), 50),
-                                  Pair(mutableStateOf(false), 125))
-        }
-
-        val applyFilter = remember(rangeSliderState, selected, listOfButtonsStates) {
-            mutableStateOf(
-                rangeSliderState.value != 0f..10f ||
-                        selected.value ||
-                        listOfButtonsStates.any { it.first.value }
-            )
-        }
-
-            FilterList(showDialog = showFilter,
-                       rangeSliderState = rangeSliderState,
-                       selected = selected,
-                       listOfButtonsStates = listOfButtonsStates,
-            onApplyButtonClick = {
-                showProductList.value = true
-                showFilter.value = false
+            try {
+                val minValue = moreThanState.value.toFloat()
+                val maxValue = lessThanState.value.toFloat()
 
                 searchViewModel.searchQuery(
                     query = query,
                     queryType = queryType,
                     applyFilter = applyFilter.value,
-                    minValue = rangeSliderState.value.start,
-                    maxValue = rangeSliderState.value.endInclusive,
-                    volume = listOfButtonsStates.filter { it.first.value }.map { it.second }
+                    minValue = minValue,
+                    maxValue = maxValue,
+                    volumes = volumes.filterIndexed{ ind, _ -> volumesStates[ind] }
                 )
-            })
+            } catch (e: Exception) {
+                showToast(context = context, "Ошибка\nНекорректные данные")
+            }
+        }
+
+        SortDialog(
+            showDialog = showSort, states = sortStates,
+            priorities = priorities, isAscending = isAscending
+        ){
+            showProductList.value = true
+            showSort.value = false
+            searchViewModel.sortProducts(priorities)
+        }
     }
 }
 
 @Composable
 fun ShowProductList(
     showProductList: MutableState<Boolean>,
-    viewModel: SearchViewModel,
+    searchViewModel: SearchViewModel,
     onProductClick: (String) -> Unit,
-    onAddToFavouriteClick : (Product) -> Unit,
-    onAddToCartClick : (Product) -> Unit,
-    onRemoveFromFavouriteClick : (String) -> Unit,
-    onRemoveFromCartClick : (String) -> Unit,
-    isInFavouriteCheck : (String) -> Boolean,
-    isInCartCheck : (String) -> Boolean
+    onAddToFavouriteClick: (Product) -> Unit,
+    onAddToCartClick: (ProductWithAmount) -> Unit,
+    onRemoveFromFavouriteClick: (String) -> Unit,
+    onRemoveFromCartClick: (String) -> Unit,
+    isInFavouriteCheck: (String) -> Boolean,
+    isInCartCheck: (String) -> Boolean,
+    isCashPriceState: MutableState<Boolean>
 ) {
 
-    if (showProductList.value)
-    if (viewModel.isSuccess)
-        LazyProductList(
-            onProductClick = onProductClick,
-            listOfProducts = viewModel.searchList.collectAsState().value,
-            onAddToFavouriteClick = onAddToFavouriteClick,
-            onAddToCartClick = onAddToCartClick,
-            onRemoveFromFavouriteClick = onRemoveFromFavouriteClick,
-            onRemoveFromCartClick = onRemoveFromCartClick,
-            isInFavouriteCheck = isInFavouriteCheck,
-            isInCartCheck = isInCartCheck
-        )
-    if (viewModel.isFailure)
-        Text(text = "ERROR")
-    else if (viewModel.isLoading)
-        LoadingIndicator()
-    else if (!viewModel.isLoading && viewModel.searchList.collectAsState().value.isEmpty())
-        viewModel.isFailure = true
-}
+    remember(isCashPriceState.value) {
+        searchViewModel.isCashPrice = isCashPriceState.value
+        searchViewModel.searchProducts.forEach{ it.isCashPrice = isCashPriceState.value }
+        null
+    }
 
+    if (showProductList.value) {
+        if (searchViewModel.isSuccess) {
+            LazyProductList(
+                onProductClick = onProductClick,
+                listOfProductsWithAmounts = searchViewModel.searchProducts,
+                onAddToFavouriteClick = onAddToFavouriteClick,
+                onAddToCartClick = onAddToCartClick,
+                onRemoveFromFavouriteClick = onRemoveFromFavouriteClick,
+                onRemoveFromCartClick = onRemoveFromCartClick,
+                isInFavouriteCheck = isInFavouriteCheck,
+                priceTypeState = isCashPriceState,
+                isInCartCheck = isInCartCheck,
+                UploadMoreButton = { UploadMoreButton(searchViewModel = searchViewModel) }
+            )
+        }
+
+        if (searchViewModel.isFailure)
+            Text(text = stringResource(id = R.string.error_occured))
+        else if (searchViewModel.isLoading)
+            LoadingIndicator()
+        else if (!searchViewModel.isLoading && searchViewModel.searchProducts.isEmpty())
+            Text(text = stringResource(id = R.string.nothing_found))
+    }
+}
 
