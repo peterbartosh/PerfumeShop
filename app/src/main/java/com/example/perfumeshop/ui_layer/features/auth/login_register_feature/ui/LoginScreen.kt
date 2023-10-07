@@ -60,8 +60,7 @@ fun LoginScreen(
 
             if (showLoginForm.value)
                 UserForm(isCreateAccount = false) { fn, sn, pn, sexInd, pwd ->
-                    authViewModel.signIn(pn, pwd)
-                    onSuccess()
+                    authViewModel.signIn(pn, pwd, onSuccess = onSuccess)
                 }
             else
                 UserForm(isCreateAccount = true) { fn, sn, pn, sexInd, pwd ->

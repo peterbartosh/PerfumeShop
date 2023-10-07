@@ -18,7 +18,6 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
 import com.example.perfumeshop.data_layer.models.Order
-import com.example.perfumeshop.data_layer.models.Product
 import com.example.perfumeshop.ui_layer.components.LoadingIndicator
 import com.example.perfumeshop.ui_layer.components.SubmitButton
 import com.example.perfumeshop.ui_layer.components.showToast
@@ -33,7 +32,9 @@ import kotlin.random.Random
 fun OrderMakingScreen(
     cartViewModel: CartViewModel,
     orderMakingViewModel: OrderMakingViewModel,
-    onOrderDone : () -> Unit) {
+    onOrderDone : () -> Unit,
+    seed : Int
+) {
 
     val context = LocalContext.current
 
@@ -42,15 +43,15 @@ fun OrderMakingScreen(
     val sep = ","
 
     val streetState = remember {
-        mutableStateOf(displayName?.split(sep)?.get(3) ?: "")
-    }
-
-    val houseNumberState = remember {
         mutableStateOf(displayName?.split(sep)?.get(4) ?: "")
     }
 
-    val flatNumberState = remember {
+    val houseNumberState = remember {
         mutableStateOf(displayName?.split(sep)?.get(5) ?: "")
+    }
+
+    val flatNumberState = remember {
+        mutableStateOf(displayName?.split(sep)?.get(6) ?: "")
     }
 
     val validInputsState = remember(streetState.value, houseNumberState.value, flatNumberState.value) {
@@ -129,33 +130,28 @@ fun OrderMakingScreen(
             text = "Оформить заказ",
             validInputsState = validInputsState
         ) {
-            val products = cartViewModel.userProducts
+            val productWithAmounts = cartViewModel.userProducts
 
-            if (products.isEmpty()) return@SubmitButton
+            if (productWithAmounts.isEmpty()) return@SubmitButton
 
             val order = Order(
-                number = Random(33).nextInt(999999).toString(),
+                number = Random(seed).nextInt(100000, 999999).toString(),
                 userId = FirebaseAuth.getInstance().uid,
-                productIds = cartViewModel.userProducts.map { mapOf(it.product?.id!! to 1) },
                 address = "ул. " + streetState.value + ", д. " +
                         houseNumberState.value + ", к. " + flatNumberState.value,
                 date = Timestamp.now()
             )
 
-            orderMakingViewModel.confirmOrder(order = order,
-                                              products = products.map { productWithAmount ->
-                                                  Pair(
-                                                       productWithAmount.product ?: Product(),
-                                                       productWithAmount.amount ?: 1
-                                                  )
-                                              })
-
-            if (orderMakingViewModel.isSuccess.value) {
-                showToast(context, "Ошибка. Повторите попытку позже")
-            } else {
-                showToast(context, "Заказ принят")
-                onOrderDone()
-            }
+            orderMakingViewModel.confirmOrder(
+                order = order,
+                productWithAmounts = productWithAmounts,
+                onFailed = { showToast(context, "Ошибка. Повторите попытку позже") },
+                onSuccess = {
+                    showToast(context, "Заказ принят")
+                    cartViewModel.clearContent()
+                    onOrderDone()
+                }
+            )
 
         }
 

@@ -71,6 +71,7 @@ import com.example.perfumeshop.R
 import com.example.perfumeshop.data_layer.models.Product
 import com.example.perfumeshop.data_layer.models.ProductWithAmount
 import com.example.perfumeshop.data_layer.utils.getWidthPercent
+import com.example.perfumeshop.data_layer.utils.round
 import com.example.perfumeshop.ui_layer.components.LoadingIndicator
 import com.example.perfumeshop.ui_layer.components.showToast
 import com.example.perfumeshop.ui_layer.features.auth.login_register_feature.ui.InputField
@@ -147,6 +148,7 @@ fun UploadMoreButton(searchViewModel: SearchViewModel) {
 fun LazyProductList(
     modifier: Modifier = Modifier,
     listOfProductsWithAmounts : List<ProductWithAmount>,
+    updateChangedAmount: (Int, Int) -> Unit = {_,_ ->},
     onProductClick : (String) -> Unit,
     onAddToFavouriteClick : (Product) -> Unit,
     onAddToCartClick : (ProductWithAmount) -> Unit,
@@ -154,12 +156,12 @@ fun LazyProductList(
     onRemoveFromCartClick : (String) -> Unit,
     isInFavouriteCheck : (String) -> Boolean,
     isInCartCheck : (String) -> Boolean,
-    priceTypeState : MutableState<Boolean>,
+    isCashPriceState : MutableState<Boolean>?,
     userScrollEnabled : Boolean = true,
     UploadMoreButton :  @Composable () -> Unit = { Box{} }
 ) {
 
-    Log.d("LazyProductList", "LazyProductList: $listOfProductsWithAmounts")
+    Log.d("LazyProductList", "LazyProductList: ${listOfProductsWithAmounts.size}")
 
 
     LazyColumn(
@@ -170,13 +172,12 @@ fun LazyProductList(
         state = rememberLazyListState(),
         userScrollEnabled = userScrollEnabled,
     ) {
-        Log.d("LazyProductList", "LazyProductList: $listOfProductsWithAmounts")
-
         itemsIndexed(listOfProductsWithAmounts,
-                     key = {i, p -> p.product?.id ?: i}) { ind, productWithAmount ->
-            Log.d("LazyProductList", "LazyProductList: $productWithAmount")
+            key = {i, p -> p.product?.id ?: i}) { ind, productWithAmount ->
+
             ProductRow(
                 productWithAmount = productWithAmount,
+                onAmountChange = { value -> updateChangedAmount(ind, value) },
                 onProductClick = onProductClick,
                 onAddToFavouriteClick = onAddToFavouriteClick,
                 onAddToCartClick = onAddToCartClick,
@@ -184,7 +185,7 @@ fun LazyProductList(
                 onRemoveFromCartClick = onRemoveFromCartClick,
                 isInFavouriteCheck = isInFavouriteCheck,
                 isInCartCheck = isInCartCheck,
-                priceTypeState = priceTypeState
+                isCashPriceState = isCashPriceState
             )
         }
 
@@ -196,7 +197,9 @@ fun LazyProductList(
 
 @Composable
 fun ProductRow(
+    showEditableAmount : Boolean = true,
     productWithAmount: ProductWithAmount,
+    onAmountChange : (Int) -> Unit,
     onProductClick : (String) -> Unit,
     onAddToFavouriteClick : (Product) -> Unit,
     onAddToCartClick : (ProductWithAmount) -> Unit,
@@ -204,7 +207,7 @@ fun ProductRow(
     onRemoveFromCartClick : (String) -> Unit,
     isInFavouriteCheck : (String) -> Boolean,
     isInCartCheck : (String) -> Boolean,
-    priceTypeState : MutableState<Boolean>,
+    isCashPriceState : MutableState<Boolean>? = null,
 ) {
 
     val context = LocalContext.current
@@ -248,19 +251,26 @@ fun ProductRow(
 
                 Divider()
 
-                Text(text = if (!priceTypeState.value)
-                    productWithAmount.product?.cashPrice.toString()
+                if (isCashPriceState == null)
+                    Row {
+                        Text(text = productWithAmount.product?.cashPrice?.round(2).toString(), fontSize = 12.sp)
+                        Spacer(modifier = Modifier.width(10.dp))
+                        Text(text = productWithAmount.product?.cashlessPrice?.round(2).toString(), fontSize = 12.sp)
+                    }
                 else
-                    productWithAmount.product?.cashlessPrice.toString(),
-                fontSize = 12.sp)
+                    Text(text = if (isCashPriceState.value)
+                        productWithAmount.product?.cashPrice?.round(2).toString()
+                    else
+                        productWithAmount.product?.cashlessPrice?.round(2).toString(),
+                    fontSize = 12.sp)
             }
 
 
-            Row(modifier = Modifier
-                .fillMaxWidth()
-                .wrapContentHeight()
-                .padding(end = 10.dp),
-                //verticalAlignment = Alignment.CenterVertically
+            Row(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .wrapContentHeight()
+                    .padding(end = 10.dp)
             ) {
                 IconButton(
                     modifier = Modifier.size(20.dp),
@@ -309,13 +319,13 @@ fun ProductRow(
                     )
                 }
 
-                if (true) {
                     Spacer(modifier = Modifier.width(5.dp))
 
-                    PlusMinus(initValue = productWithAmount.amount ?: 1) { value ->
-                        productWithAmount.amount = value
-                    }
-                }
+                    if (showEditableAmount)
+                         PlusMinus(initValue = productWithAmount.amount ?: 1, onValueChange = onAmountChange)
+                    else
+                        Text(text = productWithAmount.amount?.toString() ?: "1", fontSize = 15.sp)
+
 
 
             }
@@ -405,7 +415,7 @@ fun ProductRow(
 @Composable
 fun PlusMinus(initValue : Int, onValueChange : (Int) -> Unit) {
 
-    val valueState = remember {
+    val valueState = rememberSaveable {
         mutableStateOf(initValue.toString())
     }
 

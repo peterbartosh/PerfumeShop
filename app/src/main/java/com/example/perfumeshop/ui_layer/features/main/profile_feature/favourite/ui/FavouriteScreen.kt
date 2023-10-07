@@ -19,11 +19,9 @@ fun FavouriteScreen(
     onProductClick: (String) -> Unit
 ) {
 
-    val products by favouriteViewModel.userProducts.collectAsState()
-
     if (favouriteViewModel.isSuccess)
         LazyProductList(
-            listOfProducts = products,
+            listOfProducts = favouriteViewModel.userProducts,
             onProductClick = onProductClick,
             onAddToFavouriteClick = favouriteViewModel::addToFavourite,
             onRemoveFromFavouriteClick = favouriteViewModel::removeFromFavourite,
@@ -35,6 +33,6 @@ fun FavouriteScreen(
         Text(text = stringResource(id = R.string.error_occured))
     else if (favouriteViewModel.isLoading)
         LoadingIndicator()
-    else if (!favouriteViewModel.isLoading && products.isEmpty())
+    else if (!favouriteViewModel.isLoading && favouriteViewModel.userProducts.isEmpty())
         CartIsEmpty()
 }

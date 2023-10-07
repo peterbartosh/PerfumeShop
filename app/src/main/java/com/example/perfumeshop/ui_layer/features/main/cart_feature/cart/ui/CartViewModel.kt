@@ -11,8 +11,6 @@ import com.example.perfumeshop.data_layer.models.ProductWithAmount
 import com.example.perfumeshop.data_layer.repositories.FireRepository
 import com.google.firebase.auth.FirebaseAuth
 import dagger.hilt.android.lifecycle.HiltViewModel
-import kotlinx.coroutines.flow.MutableStateFlow
-import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.catch
 import kotlinx.coroutines.launch
 import javax.inject.Inject
@@ -30,10 +28,10 @@ class CartViewModel @Inject constructor(private val repository: FireRepository) 
     var isFailure by mutableStateOf(false)
 
 
-    init {
-        if (FirebaseAuth.getInstance().currentUser?.isAnonymous == false)
-           loadUserProducts()
-    }
+//    init {
+//        if (FirebaseAuth.getInstance().currentUser?.isAnonymous == false)
+//           loadUserProducts()
+//    }
 
     fun clear(){
         super.onCleared()
@@ -41,13 +39,14 @@ class CartViewModel @Inject constructor(private val repository: FireRepository) 
 
     fun clearContent(){
         userProducts.clear()
+
     }
 
     fun addToCart(productWithAmount: ProductWithAmount) = viewModelScope.launch{
         userProducts.add(productWithAmount)
         FirebaseAuth.getInstance().uid.let { uid ->
             if (uid != null)
-            repository.addCartObj(productWithAmount = productWithAmount, userId = uid)
+                repository.addCartObj(productWithAmount = productWithAmount, userId = uid)
         }
     }
 
@@ -56,6 +55,15 @@ class CartViewModel @Inject constructor(private val repository: FireRepository) 
         FirebaseAuth.getInstance().uid.let { uid ->
             if (uid != null)
                 repository.deleteCartObj(productId = productId, userId = uid)
+        }
+    }
+
+    fun updateProductAmountInCart(productIndex : Int, amount : Int) = viewModelScope.launch {
+        userProducts[productIndex].amount = amount
+        val productId = userProducts[productIndex].product?.id
+        FirebaseAuth.getInstance().uid.let { uid ->
+            if (uid != null && productId != null)
+                repository.updateCartProductAmount(productId = productId, userId = uid, amount = amount)
         }
     }
 

@@ -6,6 +6,7 @@ import androidx.compose.runtime.mutableStateOf
 import com.example.perfumeshop.data_layer.models.CartObj
 import com.example.perfumeshop.data_layer.models.FavouriteObj
 import com.example.perfumeshop.data_layer.models.Order
+import com.example.perfumeshop.data_layer.models.OrderProduct
 import com.example.perfumeshop.data_layer.models.Product
 import com.example.perfumeshop.data_layer.models.ProductWithAmount
 import com.example.perfumeshop.data_layer.models.Review
@@ -13,19 +14,24 @@ import com.example.perfumeshop.data_layer.models.User
 import com.example.perfumeshop.data_layer.utils.ProductType
 import com.example.perfumeshop.data_layer.utils.QueryType
 import com.google.firebase.auth.FirebaseAuth
+import com.google.firebase.firestore.DocumentReference
 import com.google.firebase.firestore.FirebaseFirestore
 import com.google.firebase.firestore.Query
 import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Deferred
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.asFlow
 import kotlinx.coroutines.flow.catch
 import kotlinx.coroutines.flow.emptyFlow
+import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.tasks.await
 import kotlinx.coroutines.withContext
 import javax.inject.Inject
+
+const val TAG = "FireRepository"
 
 internal fun Query.filterPrice(range : ClosedFloatingPointRange<Float>) : Query {
     return this
@@ -85,111 +91,58 @@ class FireRepository @Inject constructor(
     private val favouriteCollection = FirebaseFirestore.getInstance()
         .collection("favourite")
 
-    suspend fun saveToFirebase(item: Any, collectionName: String) : Pair<Boolean, Exception?> {
-        var state : Pair<Boolean, Exception?> = Pair(false, null)
+    private val ordersProductsCollection = FirebaseFirestore.getInstance()
+        .collection("orders_products")
+
+    suspend fun saveToFirebase(
+        item: Any,
+        collectionName: String,
+        updateId : Boolean = true
+    ) : Pair<Boolean, Any?> {
+
+        var state : Pair<Boolean, Any?> = Pair(false, null)
+
         val doc = FirebaseFirestore.getInstance().collection(collectionName)
             .add(item)
-            .addOnFailureListener{ state = Pair(false, it)
-                Log.d("SAVE_TO_DATAB", "saveToFirebase: ${it.message}")}
+            .addOnFailureListener{
+                state = Pair(false, it)
+                Log.d(TAG, "saveToFirebase: ${it.message}")}
             .await()
-        doc.update("id", doc.id)
-            .addOnSuccessListener { state = Pair(true, null)
-                Log.d("SAVE_TO_DATAB", "saveToFirebase: SUCC")}
-            .addOnFailureListener{ state = Pair(false, it)
-                Log.d("SAVE_TO_DATAB", "saveToFirebase: FAIL")
-    }.await()
+
+        if (state.second == null && !updateId) state = Pair(true, null)
+
+        if (updateId)
+            doc.update("id", doc.id)
+                .addOnSuccessListener {
+                    state = Pair(true, null)
+                    Log.d(TAG, "saveToFirebase: SUCC")}
+                .addOnFailureListener{
+                    state = Pair(false, it)
+                    Log.d(TAG, "saveToFirebase: FAIL")
+            }.await()
+
+        if (state.second == null) state = Pair(true, doc.id)
+
         return state
     }
 
-    fun deleteFromDatabase(id: String, collectionName: String, onSuccess: () -> Unit) {
-
-        CoroutineScope(Job()).launch {
-            FirebaseFirestore.getInstance()
-                .collection(collectionName)
-                .document(id)
-                .delete()
-                .addOnCompleteListener {
-                    if (it.isSuccessful) {
-                        onSuccess.invoke()
-                    }
-                }
-        }
-    }
-
-    suspend fun deleteProducts(
-        productType: ProductType,
-        volumes : List<String>,
-        onSuccess: () -> Unit) :  Pair<MutableState<Boolean>, MutableState<Int>>  {
-
-        val state: Pair<MutableState<Boolean>, MutableState<Int>> =
-            Pair(mutableStateOf(false), mutableStateOf(0))
-
-        withContext(Dispatchers.IO) {
-
-            val docIds = productsCollection
-                .whereIn("type", listOf(productType.name))
-                .apply {
-                    if (volumes.isNotEmpty())
-                        this.whereIn("volume", volumes)
-                    else
-                        this
-                }
-                .get().await().documents.asFlow()
-
-            docIds.catch {
-                state.second.value++
-                state.first.value = true
-            }.collect { ds ->
-                productsCollection.document(ds.id).delete()
-            }
-        }
-
-            return state
-
-    }
-
-    fun createUser(user : User){
+    suspend fun createUser(user : User){
         FirebaseFirestore.getInstance()
             .collection("users")
             .document(user.id)
             .set(user)
-            .addOnSuccessListener { Log.d("AUTH_CREATE_USER", "createUser: SUCCESS") }
-            .addOnFailureListener { Log.d("AUTH_CREATE_USER", "createUser: FAILED") }
-    }
-
-
-    suspend fun createProduct(product: Product) : MutableState<Boolean> {
-        val failState = mutableStateOf(false)
-
-        withContext(Dispatchers.IO) {
-            val id = product.id
-            if (id != null) productsCollection.document(id).set(product).addOnFailureListener{
-                failState.value = true
-            }
-        }
-
-        return failState
-    }
-
-    fun updateFieldInDatabase(
-        collectionPath : String,
-        id : String,
-        fieldPath : String,
-        updatedValue : Any) {
-
-            FirebaseFirestore.getInstance()
-                .collection(collectionPath)
-                .document(id)
-                .update(fieldPath, updatedValue)
-                .addOnCompleteListener {
-                    Log.d("DATABASE_TASK", "updateFieldInDatabase: SUCCESS")
-                }.addOnFailureListener {
-                    Log.d("DATABASE_TASK", "updateFieldInDatabase: FAILED")
-                }
+            .addOnSuccessListener { Log.d(TAG, "createUser: SUCCESS") }
+            .addOnFailureListener { Log.d(TAG, "createUser: FAILED") }
+            .await()
     }
 
     suspend fun getUserOrders() : Flow<Order> {
         return queryOrders.whereIn("user_id", listOf(FirebaseAuth.getInstance().uid)).queryToFlow()
+    }
+
+    suspend fun getOrderProducts(orderId : String) : List<OrderProduct> {
+        return ordersProductsCollection.whereIn("order_id", listOf(orderId))
+            .get().await().toObjects(OrderProduct::class.java)
     }
 
     fun getQueryProducts(
@@ -207,14 +160,11 @@ class FireRepository @Inject constructor(
         return queryReview.whereIn("product_id", listOf(productId)).queryToFlow()
     }
 
-    suspend fun getProduct(productId: String) : Product? {
-        return try {
-            queryProducts.whereIn("id", listOf(productId))
-                .get().await().first().toObject(Product::class.java)
-        } catch (e : Exception) {
-            Log.d("ERROR_ERROR", "getProduct: ${e.message}")
-            null
-        }
+    suspend fun getProduct(productId: String?) : Product? {
+        return if (!productId.isNullOrEmpty()) {
+            val snapshot = productsCollection.document(productId).get().await()
+            if (snapshot.exists()) snapshot.toObject(Product::class.java) else null
+        } else null
     }
 
     suspend fun addFavouriteObj(productId: String, userId: String){
@@ -277,6 +227,31 @@ class FireRepository @Inject constructor(
                 else
                     Log.d("ERROR_ERROR", "deleteCartObj: Failed")
             }.await()
+    }
+
+    suspend fun updateCartProductAmount(productId: String, userId: String, amount: Int){
+        cartCollection.document("$userId|$productId")
+            .update("amount", amount)
+            .addOnCompleteListener {
+            if (it.isSuccessful)
+                Log.d("SUCC", "deleteCartObj: SUCC")
+            else
+                Log.d("ERROR_ERROR", "deleteCartObj: Failed")
+        }.await()
+    }
+
+    suspend fun clearCart(userId : String?) : Boolean {
+
+        var isSuccess = true
+        val documentsIds = cartCollection.whereIn("user_id", listOf(userId))
+            .get().await().documents.map { it.id }
+
+        documentsIds.forEach { id ->
+            cartCollection.document(id).delete().addOnCompleteListener{
+                if (!it.isSuccessful) isSuccess = false
+            }.await()
+        }
+        return isSuccess
     }
 
     suspend fun getUserCartProducts(userId : String) : Flow<ProductWithAmount> {

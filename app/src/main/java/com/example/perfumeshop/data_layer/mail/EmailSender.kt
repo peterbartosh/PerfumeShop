@@ -4,10 +4,13 @@ package com.example.perfumeshop.data_layer.mail
 import android.util.Log
 import com.example.perfumeshop.data_layer.models.Order
 import com.example.perfumeshop.data_layer.models.Product
+import com.example.perfumeshop.data_layer.models.ProductWithAmount
 import com.google.firebase.auth.FirebaseAuth
 import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Deferred
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
+import kotlinx.coroutines.async
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import java.lang.StringBuilder
@@ -23,11 +26,11 @@ import javax.mail.internet.MimeMessage
 
 class EmailSender() {
 
-    fun s(){
+    fun s() {
 
     }
 
-    fun sendRegisterRequestEmail(fN : String, sN : String, pN : String, code : Int){
+    fun sendRegisterRequestEmail(fN: String, sN: String, pN: String, code: Int) {
 
         val stringSenderEmail = "goldappsender@gmail.com"
         val stringReceiverEmail = "pt.bartosh54321@gmail.com"
@@ -58,9 +61,9 @@ class EmailSender() {
 
         mimeMessage.setContent(
 //            "<h2> Подтвердить регистрацию.\n </h2>" +
-                    "<h3>Имя: $sN $fN</h3>"+
+            "<h3>Имя: $sN $fN</h3>" +
                     "<h3>Номер телефона: $pN</h3>" +
-                            "<h3>Код: $code</h3>",
+                    "<h3>Код: $code</h3>",
             "text/html; charset=utf-8"
         )
 
@@ -79,49 +82,50 @@ class EmailSender() {
         // create mime message
     }
 
-    fun sendOrderEmail(order: Order, products: List<Pair<Product, Int>>): Pair<Boolean, Exception?> {
+    suspend fun sendOrderEmail(
+        order: Order,
+        products: List<ProductWithAmount>,
+        scope: CoroutineScope
+    ): Pair<Boolean, Exception?> = scope.async {
 
-        // try {
-        val stringSenderEmail = "goldappsender@gmail.com"
-        val stringReceiverEmail = "pt.bartosh54321@gmail.com"
-        val stringPasswordSenderEmail = "tccw syra ghsy reib"
-        val stringHost = "smtp.gmail.com"
-        val properties = System.getProperties()
+            val stringSenderEmail = "goldappsender@gmail.com"
+            val stringReceiverEmail = "pt.bartosh54321@gmail.com"
+            val stringPasswordSenderEmail = "tccw syra ghsy reib"
+            val stringHost = "smtp.gmail.com"
+            val properties = System.getProperties()
 
-        properties["mail.smtp.host"] = stringHost
-        properties["mail.smtp.port"] = "465"
-        properties["mail.smtp.ssl.enable"] = "true"
-        properties["mail.smtp.auth"] = "true"
-        properties["mail.debug"] = "true"
+            properties["mail.smtp.host"] = stringHost
+            properties["mail.smtp.port"] = "465"
+            properties["mail.smtp.ssl.enable"] = "true"
+            properties["mail.smtp.auth"] = "true"
+            properties["mail.debug"] = "true"
 
-        val session = Session.getInstance(properties, object : Authenticator() {
-            override fun getPasswordAuthentication(): PasswordAuthentication {
-                return PasswordAuthentication(stringSenderEmail, stringPasswordSenderEmail)
-            }
-        })
+            val session = Session.getInstance(properties, object : Authenticator() {
+                override fun getPasswordAuthentication(): PasswordAuthentication {
+                    return PasswordAuthentication(stringSenderEmail, stringPasswordSenderEmail)
+                }
+            })
 
-        val user = FirebaseAuth.getInstance().currentUser
+            val user = FirebaseAuth.getInstance().currentUser
 
-        val mimeMessage = MimeMessage(session)
-        mimeMessage.addRecipient(
-            Message.RecipientType.TO,
-            InternetAddress(stringReceiverEmail)
-        )
+            val mimeMessage = MimeMessage(session)
+            mimeMessage.addRecipient(
+                Message.RecipientType.TO,
+                InternetAddress(stringReceiverEmail)
+            )
 
-        mimeMessage.subject = "Заказ-${order.number}"
+            mimeMessage.subject = "Заказ-${order.number}"
 
-        val sep = ","
+            val sep = ","
 
-        val values = mutableListOf(
-            order.number, order.address, user?.displayName?.split(sep)?.get(0),
-            user?.displayName?.split(sep)?.get(1), user?.phoneNumber
-        )
+            val values = mutableListOf(
+                order.number, order.address, user?.displayName?.split(sep)?.get(0),
+                user?.displayName?.split(sep)?.get(1), user?.phoneNumber
+            )
 
-        val orderDesc = StringBuilder("")
+            val orderDesc = StringBuilder("")
 
-        var state : Pair<Boolean, Exception?> = Pair(false, null)
-
-        CoroutineScope(Job() + Dispatchers.Default).launch {
+            var state: Pair<Boolean, Exception?> = Pair(false, null)
 
             if (values.any { it?.isEmpty() == true })
                 delay(200)
@@ -142,13 +146,11 @@ class EmailSender() {
                 else break
             }
 
-            products.forEachIndexed { ind, pair ->
-//                    if (pair.first.id?.isEmpty() == true || pair.first.brand?.isEmpty() == true || pair.second == )
-//                        delay(200)
+            products.forEachIndexed{ ind, productWithAmount ->
                 orderDesc.append(
-                    "  ${ind + 1}) Идентификатор товара: ${pair.first.id}\n" +
-                            "      Брэнд: ${pair.first.brand}\n" +
-                            "      Количество: ${pair.second}\n"
+                    "  ${ind + 1}) Идентификатор товара: ${productWithAmount.product?.id}\n" +
+                            "      Брэнд: ${productWithAmount.product?.brand}\n" +
+                            "      Количество: ${productWithAmount.amount}\n"
                 )
             }
 
@@ -162,13 +164,10 @@ class EmailSender() {
                 Log.d("ERROR_ERROR_1", e.message ?: "Unknown error message")
                 Pair(false, e)
             }
-        }
-        return state
-            //}
-//        }
-//        catch (e: MessagingException) {
-//            Log.d("ERROR_ERROR_2", e.message ?: "Unknown error message")
-//        }
-    }
+
+            state
+
+        }.await()
 }
+
 

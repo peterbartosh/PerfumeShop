@@ -9,6 +9,7 @@ import com.example.perfumeshop.ui_layer.features.main.cart_feature.order_making.
 import com.example.perfumeshop.ui_layer.features.main.cart_feature.cart.ui.CartViewModel
 import com.example.perfumeshop.ui_layer.features.main.cart_feature.cartActiveChild
 import com.example.perfumeshop.ui_layer.features.main.cart_feature.order_making.ui.OrderMakingViewModel
+import kotlin.random.Random
 
 
 const val orderMakingRoute = "order_making"
@@ -28,8 +29,12 @@ fun NavGraphBuilder.orderMakingScreen(
     onOrderDone: () -> Unit) {
     composable(route = orderMakingRoute) {
         val orderMakingViewModel = hiltViewModel<OrderMakingViewModel>()
-        OrderMakingScreen(cartViewModel = cartViewModel,
-                          orderMakingViewModel = orderMakingViewModel,
-                          onOrderDone = onOrderDone)
+        val seed = Random(243).nextInt()
+        OrderMakingScreen(
+            cartViewModel = cartViewModel,
+            orderMakingViewModel = orderMakingViewModel,
+            onOrderDone = onOrderDone,
+            seed = seed
+        )
     }
 }

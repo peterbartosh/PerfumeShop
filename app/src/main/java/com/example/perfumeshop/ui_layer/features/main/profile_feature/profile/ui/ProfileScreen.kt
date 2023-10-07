@@ -41,6 +41,7 @@ fun ProfileScreen(
                 NotRegisteredSection(onOptionClick = onOptionClick)
             else
                 RegisteredSection(onOptionClick = onOptionClick, onSignOutClick = {
+                    //FirebaseAuth.getInstance().
                     FirebaseAuth.getInstance().signOut()
                     FirebaseAuth.getInstance().signInAnonymously()
                     isAnonymous.value = true
@@ -54,9 +55,9 @@ fun ProfileScreen(
 
 @Composable
 fun RegisteredSection(onOptionClick: (OptionType) -> Unit, onSignOutClick: () -> Unit ) {
-    ProfileSection(onEditProfileClick = {
-        onOptionClick(OptionType.Edit)
-    },
+
+    ProfileSection(
+        onEditProfileClick = { onOptionClick(OptionType.Edit) },
         onSignOutClick = onSignOutClick
     )
 

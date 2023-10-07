@@ -11,5 +11,5 @@
     <string name="error_occured"> Произошла ошибка </string>
     <string name="nothing_found"> Ничего не найдено </string>
     <string name="password_requirements"> Пароль должен состоять как минимум из 6-ти символов. </string>
-
+    <string name="code_verification_alert"> Ожидайте. В течение нескольких минут вам поступит звонок от нашего оператора. </string>
 </resources>

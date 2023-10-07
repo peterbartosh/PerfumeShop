@@ -53,7 +53,7 @@ fun NavGraphBuilder.mainGraph(
     navigateProduct: (String) -> Unit,
     navigateToOrderMaking : () -> Unit,
     navigateToCart : () -> Unit,
-    homeViewModel: HomeViewModel,
+    //homeViewModel: HomeViewModel,
     cartViewModel: CartViewModel,
     favouriteViewModel: FavouriteViewModel
 ){

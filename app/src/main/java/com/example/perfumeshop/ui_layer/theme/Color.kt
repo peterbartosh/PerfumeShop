@@ -17,3 +17,6 @@ val Pink = Color(0xFFFFC0CB)
 val DarkPurple = Color(0xFF020035)
 
 val NormalYellow = Color(0xFFFDDA0D)
+
+val GreyLight = Color(0xFFB5B6BA)
+val GreyDark = Color(0xFF60626C)

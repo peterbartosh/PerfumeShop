@@ -5,6 +5,8 @@ import androidx.navigation.NavController
 import androidx.navigation.NavGraphBuilder
 import androidx.navigation.NavOptions
 import androidx.navigation.compose.composable
+import com.example.perfumeshop.ui_layer.features.main.cart_feature.cart.ui.CartViewModel
+import com.example.perfumeshop.ui_layer.features.main.profile_feature.favourite.ui.FavouriteViewModel
 import com.example.perfumeshop.ui_layer.features.main.profile_feature.orders.ui.OrdersScreen
 import com.example.perfumeshop.ui_layer.features.main.profile_feature.orders.ui.OrdersViewModel
 import com.example.perfumeshop.ui_layer.features.main.profile_feature.profile.navigation.profileRoute
@@ -18,7 +20,11 @@ fun NavController.navigateToOrders(navOptions: NavOptions? = null) {
     this.navigate(ordersRoute, navOptions)
 }
 
-fun NavGraphBuilder.ordersScreen(onProductClick : (String) -> Unit) {
+fun NavGraphBuilder.ordersScreen(
+    favouriteViewModel: FavouriteViewModel,
+    cartViewModel: CartViewModel,
+    onProductClick : (String) -> Unit
+) {
     composable(route = ordersRoute) {
         val ordersViewModel = hiltViewModel<OrdersViewModel>()
 //        if (profileActiveChild != ordersRoute) {
@@ -27,6 +33,11 @@ fun NavGraphBuilder.ordersScreen(onProductClick : (String) -> Unit) {
 //            ordersViewModel.isSuccess = false
 //            //ordersViewModel.initOrdersQuery = true
 //        }
-        OrdersScreen(ordersViewModel = ordersViewModel, onProductClick = onProductClick)
+        OrdersScreen(
+            ordersViewModel = ordersViewModel,
+            favouriteViewModel = favouriteViewModel,
+            cartViewModel = cartViewModel,
+            onProductClick = onProductClick
+        )
     }
 }

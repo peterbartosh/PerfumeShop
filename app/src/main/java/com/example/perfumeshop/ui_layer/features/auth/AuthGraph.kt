@@ -22,11 +22,9 @@ fun NavGraphBuilder.authGraph(
 
     //navigation(startDestination = loginAskRoute, route = authRoute) {
 
-        loginScreen(onCodeSent = navigateCodeVerification,
-                    onSuccess = navigateMain)
+        loginScreen(onCodeSent = navigateCodeVerification, onSuccess = navigateMain)
 
-        codeVerificationScreen(navController = navController,
-                               onSuccess = navigateMain)
+        codeVerificationScreen(navController = navController, onSuccess = navigateMain)
 
     //}
 

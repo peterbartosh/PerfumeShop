@@ -12,6 +12,7 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.layout.wrapContentHeight
 import androidx.compose.foundation.layout.wrapContentWidth
@@ -91,13 +92,14 @@ fun PasswordInput(
 fun PasswordVisibility(passwordVisibility: MutableState<Boolean>) {
     IconButton(onClick = { passwordVisibility.value = !passwordVisibility.value}) {
         Icon(
+            modifier = Modifier.size(20.dp),
             painter = painterResource(id =
               if (passwordVisibility.value)
                     R.drawable.hide_password
               else
                   R.drawable.show_password
             ),
-            contentDescription = "show / hide pwd"
+            contentDescription = "show/hide pwd"
         )
 
     }
@@ -116,7 +118,6 @@ fun InputField(
     imeAction: ImeAction = ImeAction.Next,
     textStyle: TextStyle = TextStyle(),
     keyboardType: KeyboardType = KeyboardType.Text,
-    keyboardOptions: KeyboardOptions = KeyboardOptions.Default,
     visualTransformation: VisualTransformation = VisualTransformation.None,
     trailingIcon: @Composable() (() -> Unit)? = {},
     keyboardActions: KeyboardActions = KeyboardActions.Default
@@ -227,10 +228,10 @@ fun PhoneInput(
         InputField(
             modifier = modifier,
             valueState = phone,
-            onValueChange = { onPhoneChanged(it.take(mask.count { it == maskNumber })) },
+            onValueChange = { value -> onPhoneChanged(value.take(mask.count { it == maskNumber })) },
             label = "Телефон",
             enabled = enabled,
-            keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
+            keyboardType = KeyboardType.NumberPassword,
             visualTransformation = PhoneVisualTransformation(mask, maskNumber)
         )
     }

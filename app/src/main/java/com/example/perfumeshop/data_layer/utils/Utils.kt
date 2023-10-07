@@ -15,6 +15,7 @@ import java.time.ZoneId
 import java.time.ZoneOffset
 import java.time.format.DateTimeFormatter
 import java.util.function.Predicate
+import kotlin.math.round
 
 //sealed class TaskState(loading : Boolean? = null, success : Boolean ? = null){
 //    class Success() : TaskState()
@@ -55,7 +56,6 @@ fun getDateTimeTimestamp(timestamp: Timestamp?) : Timestamp {
     return Timestamp.valueOf(odt.toString())
 }
 
-@RequiresApi(Build.VERSION_CODES.O)
 fun getDateTimeString(timestamp: Timestamp?): String {
     if (timestamp == null) return ""
     val offset = ZoneOffset.ofHoursMinutes(+6, +9)
@@ -64,4 +64,10 @@ fun getDateTimeString(timestamp: Timestamp?): String {
 
     return odt.toLocalDateTime()
         .format(DateTimeFormatter.ofPattern("yyyy.MM.dd|HH:mm"))
+}
+
+fun Double.round(decimals: Int): Double {
+    var multiplier = 1.0
+    repeat(decimals) { multiplier *= 10 }
+    return round(this * multiplier) / multiplier
 }

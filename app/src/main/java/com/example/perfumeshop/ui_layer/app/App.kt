@@ -49,6 +49,9 @@ import com.example.perfumeshop.ui_layer.theme.PerfumeShopTheme
 import com.example.perfumeshop.ui_layer.theme.PreferencesManager
 import com.google.firebase.auth.FirebaseAuth
 
+const val TAG = "App"
+const val ERROR_TAG = "ERROR_OCCURRED"
+
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -84,14 +87,16 @@ fun App() {
 
         navController.addOnDestinationChangedListener{ controller, dest, args ->
 
-            Log.d("YHHJD", "APP: ${FirebaseAuth.getInstance().currentUser?.displayName}")
+            Log.d("UID_TEST", "App: ${FirebaseAuth.getInstance().uid}")
 
-            Log.d("ACTIVE_CHILD_TEST",
-                  "Home child: ${homeActiveChild} Cart child: $cartActiveChild Profile child: $profileActiveChild"
-            )
-
-            Log.d("BQ_TEST", "${controller.backQueue.map { it.destination.route }}")
-            Log.d("BQ_TEST_ID", "${controller.backQueue.map { it.destination.route + " " + it.id }}")
+            Log.d(TAG, "APP: ${FirebaseAuth.getInstance().currentUser?.displayName}")
+//
+//            Log.d(TAG,
+//                  "Home child: $homeActiveChild Cart child: $cartActiveChild Profile child: $profileActiveChild"
+//            )
+//
+//            Log.d(TAG, "${controller.backQueue.map { it.destination.route }}")
+//            Log.d(TAG, "${controller.backQueue.map { it.destination.route + " " + it.id }}")
 
             showBackIcon = dest.route !in
                     listOf(splashRoute, askRoute, homeRoute, cartRoute, profileRoute)
@@ -132,8 +137,10 @@ fun App() {
             },
             bottomBar = {
                 if (showBottomBar)
-                    BottomNavigationBar(bottomBarSelectedIndex = bottomBarSelectedIndex,
-                                        navController = navController)
+                    BottomNavigationBar(
+                        bottomBarSelectedIndex = bottomBarSelectedIndex,
+                        navController = navController
+                    )
                  else
                     Box {}
             }

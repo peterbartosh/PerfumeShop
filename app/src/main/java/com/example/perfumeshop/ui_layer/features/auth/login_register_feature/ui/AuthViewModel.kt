@@ -22,17 +22,16 @@ import com.google.firebase.auth.PhoneAuthProvider
 import com.google.firebase.auth.UserProfileChangeRequest
 import com.google.firebase.firestore.FirebaseFirestore
 import dagger.hilt.android.lifecycle.HiltViewModel
+import kotlinx.coroutines.async
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.tasks.await
 import java.util.concurrent.TimeUnit
 import javax.inject.Inject
 import kotlin.random.Random
 
 @HiltViewModel
 class AuthViewModel @Inject constructor(private val repository: FireRepository) : ViewModel() {
-
-
-//    private val _loading = MutableLiveData(false)
-//    val loading: LiveData<Boolean> = _loading
 
     var isLoading by mutableStateOf(false)
 
@@ -70,7 +69,7 @@ class AuthViewModel @Inject constructor(private val repository: FireRepository) 
         return code == verCode
     }
 
-    fun register(){
+    fun register() = viewModelScope.launch {
         _auth.createUserWithEmailAndPassword(
             "$phoneNumberState@gmail.com", passwordState
         ).addOnSuccessListener {
@@ -81,15 +80,18 @@ class AuthViewModel @Inject constructor(private val repository: FireRepository) 
                 ).build()
             )
             createUserInDatabase()
-        }
+        }.await()
     }
 
-    fun signIn(phoneNumber: String, password : String){
-        Log.d("AUTHH_TEST", "signIn: $phoneNumber, $password")
-        _auth.signInWithEmailAndPassword("$phoneNumber@gmail.com", password)
+    fun signIn(phoneNumber: String, password : String, onSuccess : () -> Unit) = viewModelScope.launch {
+       // Log.d("AUTHH_TEST", "signIn: $phoneNumber, $password")
+        _auth.signInWithEmailAndPassword("$phoneNumber@gmail.com", password).await()
+        onSuccess()
+//        Log.d("UID_TEST", "signIn: ${_auth.uid}")
+//        delay(300)
     }
 
-    private fun createUserInDatabase() {
+    private fun createUserInDatabase() = viewModelScope.launch {
         val id = _auth.uid
         val sexes = listOf(Sex.Male, Sex.Female, Sex.Unisex)
         if (id != null) {
@@ -103,114 +105,4 @@ class AuthViewModel @Inject constructor(private val repository: FireRepository) 
             repository.createUser(user)
         }
     }
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-    var storedVerificationId: String = ""
-
-
-
-
-    fun clear() {
-        super.onCleared()
-    }
-
-    fun onLoginClicked(
-        firstName : String,
-        secondName : String,
-        sexInd : Int,
-        phoneNumber: String,
-        onCodeSent: () -> Unit,
-        onSuccess: () -> Unit
-    ) = viewModelScope.launch {
-
-        isLoading = true
-
-        _auth.setLanguageCode("ru")
-
-        firstNameState = firstName
-        secondNameState = secondName
-        sexState = sexInd
-
-        val callback = object : PhoneAuthProvider.OnVerificationStateChangedCallbacks() {
-            override fun onVerificationCompleted(credential: PhoneAuthCredential) {
-                Log.d("PHONE_AUTH_TEST", "verification completed")
-                viewModelScope.launch {
-                    signInWithPhoneAuthCredential(credential, onSuccess)
-                }
-            }
-
-            override fun onVerificationFailed(p0: FirebaseException) {
-                Log.d("PHONE_AUTH_TEST", "verification failed" + p0)
-            }
-
-            override fun onCodeSent(
-                verificationId: String,
-                token: PhoneAuthProvider.ForceResendingToken
-            ) {
-                Log.d("PHONE_AUTH_TEST", "code sent $verificationId")
-                storedVerificationId = verificationId
-                onCodeSent()
-                isLoading = false
-            }
-        }
-
-        val options =
-            PhoneAuthOptions.newBuilder(_auth)
-                .setPhoneNumber(phoneNumber)
-                .setTimeout(60L, TimeUnit.SECONDS)
-                .setCallbacks(callback)
-                .build()
-
-        if (options != null) {
-            Log.d("PHONE_AUTH_TEST", options.toString())
-            PhoneAuthProvider.verifyPhoneNumber(options)
-        }
-    }
-
-
-    fun verifyPhoneNumberWithCode(code: String, onSuccess: () -> Unit) = viewModelScope.launch {
-        val credential = PhoneAuthProvider.getCredential(storedVerificationId, code)
-        signInWithPhoneAuthCredential(credential, onSuccess)
-    }
-
-
-    private fun signInWithPhoneAuthCredential(
-        credential: PhoneAuthCredential,
-        onSuccess: () -> Unit
-    ) {
-
-        viewModelScope.launch {
-            _auth.signInWithCredential(credential)
-                .addOnCompleteListener { task ->
-                    if (task.isSuccessful) {
-
-                        if (firstNameState.isNotEmpty() && secondNameState.isNotEmpty())
-                            _auth.currentUser?.updateProfile(
-                                UserProfileChangeRequest.Builder()
-                                    .setDisplayName("$firstNameState,$secondNameState,$sexState,,,").build())
-
-//                    if (_auth.currentUser?.phoneNumber?.isNullOrEmpty() == true)
-//                        _auth.currentUser?.updatePhoneNumber(credential.)
-                        onSuccess()
-
-                    } else Log.d(
-                        "ERROR_ERROR",
-                        "signInWithPhoneAuthCredential: ${task.exception?.message}"
-                    )
-                }
-        }
-    }
-
 }

@@ -238,8 +238,8 @@ fun ProfileSection(onEditProfileClick: () -> Unit = {}, onSignOutClick: () -> Un
     val firstName = curUser?.displayName?.split(sep)?.get(0) ?: notSpecified
     val secondName = curUser?.displayName?.split(sep)?.get(1) ?: notSpecified
     val sexInd = curUser?.displayName?.split(sep)?.get(2)?.let { if (it.isEmpty()) 2 else it.toInt() } ?: 2
-    val phoneNumber = curUser?.phoneNumber ?: notSpecified
-    val address = curUser?.displayName?.split(sep)?.filterIndexed{ i, _ -> i > 2}?.joinToString(separator = ", ") ?: notSpecified
+    val phoneNumber = curUser?.displayName?.split(sep)?.get(3) ?: notSpecified
+    val address = curUser?.displayName?.split(sep)?.filterIndexed{ i, _ -> i > 3}?.joinToString(separator = sep) ?: notSpecified
 
 //    val displayNameState = remember {
 //        mutableStateOf("$firstName $secondName")

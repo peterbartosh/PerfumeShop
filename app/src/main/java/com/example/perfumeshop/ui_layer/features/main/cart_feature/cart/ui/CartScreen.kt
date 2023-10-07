@@ -1,13 +1,10 @@
 package com.example.perfumeshop.ui_layer.features.main.cart_feature.cart.ui
 
-import android.util.Log
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.collectAsState
-import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
@@ -31,8 +28,8 @@ fun CartScreen(
 ) {
         val context = LocalContext.current
 
-        val priceTypeState = remember {
-            mutableStateOf(false)
+        val validState = remember(!cartViewModel.userProducts.isEmpty()) {
+            mutableStateOf(!cartViewModel.userProducts.isEmpty())
         }
 
         Column(
@@ -45,12 +42,13 @@ fun CartScreen(
                 LazyProductList(
                     onProductClick = onProductClick,
                     listOfProductsWithAmounts = cartViewModel.userProducts,
+                    updateChangedAmount = cartViewModel::updateProductAmountInCart,
                     onAddToFavouriteClick = favouriteViewModel::addToFavourite,
                     onAddToCartClick = cartViewModel::addToCart,
                     onRemoveFromFavouriteClick = favouriteViewModel::removeFromFavourite,
                     onRemoveFromCartClick = cartViewModel::removeFromCart,
                     isInCartCheck = cartViewModel::isInCart,
-                    priceTypeState = priceTypeState,
+                    isCashPriceState = null,
                     isInFavouriteCheck = favouriteViewModel::isInFavourite
                 )
             }
@@ -62,7 +60,10 @@ fun CartScreen(
                 CartIsEmpty()
 
 
-            SubmitButton(text = "Перейти к оформлению заказа") {
+            SubmitButton(
+                validInputsState = validState,
+                text = "Перейти к оформлению заказа",
+            ) {
                 if (FirebaseAuth.getInstance().currentUser?.isAnonymous == false)
                     onOrderMakeClick()
                 else

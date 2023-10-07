@@ -6,11 +6,13 @@ import androidx.navigation.NavOptions
 import androidx.navigation.compose.composable
 import com.example.perfumeshop.ui_layer.features.main.cart_feature.cart.ui.CartScreen
 import com.example.perfumeshop.ui_layer.features.main.cart_feature.cart.ui.CartViewModel
+import com.example.perfumeshop.ui_layer.features.main.cart_feature.cartActiveChild
 import com.example.perfumeshop.ui_layer.features.main.profile_feature.favourite.ui.FavouriteViewModel
 
 const val cartRoute = "cart"
 
 fun NavController.navigateToCart(navOptions: NavOptions? = null) {
+    cartActiveChild = cartRoute
     this.navigate(cartRoute, navOptions)
 }
 

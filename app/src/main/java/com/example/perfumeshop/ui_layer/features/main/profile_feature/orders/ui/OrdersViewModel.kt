@@ -7,10 +7,10 @@ import androidx.compose.runtime.setValue
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.perfumeshop.data_layer.models.Order
+import com.example.perfumeshop.data_layer.models.ProductWithAmount
 import com.example.perfumeshop.data_layer.repositories.FireRepository
+import com.google.firebase.auth.FirebaseAuth
 import dagger.hilt.android.lifecycle.HiltViewModel
-import kotlinx.coroutines.flow.MutableStateFlow
-import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.catch
 import kotlinx.coroutines.launch
 import javax.inject.Inject
@@ -19,8 +19,14 @@ import javax.inject.Inject
 @HiltViewModel
 class OrdersViewModel @Inject constructor(private val repository: FireRepository) : ViewModel() {
 
-    private var _ordersList = MutableStateFlow<MutableList<Order>>(mutableListOf())
-    var ordersList : StateFlow<List<Order>> = _ordersList
+//    private var _ordersList = MutableStateFlow(mutableListOf<Order>())
+//    var ordersList : StateFlow<List<Order>> = _ordersList
+
+    private val _ordersList = mutableListOf<Order>()
+    var ordersList = _ordersList.toList()
+
+    private val _productsWithAmountMap = mutableMapOf<String, List<ProductWithAmount>>()
+    var productsWithAmountMap = _productsWithAmountMap.toMap()
 
     var isLoading by mutableStateOf(false)
     var isSuccess by mutableStateOf(false)
@@ -32,7 +38,15 @@ class OrdersViewModel @Inject constructor(private val repository: FireRepository
     }
 
     init {
-        getUserOrders()
+        if (FirebaseAuth.getInstance().currentUser?.isAnonymous == false)
+            getUserOrders()
+    }
+
+    fun getProductsWithAmount(){
+        val productsWithAmount = mutableListOf<ProductWithAmount>()
+        viewModelScope.launch {
+
+        }
     }
 
 
@@ -40,25 +54,31 @@ class OrdersViewModel @Inject constructor(private val repository: FireRepository
         isSuccess = false
         isFailure = false
         isLoading = true
-       // initOrdersQuery = false
+
         repository.getUserOrders()
             .catch {
                     e -> Log.d("ERROR_ERROR", "getUserOrders: ${e.message}")
                 isFailure = true
-            }.collect {
-                _ordersList.value.add(it)
+            }.collect { order ->
+                _ordersList.add(order)
+                val id = order.id
+                if (id != null)
+                    _productsWithAmountMap[id] = repository.getOrderProducts(id).map { orderProduct ->
+                        ProductWithAmount(
+                            product = repository.getProduct(orderProduct.productId),
+                            amount = orderProduct.amount,
+                            isCashPrice = orderProduct.isCashPrice
+                        )
+
+                    }
             }
 
         ordersList = _ordersList
+        productsWithAmountMap = _productsWithAmountMap
 
         isLoading = false
 
-        if (_ordersList.value.isEmpty()) Log.d("EMPTY_EMPTY", "getUserOrders: EMPTY")
-
-        if (_ordersList.value.isEmpty() || isFailure)
-            isFailure = true
-        else
-            isSuccess = true
+        isSuccess = !isFailure
 
         // Log.d("VIEW_MODEL_REQ", "searchQuery: REQ ENDED ${_searchList.size}  ${searchList.size}")
 

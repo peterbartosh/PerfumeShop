@@ -20,6 +20,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalSoftwareKeyboardController
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -60,20 +61,20 @@ fun EditProfileScreen(viewModel: EditProfileViewModel, onClick : () -> Unit) {
     }
 
     val phoneNumberState = remember {
-        mutableStateOf(curUser?.phoneNumber ?: "")
+        mutableStateOf(curUser?.displayName?.split(sep)?.get(3) ?: "")
     }
 
 
     val streetState = remember {
-        mutableStateOf(curUser?.displayName?.split(sep)?.get(3) ?: "")
-    }
-
-    val houseNumberState = remember {
         mutableStateOf(curUser?.displayName?.split(sep)?.get(4) ?: "")
     }
 
-    val flatNumberState = remember {
+    val houseNumberState = remember {
         mutableStateOf(curUser?.displayName?.split(sep)?.get(5) ?: "")
+    }
+
+    val flatNumberState = remember {
+        mutableStateOf(curUser?.displayName?.split(sep)?.get(6) ?: "")
     }
 
     val validInputsState = remember {
@@ -99,9 +100,11 @@ fun EditProfileScreen(viewModel: EditProfileViewModel, onClick : () -> Unit) {
 //        )
 //    }
 
-    Column(modifier = Modifier.fillMaxSize(),
-    verticalArrangement = Arrangement.Top,
-    horizontalAlignment = Alignment.CenterHorizontally) {
+    Column(
+        modifier = Modifier.fillMaxSize(),
+        verticalArrangement = Arrangement.Top,
+        horizontalAlignment = Alignment.CenterHorizontally
+    ) {
 
         Text(text = "Ваш профиль", fontSize = 20.sp, fontWeight = FontWeight.Bold)
 
@@ -168,6 +171,7 @@ fun EditProfileScreen(viewModel: EditProfileViewModel, onClick : () -> Unit) {
                         .width(130.dp)
                         .padding(5.dp),
                     keyboardType = KeyboardType.Number,
+                    imeAction = ImeAction.Done,
                     valueState = flatNumberState,
                     label = "Квартира",
                     enabled = true
@@ -183,6 +187,7 @@ fun EditProfileScreen(viewModel: EditProfileViewModel, onClick : () -> Unit) {
                 .add(firstNameState.value)
                 .add(secondNameState.value)
                 .add(sexState.value.toString())
+                .add(phoneNumberState.value)
                 .add(streetState.value)
                 .add(houseNumberState.value)
                 .add(flatNumberState.value)

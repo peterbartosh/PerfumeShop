@@ -21,12 +21,23 @@ fun NavGraphBuilder.profileGraph(
     cartViewModel: CartViewModel,
     favouriteViewModel: FavouriteViewModel
 ){
-        profileScreen(onOptionClick = onOptionClick, cartViewModel = cartViewModel, favouriteViewModel = favouriteViewModel)
+        profileScreen(
+            onOptionClick = onOptionClick,
+            cartViewModel = cartViewModel,
+            favouriteViewModel = favouriteViewModel
+        )
 
         editProfileScreen(onClick = {})
 
-        favouriteScreen(onProductClick = onProductClick, favouriteViewModel = favouriteViewModel)
+        favouriteScreen(
+            onProductClick = onProductClick,
+            favouriteViewModel = favouriteViewModel
+        )
 
-        ordersScreen(onProductClick = onProductClick)
+        ordersScreen(
+            favouriteViewModel = favouriteViewModel,
+            cartViewModel = cartViewModel,
+            onProductClick = onProductClick
+        )
 
 }

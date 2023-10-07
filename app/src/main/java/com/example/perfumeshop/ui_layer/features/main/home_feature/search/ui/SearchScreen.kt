@@ -240,12 +240,13 @@ fun ShowProductList(
             LazyProductList(
                 onProductClick = onProductClick,
                 listOfProductsWithAmounts = searchViewModel.searchProducts,
+                updateChangedAmount = { ind, amount -> searchViewModel.searchProducts[ind].amount = amount },
                 onAddToFavouriteClick = onAddToFavouriteClick,
                 onAddToCartClick = onAddToCartClick,
                 onRemoveFromFavouriteClick = onRemoveFromFavouriteClick,
                 onRemoveFromCartClick = onRemoveFromCartClick,
                 isInFavouriteCheck = isInFavouriteCheck,
-                priceTypeState = isCashPriceState,
+                isCashPriceState = isCashPriceState,
                 isInCartCheck = isInCartCheck,
                 UploadMoreButton = { UploadMoreButton(searchViewModel = searchViewModel) }
             )

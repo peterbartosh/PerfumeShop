@@ -48,35 +48,39 @@ fun AppNavHost(
             restoreState = true
         }
 
-        val navOptionsWithoutSavingState = navOptions {
-            popUpTo(navController.currentDestination?.id ?: startDest) {
-                inclusive = true
-            }
-            launchSingleTop = true
-            restoreState = true
-        }
+//        val navOptionsWithoutSavingState = navOptions {
+//            popUpTo(navController.currentDestination?.id ?: startDest) {
+//                inclusive = true
+//            }
+//            launchSingleTop = true
+//            restoreState = true
+//        }
 
 
         startGraph(navigateAsk = { navController.navigateToAsk(navOptions = navOptions) },
-                   navigateMain = { navController.navigateToHome(navOptions = null) },
+                   navigateMain = {
+                       cartViewModel.loadUserProducts()
+                       favouriteViewModel.loadUserProducts()
+                       navController.navigateToHome(navOptions = null)
+                   },
                    navigateAuth = { navController.navigateToLogin(navOptions = navOptions) })
 
         authGraph(
             navController = navController,
             navigateCodeVerification = { navController.navigateToCodeVerification(navOptions = navOptions) },
             navigateMain = {
-                navController.navigateToHome(navOptions = null)
                 cartViewModel.loadUserProducts()
                 favouriteViewModel.loadUserProducts()
+                navController.navigateToHome(navOptions = null)
             }
         )
 
         mainGraph(
-            homeViewModel = homeViewModel,
+            //homeViewModel = homeViewModel,
             cartViewModel = cartViewModel,
             favouriteViewModel = favouriteViewModel,
             onThemeChange = onThemeChange,
-            navigateToCart = { navController.navigateToCart(navOptions = navOptionsWithoutSavingState) },
+            navigateToCart = { navController.navigateToCart(navOptions = navOptions) },
             navigateToOrderMaking = { navController.navigateToOrderMaking(navOptions = navOptions) },
             navigateSearch = { query, queryType -> navController.navigateToSearch(query = query, queryType = queryType, navOptions = navOptions) },
             navigateOption = { optionType ->

@@ -227,7 +227,7 @@ fun BottomNavigationBar(
                                   if (item.parentRoute != currentDestination?.route) {
 
                                       val route = getActiveChild(item.parentRoute)
-                                      Log.d("ROUTE_CH_TEST", "BottomNavigationBar: $route")
+                                      //Log.d("ROUTE_CH_TEST", "BottomNavigationBar: $route")
                                       navController.navigate(route = route){
                                           popUpTo(currentDestination?.id ?: navController.graph.findStartDestination().id){
                                               saveState = true
@@ -238,9 +238,9 @@ fun BottomNavigationBar(
                                       }
 
                                   } else {
-                                      Log.d("CUR_USER", "User: ${FirebaseAuth.getInstance().currentUser == null}")
+                                     // Log.d("CUR_USER", "User: ${FirebaseAuth.getInstance().currentUser == null}")
 
-                                      Log.d("CUR_USER", "isAnon: ${FirebaseAuth.getInstance().currentUser?.isAnonymous}")
+                                     // Log.d("CUR_USER", "isAnon: ${FirebaseAuth.getInstance().currentUser?.isAnonymous}")
                                       navController.navigate(item.parentRoute){
                                           popUpTo(currentDestination.id){
                                               saveState = false
@@ -298,28 +298,4 @@ fun onBackArrowClick(navController: NavHostController) {
         launchSingleTop = true
         restoreState = true
     }
-
-//        // clear view model todo
-//
-//        val parentsList = navController.currentDestination?.route
-//            ?.split(' ')!!.toMutableList()
-//
-//        val parentRoute = parentsList.filterIndexed{ i, s ->
-//            i + 1 != parentsList.size
-//        }.joinToString(separator = " ")
-//
-////        val lastEntry = navController.backQueue.findLast { nbse ->
-////            nbse.destination.route == parentRoute &&
-////                    nbse.destination.route != navController.currentDestination?.route
-////        }
-//
-////        val lastRoute =
-////            if (lastEntry == null) parentRoute else lastEntry.destination.route!!
-//
-//        navController.popBackStack()
-//        navController.navigate(parentRoute)
-//
-//        Log.d("BQ_BQ_BQ_TEST", "onBackArrowClick: ${navController.backQueue.map { it.destination.route }}")
-
-
-    }
+}

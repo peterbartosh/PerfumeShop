@@ -38,6 +38,7 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.example.perfumeshop.data_layer.models.Product
+import com.example.perfumeshop.data_layer.utils.round
 import com.example.perfumeshop.ui_layer.components.showToast
 import com.example.perfumeshop.ui_layer.theme.Gold
 import com.google.firebase.auth.FirebaseAuth
@@ -119,6 +120,12 @@ fun ProductRow(
                 Text(text = product.volume.toString(), fontSize = 10.sp)
 
                 Divider()
+
+                Row {
+                    Text(text = product.cashPrice?.round(2).toString(), fontSize = 12.sp)
+                    Spacer(modifier = Modifier.width(10.dp))
+                    Text(text = product.cashlessPrice?.round(2).toString(), fontSize = 12.sp)
+                }
             }
 
 
