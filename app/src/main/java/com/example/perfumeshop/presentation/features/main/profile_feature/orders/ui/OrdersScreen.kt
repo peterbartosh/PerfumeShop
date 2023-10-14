@@ -16,6 +16,8 @@ fun OrdersScreen(
     onProductClick : (String) -> Unit
 ) {
 
+    val str = "str"
+
     if (ordersViewModel.isSuccess)
         LazyColumn{
             items(ordersViewModel.ordersList){ order ->
