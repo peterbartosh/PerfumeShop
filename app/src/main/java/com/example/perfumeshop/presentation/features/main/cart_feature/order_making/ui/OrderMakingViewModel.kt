@@ -1,30 +1,34 @@
 package com.example.perfumeshop.presentation.features.main.cart_feature.order_making.ui
 
 import android.util.Log
-import androidx.compose.runtime.MutableState
+import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.setValue
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.perfumeshop.data.mail.EmailSender
-import com.example.perfumeshop.data.models.Order
-import com.example.perfumeshop.data.models.OrderProduct
-import com.example.perfumeshop.data.models.ProductWithAmount
-import com.example.perfumeshop.data.repositories.FireRepository
+import com.example.perfumeshop.data.model.Order
+import com.example.perfumeshop.data.model.OrderProduct
+import com.example.perfumeshop.data.model.ProductWithAmount
+import com.example.perfumeshop.data.repository.FireRepository
 import com.google.firebase.auth.FirebaseAuth
 import dagger.hilt.android.lifecycle.HiltViewModel
+import kotlinx.coroutines.Deferred
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.async
+import kotlinx.coroutines.awaitAll
 import kotlinx.coroutines.launch
 import javax.inject.Inject
 
+const val TAG = "OrderMakingViewModel"
 @HiltViewModel
-class OrderMakingViewModel @Inject constructor(private val repository: FireRepository,
-                                     private val emailSender: EmailSender) : ViewModel(){
+class OrderMakingViewModel @Inject constructor(
+        private val repository: FireRepository,
+        private val emailSender: EmailSender
+    ) : ViewModel(){
 
-    val isLoading : MutableState<Boolean> = mutableStateOf(false)
-    val isSuccess : MutableState<Boolean> = mutableStateOf(false)
-    //val e : MutableState<Exception?> = mutableStateOf(null)
-
+    var isLoading by mutableStateOf(false)
+    var isSuccess by mutableStateOf(false)
 
     fun confirmOrder(
         order: Order,
@@ -33,27 +37,17 @@ class OrderMakingViewModel @Inject constructor(private val repository: FireRepos
         onSuccess : () -> Unit
     ) = viewModelScope.launch() {
 
-            isLoading.value = true
+        isLoading = true
 
-        async(Dispatchers.Default) {
+        val deferred = async(Dispatchers.Default) {
 
-            val sendTaskState = emailSender.sendOrderEmail(
-                order = order,
-                products = productWithAmounts,
-                scope = this
-            )
+            val saveOrderResult = repository.saveToFirebase(item = order, collectionName = "orders")
 
-            val saveOrderTaskState =
-                repository.saveToFirebase(item = order, collectionName = "orders")
+            val generatedOrderId = saveOrderResult?.getOrNull()
 
-            val generatedOrderId =
-                if (saveOrderTaskState.first)
-                    saveOrderTaskState.second as String
-                else
-                    null
+            Log.d(TAG, "confirmOrder: $generatedOrderId")
 
-
-            var saveOrderProductsTaskState: Pair<Boolean, Any?> = Pair(true, null)
+            val saveProductsDeferreds = mutableListOf<Deferred<Result<String>?>>()
 
             productWithAmounts.map { productWithAmount ->
                 OrderProduct(
@@ -63,38 +57,53 @@ class OrderMakingViewModel @Inject constructor(private val repository: FireRepos
                     isCashPrice = productWithAmount.isCashPrice
                 )
             }.forEach { orderProduct ->
-                val state = repository.saveToFirebase(
-                    item = orderProduct,
-                    collectionName = "orders_products",
-                    updateId = false
-                )
-                if (!state.first)
-                    saveOrderProductsTaskState =
-                        Pair(false, state.second ?: Exception("null exception"))
+                val defResult = async {
+                    repository.saveToFirebase(
+                        item = orderProduct,
+                        collectionName = "orders_products",
+                        updateId = false
+                    )
+                }
+                saveProductsDeferreds.add(defResult)
             }
 
-            val uid = FirebaseAuth.getInstance().uid
 
-            val clearState = repository.clearCart(uid)
-
-            isSuccess.value =
-                saveOrderTaskState.first && sendTaskState.first && clearState && saveOrderProductsTaskState.first
-
-            if (!isSuccess.value)
-                Log.d(
-                    "ERROR_ERROR",
-                    (saveOrderProductsTaskState.second ?: saveOrderTaskState.second
-                    ?: sendTaskState.second).toString()
+            val sendDeferred = async {
+                emailSender.sendOrderEmail(
+                    order = order,
+                    products = productWithAmounts,
+                    scope = this
                 )
-            }.await()
+            }
 
-            isLoading.value = false
+            saveProductsDeferreds.add(sendDeferred)
 
-            if (isSuccess.value){
-                onSuccess()
-            } else {
-                onFailed()
+            val sendAndSaveProductsResults = saveProductsDeferreds.awaitAll()
+
+            val uid = FirebaseAuth.getInstance().uid
+            val clearResult = repository.clearCart(uid)
+
+            val allResults = mutableListOf<Result<String>?>()
+            allResults.addAll(sendAndSaveProductsResults)
+            allResults.add(clearResult)
+            allResults.add(saveOrderResult)
+
+            isSuccess = allResults.all { it?.isSuccess == true || it?.exceptionOrNull() == null }
+
+            if (!isSuccess) {
+                Log.d(
+                    TAG,
+                    "confirmOrder: ${
+                        allResults.find { it?.exceptionOrNull() != null }?.exceptionOrNull()
+                    }"
+                )
             }
         }
 
+        deferred.await()
+
+        isLoading = false
+
+        if (isSuccess) onSuccess() else onFailed()
+    }
 }

@@ -2,8 +2,24 @@ package com.example.perfumeshop.data.utils
 
 import okhttp3.internal.immutableListOf
 
+enum class UserPreferencesType{
+    Theme, FontSize;
+}
+enum class OrderStatus{
+    Processing, Accepted, Delivering, Succeed, Canceled;
 
-//@Stable
+    fun toRus() : String{
+        return when (this){
+            Processing -> "В обработке"
+            Accepted -> "Принят"
+            Delivering -> "В пути"
+            Succeed -> "Успешно"
+            Canceled -> "Отменён"
+        }
+    }
+
+}
+
 enum class ProductType{
     volume, tester, probe, licensed, auto, original, diffuser, lux, notSpecified;
 

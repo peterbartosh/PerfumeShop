@@ -8,6 +8,7 @@ import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
@@ -18,6 +19,7 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.layout.wrapContentHeight
 import androidx.compose.foundation.layout.wrapContentSize
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -25,10 +27,13 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.outlined.ArrowForward
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
+import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
+import androidx.compose.material3.Divider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
@@ -37,6 +42,8 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
+import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.platform.LocalClipboardManager
@@ -44,29 +51,21 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.AnnotatedString
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.compose.ui.window.DialogProperties
 import androidx.core.content.ContextCompat
 import com.example.perfumeshop.R
 import com.example.perfumeshop.data.user.UserData
 import com.example.perfumeshop.data.utils.OptionType
+import com.example.perfumeshop.data.utils.firstLetterToUpperCase
 import com.example.perfumeshop.data.utils.getSexByName
+import com.example.perfumeshop.data.utils.getWidthPercent
 import com.example.perfumeshop.presentation.components.showToast
 import java.util.StringJoiner
 
-
-fun Intent.block(optionType: OptionType
-                 //, pi : PackageInfo
-){
-
-}
-
-//fun PackageManager.getPackageInfoCompat(packageName: String, flags: Int = 0): PackageInfo =
-//    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
-//        getPackageInfo(packageName, PackageManager.PackageInfoFlags.of(flags.toLong()))
-//    } else {
-//        @Suppress("DEPRECATION") getPackageInfo(packageName, flags)
-//    }
+const val TAG = "ProfileComponents"
 
 fun composeIntent(context: Context, optionType : OptionType, optionData : String) {
     //    val mailAddress = "goldappsender@gmail.com"
@@ -104,7 +103,7 @@ fun composeIntent(context: Context, optionType : OptionType, optionData : String
         }
     } catch (e : Exception){
         showToast(context, "Приложение не установлено")
-        Log.d("ERROR_ERROR", "composeIntent: ${e.message}")
+        Log.d(TAG, "composeIntent: ${e.message}")
     }
 }
 
@@ -118,18 +117,22 @@ fun OptionRow(option : Option, onOptionClick: (OptionType) -> Unit) {
     val clipboardManager = LocalClipboardManager.current
 
     Card(modifier = Modifier
-        .fillMaxWidth(0.9f)
-        .height(35.dp)
-        .padding(start = 10.dp, end = 10.dp, top = 2.dp, bottom = 2.dp)
+        .fillMaxWidth(0.95f)
+        .wrapContentHeight()
+        .padding(start = 5.dp, end = 5.dp, top = 2.dp, bottom = 2.dp)
+        .clip(RoundedCornerShape(10.dp))
         //.border(width = 1.dp, color = Color.Black)
         .clickable {
             onOptionClick(option.type)
             composeIntent(context, option.type, option.content.toString())
         },
         //.shadow(elevation = 3.dp, shape = RoundedCornerShape(5.dp))
-         colors = CardDefaults.cardColors(containerColor = Color.White),
-         shape = RoundedCornerShape(3.dp),
-         border = BorderStroke(1.dp, Color.Black)
+         colors = CardDefaults.cardColors(
+             containerColor = MaterialTheme.colorScheme.primaryContainer,
+             contentColor = MaterialTheme.colorScheme.onBackground
+         ),
+         //shape = RoundedCornerShape(3.dp),
+         border = BorderStroke(width = 1.dp, color = MaterialTheme.colorScheme.onBackground)
     ) {
 
         Row(
@@ -137,51 +140,61 @@ fun OptionRow(option : Option, onOptionClick: (OptionType) -> Unit) {
             horizontalArrangement = Arrangement.SpaceBetween,
             modifier = Modifier
                 .fillMaxWidth()
-                .fillMaxHeight()
+                .wrapContentHeight()
+                .padding(all = 10.dp)
         ) {
 
 
-            if (option.leadingIcon != null)
-                Row(modifier = Modifier.padding(start = 5.dp)) {
-                    if (option.leadingIcon is ImageVector)
-                        Icon(
-                            modifier = Modifier.size(20.dp),
+                Row(
+                    modifier = Modifier.padding(start = 5.dp),
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+
+                    when (option.leadingIcon) {
+                        null -> {
+                            Box(modifier = Modifier.size(25.dp))
+                        }
+                        is ImageVector -> Icon(
+                            modifier = Modifier.size(25.dp),
                             imageVector = option.leadingIcon,
                             contentDescription = "icon"
                         )
-                    else if (option.leadingIcon is Int)
-                        Icon(
-                            modifier = Modifier.size(20.dp),
+
+                        is Int -> Icon(
+                            modifier = Modifier.size(25.dp),
                             painter = painterResource(id = option.leadingIcon),
                             contentDescription = "icon"
                         )
+                    }
 
-                    Spacer(modifier = Modifier.width(3.dp))
+                    Spacer(modifier = Modifier.width(5.dp))
 
-                    Text(text = option.title, fontSize = 15.sp)
+                    Text(text = option.title, style = MaterialTheme.typography.bodyMedium)
                 }
-            else
-                Text(text = option.title, fontSize = 15.sp,
-                     modifier = Modifier.padding(start = 5.dp))
+
 
             if (option.content != null)
                 when (option.content) {
                     is ImageVector -> Icon(
                         modifier = Modifier
-                            .size(20.dp)
+                            .size(25.dp)
                             .padding(end = 5.dp),
                         imageVector = option.content,
                         contentDescription = "arrow front"
                     )
 
-                    is String -> Text(text = option.content,
-                                      fontSize = 12.sp,
-                                      modifier = Modifier
-                                          .padding(end = 5.dp)
-                                          .clickable {
-                                              clipboardManager.setText(AnnotatedString(option.content))
-                                              showToast(context, "Скопировано в буфер")
-                                          })
+                    is String -> Text(
+                        text = option.content,
+                        style = MaterialTheme.typography.bodySmall,
+                        fontWeight = FontWeight.SemiBold,
+                        //fontSize = 12.sp,
+                        modifier = Modifier
+                            .padding(end = 5.dp)
+                            .clickable {
+                                clipboardManager.setText(AnnotatedString(option.content))
+                                showToast(context, "Скопировано в буфер")
+                            }
+                    )
                 }
 
         }
@@ -200,15 +213,22 @@ fun OptionsSection(
     onOptionClick: (OptionType) -> Unit
 ) {
 
-    Column(modifier = Modifier
-        .padding(10.dp)
-        .wrapContentSize()
+    Column(
+        modifier = Modifier
+            .padding(10.dp)
+            .wrapContentSize(),
+        horizontalAlignment = Alignment.CenterHorizontally
     ) {
+
+        Divider()
+
+        Spacer(modifier = Modifier.height(5.dp))
+
         Row(
             verticalAlignment = Alignment.CenterVertically,
             horizontalArrangement = Arrangement.Center
         ) {
-            Text(text = sectionTitle, fontSize = 25.sp)
+            Text(text = sectionTitle, style = MaterialTheme.typography.labelMedium)
         }
 
         Column(
@@ -227,77 +247,107 @@ fun OptionsSection(
 @Composable
 fun ProfileSection(onEditProfileClick: () -> Unit = {}, onSignOutClick: () -> Unit) {
 
+    val context = LocalContext.current
+
+    val hp = getWidthPercent(context = context)
+
     var showDialog by remember { mutableStateOf(false) }
 
     val sexes = listOf("Мужской", "Женский", "Не указано")
 
     val notSpecified = "Не указано"
+    val shortNotSpecified = "_"
 
     val firstName = UserData.user?.firstName ?: notSpecified
     val secondName = UserData.user?.secondName ?: notSpecified
     val sexInd = getSexByName(UserData.user?.sex).ordinal
     val phoneNumber = UserData.user?.phoneNumber ?: notSpecified
     val address = StringJoiner(", ")
-        .add(UserData.user?.street ?: notSpecified)
-        .add((UserData.user?.home ?: notSpecified))
-        .add((UserData.user?.flat ?: notSpecified))
+        .add(UserData.user?.street?.firstLetterToUpperCase() ?: notSpecified)
+        .add((UserData.user?.home ?: shortNotSpecified))
+        .add((UserData.user?.flat ?: shortNotSpecified))
         .toString()
 
-    Card(modifier = Modifier
-        .fillMaxWidth(0.9f)
-        .height(150.dp)
-        .padding(top = 10.dp, bottom = 2.dp)
-        // .border(width = 2.dp, color = Color.Black)
-        .clickable { onEditProfileClick() },
-        //.shadow(elevation = 3.dp, shape = RoundedCornerShape(5.dp))
-        //.padding(start = 10.dp, end = 10.dp),
-         colors = CardDefaults.cardColors(containerColor = Color.White),
-         shape = RoundedCornerShape(3.dp),
-         border = BorderStroke(1.dp, Color.Black)
+
+    Card(
+        modifier = Modifier
+            .fillMaxWidth(0.9f)
+            .wrapContentHeight()
+            .padding(top = 10.dp, bottom = 2.dp)
+            //.clip(RoundedCornerShape(30.dp))
+            .shadow(elevation = 15.dp, shape = RoundedCornerShape(30.dp), clip = true)
+            .clickable { onEditProfileClick() },
+        colors = CardDefaults.cardColors(
+            containerColor = MaterialTheme.colorScheme.primaryContainer,
+            contentColor = MaterialTheme.colorScheme.onBackground
+        ),
+        //elevation = CardDefaults.cardElevation(defaultElevation = 5.dp),
+        shape = RoundedCornerShape(30.dp),
+        border = BorderStroke(width = 1.dp, color = MaterialTheme.colorScheme.onBackground),
     ) {
-        Row(modifier = Modifier.fillMaxSize()) {
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .wrapContentHeight(),
+            verticalAlignment = Alignment.Bottom
+        ) {
 
             Column(
                 modifier = Modifier
-                    .fillMaxHeight()
-                    .fillMaxWidth(0.75f),
+                    .wrapContentHeight()
+                    .fillMaxWidth(0.75f)
+                    .padding(start = 20.dp, top = 10.dp, bottom = 20.dp),
                 horizontalAlignment = Alignment.Start
             ) {
 
                 val modifier = Modifier.padding(start = 10.dp)
 
                 Text(
-                    text = "Инициалы: $firstName $secondName", fontSize = 17.sp,
-                    fontWeight = FontWeight.Bold, modifier = modifier
+                    text = "${secondName.firstLetterToUpperCase()} ${firstName.firstLetterToUpperCase()}",
+                    style = MaterialTheme.typography.titleSmall,
+                    //fontSize = 17.sp,
+                    //fontWeight = FontWeight.Bold, modifier = modifier
                 )
-                Spacer(modifier = Modifier.height(10.dp))
+
+                Spacer(modifier = Modifier.height(5.dp))
+
+                Divider()
+
+                Spacer(modifier = Modifier.height(5.dp))
+
+
                 Text(
-                    text = "Пол: ${sexes[sexInd]}", fontSize = 17.sp,
-                    fontWeight = FontWeight.Bold, modifier = modifier
+                    text = phoneNumber,
+                    style = MaterialTheme.typography.bodyLarge
+                    //fontSize = 17.sp,
+                    //fontWeight = FontWeight.Bold, modifier = modifier
                 )
                 Spacer(modifier = Modifier.height(5.dp))
                 Text(
-                    text = "Номер: $phoneNumber", fontSize = 17.sp,
-                    fontWeight = FontWeight.Bold, modifier = modifier
-                )
-                Spacer(modifier = Modifier.height(5.dp))
-                Text(
-                    text = "Адрес: $address", fontSize = 17.sp,
-                    fontWeight = FontWeight.Bold, modifier = modifier
+                    text = address,
+                    style = MaterialTheme.typography.bodyLarge
+                    //fontSize = 17.sp,
+                    //fontWeight = FontWeight.Bold, modifier = modifier
                 )
             }
 
-            Column(modifier = Modifier
-                .fillMaxHeight()
-                .fillMaxWidth(),
-                   verticalArrangement = Arrangement.Bottom,
-                   horizontalAlignment = Alignment.CenterHorizontally) {
+            Column(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .wrapContentHeight(),
+                verticalArrangement = Arrangement.Bottom,
+                horizontalAlignment = Alignment.CenterHorizontally
+            ) {
                 IconButton(
                     onClick = { showDialog = true },
                     modifier = Modifier
                         .padding(bottom = 30.dp)
                         .size(25.dp)
-                        .border(width = 1.dp, color = Color.Black, shape = CircleShape)
+                        .border(
+                            width = 1.dp,
+                            color = MaterialTheme.colorScheme.onBackground,
+                            shape = CircleShape
+                        )
                 ) {
                     Icon(
                         painter = painterResource(id = R.drawable.sign_out),
@@ -307,27 +357,70 @@ fun ProfileSection(onEditProfileClick: () -> Unit = {}, onSignOutClick: () -> Un
             }
         }
 
-            if (showDialog)
-                AlertDialog(
-                    title = { Text(text = "Выход из аккаунта") },
-                    text = { Text(text = "Вы уверены, что хотите выйти из учётной записи?") },
-                    onDismissRequest = {showDialog = false},
-                    tonalElevation = 10.dp,
-                    dismissButton = {
-                        Button(onClick = {
+        if (showDialog)
+            AlertDialog(
+                shape = RoundedCornerShape(10.dp),
+                modifier = Modifier
+                    .border(
+                        width = 2.dp,
+                        color = MaterialTheme.colorScheme.onBackground,
+                        shape = RoundedCornerShape(10.dp)
+                    ),
+                containerColor = MaterialTheme.colorScheme.background,
+                title = {
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.Center,
+                    ) {
+
+                        Text(
+                            text = "Выход из аккаунта",
+                            textAlign = TextAlign.Center,
+                            style = MaterialTheme.typography.titleMedium
+                        )
+                    }
+                },
+                text = {
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.Center,
+                    ) {
+                        Text(
+                            text = "Вы уверены, что хотите выйти из учётной записи?",
+                            textAlign = TextAlign.Center,
+                            style = MaterialTheme.typography.bodyMedium
+                        )
+                    }
+                },
+                onDismissRequest = { showDialog = false },
+                tonalElevation = 10.dp,
+                dismissButton = {
+                    Button(
+                        onClick = {
                             showDialog = false
-                        }) {
-                            Text(text = "Нет")
-                        }
-                    },
-                    confirmButton = {
-                        Button(onClick = {
+                        },
+                        colors = ButtonDefaults.buttonColors(
+                            contentColor = MaterialTheme.colorScheme.onBackground,
+                            containerColor = MaterialTheme.colorScheme.primary
+                        )
+                    ) {
+                        Text(text = "Нет", style = MaterialTheme.typography.bodyMedium)
+                    }
+                },
+                confirmButton = {
+                    Button(
+                        onClick = {
                             onSignOutClick()
                             showDialog = false
-                        }) {
-                            Text(text = "Да")
-                        }
-                })
-
-        }
+                        },
+                        colors = ButtonDefaults.buttonColors(
+                            contentColor = MaterialTheme.colorScheme.onBackground,
+                            containerColor = MaterialTheme.colorScheme.primary
+                        )
+                    ) {
+                        Text(text = "Да", style = MaterialTheme.typography.bodyMedium)
+                    }
+                }
+            )
     }
+}

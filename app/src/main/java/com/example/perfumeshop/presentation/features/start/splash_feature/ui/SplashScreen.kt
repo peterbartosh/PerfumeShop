@@ -35,13 +35,16 @@ fun SplashScreen(navigateAsk : () -> Unit, navigateMain : () -> Unit) {
     val scale = remember {
         Animatable(0f)
     }
-    LaunchedEffect(key1 = true ){
-        scale.animateTo(targetValue = 0.9f,
-                        animationSpec = tween(durationMillis = 800,
-                                              easing = {
-                                                  OvershootInterpolator(8f)
-                                                      .getInterpolation(it)
-                                              }))
+    LaunchedEffect(key1 = true){
+        scale.animateTo(
+            targetValue = 0.9f,
+            animationSpec = tween(
+                durationMillis = 800,
+                easing = {
+                    OvershootInterpolator(8f).getInterpolation(it)
+                }
+            )
+        )
         delay(2000L)
 
 
@@ -50,14 +53,11 @@ fun SplashScreen(navigateAsk : () -> Unit, navigateMain : () -> Unit) {
 
         if (currentUser?.isAnonymous == true || !currentUser?.email.isNullOrEmpty()) {
             navigateMain()
-            if (!currentUser?.email.isNullOrEmpty()) UserData.loadUserData()
+            if (!currentUser?.email.isNullOrEmpty())
+                UserData.loadUserData()
         }
         else
             navigateAsk()
-
-
-
-
     }
 
     Surface(modifier = Modifier
@@ -80,8 +80,6 @@ fun SplashScreen(navigateAsk : () -> Unit, navigateMain : () -> Unit) {
                 style = MaterialTheme.typography.bodyMedium,
                 color = Color.LightGray
             )
-
-
         }
     }
 

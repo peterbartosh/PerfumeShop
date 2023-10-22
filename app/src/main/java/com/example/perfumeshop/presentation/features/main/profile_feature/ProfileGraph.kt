@@ -37,6 +37,7 @@ fun NavGraphBuilder.profileGraph(
         favouriteScreen(
             onProductClick = onProductClick,
             favouriteViewModel = favouriteViewModel,
+            cartViewModel = cartViewModel,
             onBackPressed = onBackPressed
         )
 

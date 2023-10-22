@@ -23,8 +23,11 @@ fun NavGraphBuilder.codeVerificationScreen(
     onBackPressed: () -> Unit
 ) {
     composable(route = codeVerificationRoute) {
-        val viewModel = hiltViewModel<AuthViewModel>(viewModelStoreOwner = navController.previousBackStackEntry!!)
-        BackPressHandler(onBackPressed = onBackPressed)
-        CodeVerificationScreen(authViewModel = viewModel, onSuccess = onSuccess)
+        navController.previousBackStackEntry?.let { previousBackStackEntry ->
+            val viewModel =
+                hiltViewModel<AuthViewModel>(viewModelStoreOwner = previousBackStackEntry)
+            BackPressHandler(onBackPressed = onBackPressed)
+            CodeVerificationScreen(authViewModel = viewModel, onSuccess = onSuccess)
+        }
     }
 }

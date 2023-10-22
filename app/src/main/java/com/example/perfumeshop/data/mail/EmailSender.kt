@@ -3,8 +3,8 @@ package com.example.perfumeshop.data.mail
 
 import android.util.Log
 import com.example.perfumeshop.data.user.UserData
-import com.example.perfumeshop.data.models.Order
-import com.example.perfumeshop.data.models.ProductWithAmount
+import com.example.perfumeshop.data.model.Order
+import com.example.perfumeshop.data.model.ProductWithAmount
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
@@ -21,12 +21,8 @@ import javax.mail.Transport
 import javax.mail.internet.InternetAddress
 import javax.mail.internet.MimeMessage
 
-
+const val TAG = "EmailSender"
 class EmailSender() {
-
-    fun s() {
-
-    }
 
     fun sendRegisterRequestEmail(fN: String, sN: String, pN: String, code: Int) {
 
@@ -71,7 +67,7 @@ class EmailSender() {
             try {
                 Transport.send(mimeMessage)
             } catch (e: Exception) {
-                Log.d("ERROR_ERROR", e.message.toString())
+                Log.d(TAG, e.message.toString())
             }
 
         }
@@ -84,7 +80,9 @@ class EmailSender() {
         order: Order,
         products: List<ProductWithAmount>,
         scope: CoroutineScope
-    ): Pair<Boolean, Exception?> = scope.async {
+    ) : Result<String>? {
+
+        val deferred = scope.async {
 
             val stringSenderEmail = "goldappsender@gmail.com"
             val stringReceiverEmail = "pt.bartosh54321@gmail.com"
@@ -122,8 +120,6 @@ class EmailSender() {
 
             val orderDesc = StringBuilder("")
 
-            var state: Pair<Boolean, Exception?> = Pair(false, null)
-
             if (values.any { it?.isEmpty() == true })
                 delay(200)
             else
@@ -143,7 +139,7 @@ class EmailSender() {
                 else break
             }
 
-            products.forEachIndexed{ ind, productWithAmount ->
+            products.forEachIndexed { ind, productWithAmount ->
                 orderDesc.append(
                     "  ${ind + 1}) Идентификатор товара: ${productWithAmount.product?.id}\n" +
                             "      Брэнд: ${productWithAmount.product?.brand}\n" +
@@ -154,17 +150,24 @@ class EmailSender() {
             mimeMessage.setText(orderDesc.toString())
 
 
-            state = try {
+            val result: Result<String>? = try {
                 Transport.send(mimeMessage)
-                Pair(true, null)
+                Result.success("")
             } catch (e: MessagingException) {
-                Log.d("ERROR_ERROR_1", e.message ?: "Unknown error message")
-                Pair(false, e)
+                Log.d(TAG, e.message ?: "Unknown error message")
+                Result.failure(e)
+            } catch (e : Exception){
+                Log.d(TAG, e.message ?: "Unknown error message")
+                Result.failure(e)
             }
 
-            state
+            result
 
-        }.await()
+        }
+
+        return deferred.await()
+
+    }
 }
 
 

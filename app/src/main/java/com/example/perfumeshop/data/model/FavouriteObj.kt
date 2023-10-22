@@ -1,8 +1,8 @@
-package com.example.perfumeshop.data.models
+package com.example.perfumeshop.data.model
 
 import com.google.firebase.firestore.PropertyName
 
-data class CartObj(
+data class FavouriteObj(
     @get:PropertyName("user_id")
     @set:PropertyName("user_id")
     var userId : String? = null,
@@ -16,4 +16,5 @@ data class CartObj(
     var isCashPrice : Boolean? = null,
 
     var amount : Int? = null,
+
 )

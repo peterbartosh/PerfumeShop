@@ -1,11 +1,9 @@
 package com.example.perfumeshop.presentation.features.main.home_feature.search.ui
 
-import android.util.Log
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
@@ -18,9 +16,6 @@ import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.layout.wrapContentHeight
 import androidx.compose.foundation.layout.wrapContentSize
 import androidx.compose.foundation.layout.wrapContentWidth
-import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.foundation.lazy.itemsIndexed
-import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.BasicTextField
@@ -28,37 +23,39 @@ import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Clear
-import androidx.compose.material.icons.filled.ShoppingCart
-import androidx.compose.material.icons.outlined.Favorite
-import androidx.compose.material.icons.outlined.FavoriteBorder
-import androidx.compose.material.icons.outlined.ShoppingCart
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
+import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Divider
 import androidx.compose.material3.DropdownMenu
+import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
-import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.RadioButton
+import androidx.compose.material3.RadioButtonDefaults
+import androidx.compose.material3.RangeSlider
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.MutableState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateListOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
-import androidx.compose.runtime.saveable.rememberSaveable
+import androidx.compose.runtime.setValue
 import androidx.compose.runtime.snapshots.SnapshotStateList
 import androidx.compose.runtime.toMutableStateList
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.ExperimentalComposeUiApi
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.focus.onFocusChanged
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.SolidColor
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalSoftwareKeyboardController
 import androidx.compose.ui.res.painterResource
@@ -67,22 +64,14 @@ import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextDecoration
-import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.window.Dialog
-import androidx.core.text.isDigitsOnly
-import com.example.perfumeshop.R
-import com.example.perfumeshop.data.models.Product
-import com.example.perfumeshop.data.models.ProductWithAmount
+import com.example.perfumeshop.data.user_preferences.PreferencesManager
 import com.example.perfumeshop.data.utils.getWidthPercent
-import com.example.perfumeshop.data.utils.rememberMutableStateList
 import com.example.perfumeshop.data.utils.round
-import com.example.perfumeshop.presentation.components.LoadingIndicator
-import com.example.perfumeshop.presentation.components.showToast
-import com.example.perfumeshop.presentation.features.auth.login_register_feature.ui.InputField
+import com.example.perfumeshop.presentation.components.InputField
 import com.example.perfumeshop.presentation.theme.Gold
-import com.google.firebase.auth.FirebaseAuth
 
 
 @OptIn(ExperimentalComposeUiApi::class)
@@ -115,9 +104,11 @@ fun SearchForm(
                Icon(
                     imageVector = Icons.Default.Clear,
                     contentDescription = "clear query icon",
-                    modifier = Modifier.size(20.dp).clickable {
-                        searchQueryState.value = ""
-                    }
+                    modifier = Modifier
+                        .size(20.dp)
+                        .clickable {
+                            searchQueryState.value = ""
+                        }
                )
            },
            keyboardActions = KeyboardActions {
@@ -137,7 +128,9 @@ fun SearchForm(
 
 @Composable
 fun UploadMoreButton(searchViewModel: SearchViewModel) {
+
     Spacer(modifier = Modifier.height(15.dp))
+
     Row(
         horizontalArrangement = Arrangement.Center,
         verticalAlignment = Alignment.CenterVertically,
@@ -145,8 +138,8 @@ fun UploadMoreButton(searchViewModel: SearchViewModel) {
             .fillMaxWidth()
             .wrapContentHeight()
     ) {
-        if (searchViewModel.searchProducts.size == (searchViewModel.uploadsAmount + 1) * N)
-        if (!searchViewModel.uploadingMore)
+        if (searchViewModel.searchProducts.size == (searchViewModel.uploadsAmount + 1) * productsAmountPerPage)
+        //if (!searchViewModel.uploadingMore)
             Button(
                 onClick = {
                     searchViewModel.uploadMore()
@@ -157,402 +150,57 @@ fun UploadMoreButton(searchViewModel: SearchViewModel) {
                     .height(30.dp)
                     .width(70.dp)
             ) {
-                Text(text = "Ещё")
-            }
-        else
-            LoadingIndicator()
-    }
-}
-
-@Composable
-fun LazyProductList(
-    modifier: Modifier = Modifier,
-    parentScreen : String,
-    listOfProductsWithAmounts : List<ProductWithAmount>,
-    updateChangedAmount: (Int, Int) -> Unit = {_,_ ->},
-    onProductClick : (String) -> Unit,
-    onAddToFavouriteClick : (Product) -> Unit,
-    onAddToCartClick : (ProductWithAmount) -> Unit,
-    onRemoveFromFavouriteClick : (String) -> Unit,
-    onRemoveFromCartClick : (String) -> Unit,
-    isInFavouriteCheck : (String) -> Boolean,
-    isInCartCheck : (String) -> Boolean,
-    isCashPriceState : MutableState<Boolean>?,
-    userScrollEnabled : Boolean = true,
-    UploadMoreButton :  @Composable () -> Unit = { Box{} }
-) {
-
-    Log.d("LazyProductList", "LazyProductList: ${listOfProductsWithAmounts.size}")
-
-
-    LazyColumn(
-        contentPadding = PaddingValues(3.dp),
-        modifier = modifier
-            .fillMaxWidth()
-            .wrapContentHeight(),
-        state = rememberLazyListState(),
-        userScrollEnabled = userScrollEnabled,
-    ) {
-        itemsIndexed(listOfProductsWithAmounts,
-            key = {i, p -> p.product?.id ?: i}) { ind, productWithAmount ->
-
-            ProductRow(
-                parentScreen = parentScreen,
-                productWithAmount = productWithAmount,
-                onAmountChange = { value -> updateChangedAmount(ind, value) },
-                onProductClick = onProductClick,
-                onAddToFavouriteClick = onAddToFavouriteClick,
-                onAddToCartClick = onAddToCartClick,
-                onRemoveFromFavouriteClick = onRemoveFromFavouriteClick,
-                onRemoveFromCartClick = onRemoveFromCartClick,
-                isInFavouriteCheck = isInFavouriteCheck,
-                isInCartCheck = isInCartCheck,
-                isCashPriceState = isCashPriceState
-            )
-        }
-
-        item {
-            UploadMoreButton()
-        }
-    }
-}
-
-@Composable
-fun ProductRow(
-    parentScreen : String,
-    showEditableAmount : Boolean = true,
-    productWithAmount: ProductWithAmount,
-    onAmountChange : (Int) -> Unit,
-    onProductClick : (String) -> Unit,
-    onAddToFavouriteClick : (Product) -> Unit,
-    onAddToCartClick : (ProductWithAmount) -> Unit,
-    onRemoveFromFavouriteClick : (String) -> Unit,
-    onRemoveFromCartClick : (String) -> Unit,
-    isInFavouriteCheck : (String) -> Boolean,
-    isInCartCheck : (String) -> Boolean,
-    isCashPriceState : MutableState<Boolean>? = null,
-) {
-
-    val context = LocalContext.current
-
-    val isInCart = remember {
-        mutableStateOf(isInCartCheck(productWithAmount.product?.id ?: ""))
-    }
-
-    val isInFavourite = remember {
-        mutableStateOf(isInFavouriteCheck(productWithAmount.product?.id ?: ""))
-    }
-
-    Card(
-        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.background),
-        shape = RoundedCornerShape(10.dp),
-        border = BorderStroke(1.dp, Color.LightGray),
-        modifier = Modifier
-            .fillMaxWidth()
-            .wrapContentHeight()
-    ) {
-
-        Row(
-            modifier = Modifier
-                .fillMaxWidth()
-                .wrapContentHeight()
-                .clickable { onProductClick(productWithAmount.product?.id.toString()) },
-            verticalAlignment = Alignment.CenterVertically,
-            horizontalArrangement = Arrangement.SpaceBetween
-        ) {
-
-
-            Column(
-                modifier = Modifier
-                    .fillMaxWidth(0.55f)
-                    .wrapContentHeight()
-                    .padding(start = 10.dp)
-            ) {
-                Text(text = productWithAmount.product?.brand.toString(), fontSize = 13.sp)
-
-                Text(text = productWithAmount.product?.volume.toString(), fontSize = 10.sp)
-
-                Divider()
-
-                if (isCashPriceState == null)
-                    if (parentScreen == "order")
-                        Row {
-                            Text(text = productWithAmount.product?.cashPrice?.round(2).toString(), fontSize = 12.sp)
-                            Spacer(modifier = Modifier.width(10.dp))
-                            Text(text = productWithAmount.product?.cashlessPrice?.round(2).toString(), fontSize = 12.sp)
-                        }
-                    else
-                        Text(
-                            text = if (productWithAmount.isCashPrice == true)
-                                productWithAmount.product?.cashPrice?.round(2).toString()
-                            else
-                                productWithAmount.product?.cashlessPrice?.round(2).toString(),
-                            fontSize = 12.sp
-                        )
+                if (searchViewModel.uploadingMore)
+                    CircularProgressIndicator(modifier = Modifier.size(25.dp))
                 else
-                    Text(
-                        text = if (isCashPriceState.value)
-                            productWithAmount.product?.cashPrice?.round(2).toString()
-                        else
-                            productWithAmount.product?.cashlessPrice?.round(2).toString(),
-                        fontSize = 12.sp
-                    )
+                    Text(text = "Ещё", style = MaterialTheme.typography.bodyMedium)
             }
-
-
-            Row(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .wrapContentHeight()
-                    .padding(end = 10.dp)
-            ) {
-                IconButton(
-                    modifier = Modifier.size(20.dp),
-                    onClick = {
-                        if (FirebaseAuth.getInstance().currentUser?.isAnonymous == true)
-                            showToast(context, "Вы не авторизованы")
-                        else {
-                            if (isInFavourite.value)
-                                onRemoveFromFavouriteClick(productWithAmount.product?.id!!)
-                            else
-                                onAddToFavouriteClick(productWithAmount.product ?: Product())
-                            isInFavourite.value = !isInFavourite.value
-                        }
-                    }
-                ) {
-                    Icon(
-                        imageVector = if (isInFavourite.value)
-                            Icons.Outlined.Favorite
-                        else
-                            Icons.Outlined.FavoriteBorder,
-                        contentDescription = "fav icon",
-                        tint = if (isInFavourite.value) Gold else Color.Black
-                    )
-                }
-
-                Spacer(modifier = Modifier.width(5.dp))
-
-                IconButton(
-                    modifier = Modifier.size(20.dp),
-                    onClick = {
-                        if (FirebaseAuth.getInstance().currentUser?.isAnonymous == true)
-                            showToast(context, "Вы не авторизованы")
-                        else {
-                            if (isInCart.value) onRemoveFromCartClick(productWithAmount.product?.id!!)
-                            else onAddToCartClick(
-                                ProductWithAmount(
-                                    product = productWithAmount.product,
-                                    amount = productWithAmount.amount,
-                                    isCashPrice = isCashPriceState?.value
-                                )
-                            )
-                            isInCart.value = !isInCart.value
-                        }
-                    }) {
-                    Icon(
-                        imageVector = if (isInCart.value)
-                            Icons.Filled.ShoppingCart
-                        else
-                            Icons.Outlined.ShoppingCart,
-                        contentDescription = "cart icon",
-                        tint = if (isInCart.value) Gold else Color.Black
-                    )
-                }
-
-                    Spacer(modifier = Modifier.width(5.dp))
-
-                    if (showEditableAmount)
-                         PlusMinus(initValue = productWithAmount.amount ?: 1,
-                                   onValueChange = onAmountChange)
-                    else
-                        Text(text = productWithAmount.amount?.toString() ?: "1", fontSize = 15.sp)
-
-
-
-            }
-        }
+//        else
+//            LoadingIndicator()
     }
 }
-
-//
-//@Composable
-//fun PlusMinus(amountState : MutableState<Int>) {
-//
-//
-//    val valueState = remember(amountState.value) {
-//        mutableStateOf(amountState.value.toString())
-//    }
-//    Row(modifier = Modifier.wrapContentHeight()) {
-//        IconButton(
-//            modifier = Modifier
-//                .size(15.dp)
-//                .clip(CircleShape),
-//            onClick = {
-//                if (amountState.value > 1) amountState.value--
-//            }
-//        ) {
-//            Icon(
-//                painter = painterResource(id = R.drawable.minus_icon),
-//                contentDescription = "minus icon"
-//            )
-//        }
-//
-//        BasicTextField(
-////        colors = TextFieldDefaults.textFieldColors(containerColor = MaterialTheme.colorScheme.background),
-////        shape = RectangleShape,
-//            textStyle = TextStyle(fontSize = 15.sp, textAlign = TextAlign.Center),
-//            modifier = Modifier
-//                .width(50.dp)
-//                .height(30.dp)
-//                .border(BorderStroke(width = 1.dp, color = Color.Black)),
-//            value = valueState.value,
-//            onValueChange = {
-//                if (it.isDigitsOnly() || it.isEmpty())
-//                    valueState.value = it
-//                try {
-//                    amountState.value = it.toInt()
-//                } catch (e : Exception) {}
-//            },
-//            keyboardOptions = KeyboardOptions(
-//                keyboardType = KeyboardType.Number,
-//                imeAction = ImeAction.Done
-//            )
-//        )
-//
-//
-////    TextField(
-////        colors = TextFieldDefaults.textFieldColors(containerColor = MaterialTheme.colorScheme.background),
-////        shape = RectangleShape,
-////        textStyle = TextStyle(fontSize = 10.sp),
-////        modifier = Modifier
-////            .width(50.dp)
-////            .height(40.dp)
-////            .border(BorderStroke(width = 1.dp, color = Color.Black)),
-////        value = amountState.value.toString(),
-////        onValueChange = {
-////            try {
-////                val newVal = it.toInt()
-////                amountState.value = newVal
-////            } catch (e : Exception){}
-////        },
-////        keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number, imeAction = ImeAction.Default)
-////    )
-//
-//        IconButton(
-//            modifier = Modifier
-//                .size(15.dp)
-//                .clip(CircleShape),
-//            onClick = { amountState.value++ }
-//        ) {
-//            Icon(
-//                painter = painterResource(id = R.drawable.plus_icon),
-//                contentDescription = "plus icon"
-//            )
-//        }
-//    }
-//}
-
-
-@Composable
-fun PlusMinus(initValue : Int, onValueChange : (Int) -> Unit) {
-
-    val valueState = rememberSaveable {
-        mutableStateOf(initValue.toString())
-    }
-
-    Row(modifier = Modifier.wrapContentHeight()) {
-        IconButton(
-            modifier = Modifier
-                .size(20.dp)
-                .clip(CircleShape),
-            onClick = {
-
-                try {
-                    var amount = valueState.value.toInt()
-                    if (amount > 1) amount--
-                    valueState.value = amount.toString()
-                    onValueChange(amount)
-
-                } catch (_: Exception) {}
-            }
-        ) {
-            Icon(
-                painter = painterResource(id = R.drawable.minus_icon),
-                contentDescription = "minus icon"
-            )
-        }
-
-        BasicTextField(
-//        colors = TextFieldDefaults.textFieldColors(containerColor = MaterialTheme.colorScheme.background),
-//        shape = RectangleShape,
-            textStyle = TextStyle(fontSize = 15.sp, textAlign = TextAlign.Center),
-            modifier = Modifier
-                .width(50.dp)
-                .height(30.dp)
-                .border(BorderStroke(width = 1.dp, color = Color.Black)),
-            value = valueState.value,
-            onValueChange = {
-                if (it.isDigitsOnly() || it.isEmpty())
-                    valueState.value = it
-                try {
-                    val amount = it.toInt()
-                    onValueChange(amount)
-                } catch (_ : Exception) {}
-            },
-            keyboardOptions = KeyboardOptions(
-                keyboardType = KeyboardType.Number,
-                imeAction = ImeAction.Done
-            )
-        )
-
-
-        IconButton(
-            modifier = Modifier
-                .size(20.dp)
-                .clip(CircleShape),
-            onClick = {
-                try {
-                    var amount = valueState.value.toInt()
-                    amount++
-                    valueState.value = amount.toString()
-                    onValueChange(amount)
-                } catch (_: Exception) {}
-            }
-        ) {
-            Icon(
-                painter = painterResource(id = R.drawable.plus_icon),
-                contentDescription = "plus icon"
-            )
-        }
-    }
-}
-
-
 
 //@Preview(showBackground = true)
 @Composable
 fun SearchOption(
-        applied : Boolean,
-        text : String,
-        iconId : Int,
-        showState : MutableState<Boolean>
-    ) {
+    applied : Boolean,
+    text : String,
+    iconId : Int,
+    showDialogState : MutableState<Boolean>
+) {
 
     val context = LocalContext.current
 
     val wp = getWidthPercent(context = context)
 
-    Card(modifier = Modifier
-        .wrapContentHeight()
-        .width(wp * 31)
-        .clickable { showState.value = !showState.value },
+    Card(
+        modifier = Modifier
+            .wrapContentHeight()
+            .wrapContentWidth()
+            .padding(5.dp)
+            //.width(wp * 31)
+            //.clipToBounds()
+            .clip(RoundedCornerShape(50.dp))
+            .clickable { showDialogState.value = !showDialogState.value },
          shape = RoundedCornerShape(50.dp),
-         colors = CardDefaults.cardColors(containerColor = Color.White, contentColor = Gold),
-         border = BorderStroke(width = 2.dp, color = if (applied) Gold else Color.LightGray)
+         colors = CardDefaults.cardColors(
+             containerColor = MaterialTheme.colorScheme.background,
+             contentColor = if (applied)
+                 MaterialTheme.colorScheme.primary
+             else
+                 MaterialTheme.colorScheme.onBackground
+         ),
+         border = BorderStroke(
+             width = 2.dp,
+             color = if (applied)
+                        MaterialTheme.colorScheme.primary
+                    else
+                        MaterialTheme.colorScheme.onBackground
+         )
     ) {
         Row(
             modifier = Modifier
-                .fillMaxWidth()
+                .wrapContentWidth()
                 .padding(5.dp),
             //horizontalArrangement = Arrangement.SpaceBetween,
             verticalAlignment = Alignment.CenterVertically
@@ -562,20 +210,19 @@ fun SearchOption(
                  painter = painterResource(id = iconId),
                  contentDescription = null,
                  modifier = Modifier
-                     .size(20.dp)
-                     .padding(start = 5.dp)
+                     .size(27.dp)
+                     .padding(start = 5.dp, end = 1.dp)
             )
 
-            Spacer(modifier = Modifier.width(1.dp))
+            //Spacer(modifier = Modifier.width(1.dp))
 
 
             //Divider(Modifier.width(1.dp))
 
             Text(
                 text = text,
-                fontSize = 13.sp,
                 modifier = Modifier.padding(end = 5.dp),
-                textAlign = TextAlign.Center
+                style = MaterialTheme.typography.bodyMedium
             )
 
 
@@ -666,18 +313,29 @@ fun SortDialog(
     }
 
     Dialog(onDismissRequest = { showDialog.value = false }) {
-        Surface(color = Color.White, modifier = Modifier.wrapContentSize()) {
+        Surface(
+            modifier = Modifier.wrapContentSize(),
+            shape = RoundedCornerShape(10.dp),
+            color = MaterialTheme.colorScheme.background,
+            contentColor = MaterialTheme.colorScheme.onBackground,
+            border = BorderStroke(width = 2.dp, color = MaterialTheme.colorScheme.onBackground)
+        ) {
             Column(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .height(400.dp)
+                    .wrapContentHeight()
+                    .padding(all = 5.dp)
             ) {
 
-                Text(text = "Сортировать по:")
+                Text(text = "Сортировать по:", style = MaterialTheme.typography.titleMedium)
+
 
                 repeat(2){ ind ->
-                    Row {
-                        Spacer(modifier = Modifier.width(10.dp))
+                    Row (
+                        modifier = Modifier.padding(top = 5.dp, bottom = 5.dp),
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        //Spacer(modifier = Modifier.width(10.dp))
                         CustomRadioButton(ind = ind, states = sortStates, priorities = priorities) {
                             sortStates[ind] = !sortStates[ind]
                             if (sortStates[ind])
@@ -685,33 +343,50 @@ fun SortDialog(
                             else
                                 priorities.remove(ind)
                         }
-                        Spacer(modifier = Modifier.width(10.dp))
-                        Text(text = labels[ind])
+                        Spacer(modifier = Modifier.width(5.dp))
+                        Text(text = labels[ind], style = MaterialTheme.typography.bodyMedium)
                     }
                 }
 
-                Spacer(modifier = Modifier.height(20.dp))
+                //Spacer(modifier = Modifier.height(20.dp))
 
-                Row {
+                Divider()
+
+                Row (
+                    modifier = Modifier.padding(top = 5.dp, bottom = 5.dp),
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
                    RadioButton(
+                       modifier = Modifier.padding(all = 5.dp),
                        enabled = isAscendingRadioButtonEnabled,
                        selected = isAscending.value,
+                       colors = RadioButtonDefaults.colors(
+                           selectedColor = MaterialTheme.colorScheme.primary,
+                           unselectedColor = MaterialTheme.colorScheme.primary,
+                           disabledSelectedColor = Color.LightGray,
+                           disabledUnselectedColor = Color.LightGray
+                       ),
                        onClick = { isAscending.value = !isAscending.value }
-                   )
-                    Spacer(modifier = Modifier.width(10.dp))
+                    )
+
+                    //Spacer(modifier = Modifier.width(5.dp))
 
                     Text(
                         text = if (isAscending.value) "По возрастанию" else "По убыванию",
-                        color = if (isAscendingRadioButtonEnabled) Color.Black else Color.LightGray
+                        color = if (isAscendingRadioButtonEnabled) MaterialTheme.colorScheme.onBackground else Color.LightGray,
+                        style = MaterialTheme.typography.bodyMedium
                     )
                 }
 
-                Spacer(modifier = Modifier.height(50.dp))
+                //Spacer(modifier = Modifier.height(30.dp))
 
+                Divider(modifier = Modifier.height(2.dp), color = MaterialTheme.colorScheme.onBackground)
 
-                Row(modifier = Modifier
-                    .fillMaxWidth()
-                    .wrapContentHeight(),
+                Row(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .wrapContentHeight()
+                        .padding(top = 5.dp, bottom = 5.dp),
                     horizontalArrangement = Arrangement.Center
                 ) {
 
@@ -726,12 +401,12 @@ fun SortDialog(
                             },
                             enabled = applySort.value,
                             shape = RoundedCornerShape(10.dp),
-                            colors = ButtonDefaults.buttonColors(containerColor = Color.White),
-                            border = BorderStroke(width = 1.dp, color = if (applySort.value) Gold else Color.LightGray),
+                            colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.primary),
+                            //border = BorderStroke(width = 1.dp, color = if (applySort.value) Gold else Color.LightGray),
                             modifier = Modifier.wrapContentSize(),
                             contentPadding = ButtonDefaults.ContentPadding
                         ) {
-                            Text(text = "Применить", fontSize = 18.sp, color = Color.Black)
+                            Text(text = "Применить", style = MaterialTheme.typography.bodyMedium)
                         }
 
                         Spacer(modifier = Modifier.height(5.dp))
@@ -746,7 +421,8 @@ fun SortDialog(
                             },
                             text = "Очистить всё",
                             textDecoration = TextDecoration.Underline,
-                            fontSize = 15.sp
+                            style = MaterialTheme.typography.bodySmall,
+                            color = MaterialTheme.colorScheme.onBackground
                         )
 
                     }
@@ -765,18 +441,24 @@ fun CustomRadioButton(
 
     TextButton(
         onClick = onClick,
-        modifier = Modifier.size(20.dp),
+        modifier = Modifier
+            //.wrapContentSize()
+            .size(35.dp)
+            .padding(all = 5.dp),
+                     //start = 5.dp, end = 5.dp),
         shape = CircleShape,
-        border = BorderStroke(width = 1.dp, color = Color.LightGray),
-        colors = ButtonDefaults.buttonColors(containerColor =
-                                             if (states[ind])
-                                                 Color.Green
-                                             else
-                                                 MaterialTheme.colorScheme.background),
-        contentPadding = PaddingValues(0.dp)
+        border = BorderStroke(width = 1.dp, color = MaterialTheme.colorScheme.onBackground),
+        colors = ButtonDefaults.buttonColors(
+            containerColor = if (states[ind]) MaterialTheme.colorScheme.primary else Color(0xFF212121)
+        ),
+        contentPadding = PaddingValues(1.dp)
     ) {
         val text = if (states[ind]) (priorities.indexOf(ind) + 1).toString() else ""
-        Text(textAlign = TextAlign.Center, text = text)
+        Text(
+            text = text,
+            textAlign = TextAlign.Center,
+            style = MaterialTheme.typography.bodyMedium
+        )
     }
 
 }
@@ -787,11 +469,14 @@ fun FilterDialog(
     minInitValue: String,
     maxInitValue: String,
     isOnHandOnlyInitValue: Boolean,
-    volumesStatesInitValue: List<Boolean>,
-    volumes : List<String>,
-    onApplyButtonClick: (String, String, Boolean, List<Boolean>) -> Unit,
+    isMaleOnlyInitValue : Boolean,
+    isFemaleOnlyInitValue : Boolean,
+    onApplyButtonClick: (String, String, Boolean, Boolean, Boolean) -> Unit,
     onClearClick : () -> Unit
 ) {
+
+
+    //val context = LocalContext.current
 
     val moreThanState = remember {
         mutableStateOf(minInitValue)
@@ -805,67 +490,63 @@ fun FilterDialog(
         mutableStateOf(isOnHandOnlyInitValue)
     }
 
-    val volumesStates = remember {
-        volumesStatesInitValue.toList().toMutableStateList()
+    val isMaleOnly = remember {
+        mutableStateOf(isMaleOnlyInitValue)
+    }
+
+    val isFemaleOnly = remember {
+        mutableStateOf(isFemaleOnlyInitValue)
     }
 
     val applyFilter = remember(
         moreThanState.value, lessThanState.value,
         isOnHandOnlyState.value,
-        volumesStates[0], volumesStates[1], volumesStates[2]
+        isMaleOnly.value, isFemaleOnly.value
     ) {
-
-        val value = mutableStateOf(
-            moreThanState.value != "0" ||
-                    lessThanState.value != "0" ||
-                    isOnHandOnlyState.value ||
-                    volumesStates.any { it }
+        mutableStateOf(
+            (moreThanState.value != "0.0" && moreThanState.value.isNotEmpty()) ||
+            (lessThanState.value != maxProductPrice.toString() && lessThanState.value.isNotEmpty()) ||
+            isOnHandOnlyState.value || isFemaleOnly.value || isMaleOnly.value
         )
-        Log.d("APPLY_FILTER_TEST", "SearchScreen: $value")
-        value
     }
 
-
-     Dialog(onDismissRequest = { showDialog.value = false}) {
-
-     Surface(color = Color.White, modifier = Modifier.wrapContentSize()) {
+    Dialog(onDismissRequest = { showDialog.value = false }) {
+        Surface(
+            modifier = Modifier.wrapContentSize(),
+            shape = RoundedCornerShape(10.dp),
+            color = MaterialTheme.colorScheme.background,
+            contentColor = MaterialTheme.colorScheme.onBackground,
+            border = BorderStroke(width = 2.dp, color = MaterialTheme.colorScheme.onBackground)
+        ) {
 
             Column(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .height(400.dp)
+                    .wrapContentHeight()
+                    .padding(all = 5.dp)
             ) {
 
-                FilterOption(
-                    text = "Только в наличии",
-                    height = 50.dp,
-                    selected = isOnHandOnlyState
-                )
+                Text(text = "Фильтровать по:", style = MaterialTheme.typography.titleMedium)
 
-                Row {
-                    InputField(
-                        modifier = Modifier.width(150.dp),
-                        valueState = moreThanState,
-                        label = "От",
-                        enabled = true
-                    )
-                    Spacer(modifier = Modifier.width(20.dp))
-                    InputField(
-                        modifier = Modifier.width(150.dp),
-                        valueState = lessThanState,
-                        label = "До",
-                        enabled = true
-                    )
-                }
+                Spacer(modifier = Modifier.height(5.dp))
 
-                VolumeOption(states = volumesStates, volumes = volumes)
+                PriceFilterRow(priceStates = arrayOf(moreThanState, lessThanState))
 
-                Spacer(modifier = Modifier.height(50.dp))
+                Divider()
+
+                MaleFemale(isMaleOnly, isFemaleOnly)
+
+                Divider()
+
+                IsOnHandOnlyOption(text = "Только в наличии", selected = isOnHandOnlyState)
+
+                Divider(modifier = Modifier.height(2.dp), color = MaterialTheme.colorScheme.onBackground)
 
                 Row(
                     modifier = Modifier
                         .fillMaxWidth()
-                        .wrapContentHeight(),
+                        .wrapContentHeight()
+                        .padding(top = 5.dp, bottom = 5.dp),
                     horizontalArrangement = Arrangement.Center
                 ) {
 
@@ -877,38 +558,47 @@ fun FilterDialog(
                         Button(
                             onClick = {
                                 onApplyButtonClick(
-                                    moreThanState.value,
-                                    lessThanState.value,
+                                    moreThanState.value.ifEmpty { "0.0" },
+                                    lessThanState.value.ifEmpty { maxProductPrice.toString() },
                                     isOnHandOnlyState.value,
-                                    volumesStates.toList()
+                                    isMaleOnly.value,
+                                    isFemaleOnly.value
                                 )
                             },
                             enabled = applyFilter.value,
                             shape = RoundedCornerShape(10.dp),
-                            colors = ButtonDefaults.buttonColors(containerColor = Color.White),
-                            border = BorderStroke(
-                                width = 1.dp,
-                                color = if (applyFilter.value) Gold else Color.LightGray
+                            colors = ButtonDefaults.buttonColors(
+                                containerColor = MaterialTheme.colorScheme.primary,
+                                //disabledContainerColor =
                             ),
+//                            border = BorderStroke(
+//                                width = 1.dp,
+//                                color = if (applyFilter.value) Gold else Color.LightGray
+//                            ),
                             modifier = Modifier.wrapContentSize(),
                             contentPadding = ButtonDefaults.ContentPadding
                         ) {
-                            Text(text = "Применить", fontSize = 18.sp, color = Color.Black)
+                            Text(
+                                text = "Применить",
+                                style = MaterialTheme.typography.bodyMedium,
+                               // color = MaterialTheme.colorScheme.onBackground
+                            )
                         }
 
                         Spacer(modifier = Modifier.height(5.dp))
 
                         Text(
                             modifier = Modifier.clickable {
-                                moreThanState.value = "0"
-                                lessThanState.value = "0"
+                                moreThanState.value = "0.0"
+                                lessThanState.value = maxProductPrice.toString()
                                 isOnHandOnlyState.value = false
-                                volumesStates.replaceAll { false }
+                                isMaleOnly.value = false
+                                isFemaleOnly.value = false
                                 onClearClick()
                             },
                             text = "Очистить всё",
                             textDecoration = TextDecoration.Underline,
-                            fontSize = 15.sp
+                            style = MaterialTheme.typography.bodySmall
                         )
 
                     }
@@ -919,76 +609,267 @@ fun FilterDialog(
     }
 }
 
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun VolumeOption (states:  SnapshotStateList<Boolean>, volumes : List<String>) {
-    Row(modifier = Modifier
-        .fillMaxWidth()
-        .wrapContentSize()) {
+fun PriceFilterRow(vararg priceStates : MutableState<String>) {
 
-        Text(text = "Объем")
+    val context = LocalContext.current
 
-        Spacer(modifier = Modifier.width(30.dp))
-
-        for (ind in states.indices)
-            ValueButton(ind = ind, text = "${volumes[ind]} мл", states = states)
-
-//        states.forEachIndexed{ ind, buttonState ->
-//            ValueButton(ind = ind, text = "$volume мл", states)
-//        }
+    val preferencesManager = remember {
+        PreferencesManager(context = context)
     }
-}
 
-@Composable
-fun ValueButton(
-    ind : Int,
-    text : String,
-    states : SnapshotStateList<Boolean>
-) {
+    val textColor = remember(preferencesManager.getThemeData(0)) {
+        mutableStateOf(
+            if (preferencesManager.getThemeData(0) == 1)
+                Color(0xFF212121)
+            else
+                Color(0xFFFDF5E2)
+        )
+    }
 
-    Button(
-        onClick = { states[ind] = !states[ind] },
-        shape = RoundedCornerShape(10.dp),
-        colors = ButtonDefaults.buttonColors(containerColor = Color.White),
-        border = BorderStroke(width = 1.dp, color = if (states[ind]) Gold else Color.LightGray),
-        contentPadding = ButtonDefaults.ContentPadding,
+    val focusStates = remember {
+        mutableStateListOf(false, false)
+    }
+
+    val placeHolderTexts = listOf("От", "До")
+
+    val extremeValues = listOf("0.0", maxProductPrice.toString())
+
+    val range = 0f..(maxProductPrice/10)
+
+    var sliderPosition by remember {
+        mutableStateOf(range)
+    }
+
+    LaunchedEffect(key1 = sliderPosition){
+        if (sliderPosition != range) {
+            priceStates[0].value =
+                (sliderPosition.start.toDouble() * 10).round(1).toString()
+            priceStates[1].value =
+                (sliderPosition.endInclusive.toDouble() * 10).round(1).toString()
+        }
+    }
+
+    Row(
         modifier = Modifier
-            .wrapContentWidth()
+            .fillMaxWidth()
             .wrapContentHeight()
+            .padding(start = 5.dp, top = 10.dp, bottom = 5.dp),
+        //verticalAlignment = Alignment.CenterVertically,
     ) {
 
-        Text(text = text, fontSize = 10.sp, color = Color.Black)
+        Text(
+            modifier = Modifier.padding(top = 5.dp),
+            text = "Цене:",
+            style = MaterialTheme.typography.bodyMedium
+        )
+
+        Column(
+            modifier = Modifier
+                .fillMaxWidth()
+                .wrapContentHeight()
+                .padding(start = 5.dp, end = 5.dp),
+        ) {
+
+            Row(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .wrapContentHeight(),
+                    //.padding(start = 5.dp, top = 10.dp, bottom = 5.dp),
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.Center
+            ) {
+
+                repeat(2) { ind ->
+                    BasicTextField(
+                        modifier = Modifier
+                            .height(30.dp)
+                            .width(80.dp)
+                            .padding(start = 5.dp)
+                            .border(
+                                border = BorderStroke(
+                                    width = 1.dp,
+                                    color = MaterialTheme.colorScheme.onBackground
+                                ),
+                                shape = RoundedCornerShape(10.dp)
+                            )
+                            .onFocusChanged { focus ->
+                                focusStates[ind] = focus.isFocused
+                            },
+                        textStyle = TextStyle(
+                            fontSize = 15.sp,
+                            textAlign = TextAlign.Center,
+                            color = textColor.value
+                        ),
+                        keyboardOptions = KeyboardOptions(
+                            keyboardType = KeyboardType.Number,
+                            imeAction = if (ind == 0) ImeAction.Next else ImeAction.Done
+                        ),
+                        cursorBrush = SolidColor(MaterialTheme.colorScheme.primary),
+                        value = if (priceStates[ind].value == extremeValues[ind])
+                            if (focusStates[ind]) "" else placeHolderTexts[ind]
+                        else
+                            priceStates[ind].value,
+                        onValueChange = { priceStates[ind].value = it }
+                    ) { innerTextField ->
+                        Row(
+                            verticalAlignment = Alignment.CenterVertically,
+                            horizontalArrangement = Arrangement.Center
+                        ) {
+                            innerTextField()
+                        }
+                    }
+                }
+            }
+
+            Spacer(modifier = Modifier.height(5.dp))
+
+            RangeSlider(
+                value = sliderPosition,
+                valueRange = range,
+                onValueChange = { newRange ->
+                    sliderPosition = newRange
+                },
+            )
+        }
+
     }
 }
+
 @Composable
-fun ValueButton(
-    text : String,
-    clicked : MutableState<Boolean>
+fun MaleFemale(
+    vararg states : MutableState<Boolean>,
+//    isMaleOnly : MutableState<Boolean>,
+//    isFemaleOnly: MutableState<Boolean>
 ) {
 
-    Button(
-        onClick = { clicked.value = !clicked.value },
-        shape = RoundedCornerShape(10.dp),
-        colors = ButtonDefaults.buttonColors(containerColor = Color.White),
-        border = BorderStroke(width = 1.dp, color = if (clicked.value) Gold else Color.LightGray),
-        contentPadding = ButtonDefaults.ContentPadding,
+    val texts = listOf("Мужское", "Женское")
+
+    Row(
         modifier = Modifier
-            .wrapContentWidth()
-            .wrapContentHeight()
+            .fillMaxWidth()
+            .padding(start = 5.dp),
+        verticalAlignment = Alignment.CenterVertically
     ) {
 
-        Text(text = text, fontSize = 10.sp, color = Color.Black)
+        Text(text = "Полу:", style = MaterialTheme.typography.bodyMedium, modifier = Modifier.padding(end = 5.dp))
+
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.Center
+        ) {
+
+            repeat(2) { ind ->
+
+                val shape = if (ind == 0)
+                    RoundedCornerShape(topStart = 10.dp, bottomStart = 10.dp)
+                else
+                    RoundedCornerShape(topEnd = 10.dp, bottomEnd = 10.dp)
+
+                Button(
+                    modifier = Modifier,
+                    onClick = {
+                        states[ind].value = !states[ind].value
+                    },
+                    shape = shape,
+                    colors = ButtonDefaults.buttonColors(
+                        containerColor = MaterialTheme.colorScheme.primaryContainer,
+                        contentColor = if (states[ind].value)
+                            MaterialTheme.colorScheme.primary
+                        else
+                            MaterialTheme.colorScheme.onBackground
+                    ),
+                    border = BorderStroke(
+                        width = 2.dp, color =
+                        if (states[ind].value)
+                            MaterialTheme.colorScheme.primary
+                        else
+                            Color.LightGray
+                    ),
+                    contentPadding = PaddingValues(5.dp)
+                ) {
+
+                    Text(text = texts[ind], style = MaterialTheme.typography.bodyMedium)
+                }
+            }
+        }
     }
+
 }
 
+//@Composable
+//fun VolumeOption(states:  SnapshotStateList<Boolean>, volumes : List<String>) {
+//    Row(
+//        modifier = Modifier
+//            .fillMaxWidth()
+//            .wrapContentHeight()
+//            .padding(start = 5.dp, top = 5.dp, bottom = 5.dp),
+//        verticalAlignment = Alignment.CenterVertically
+//    ) {
+//
+//        Text(modifier = Modifier.padding(end = 5.dp), text = "Объему:", style = MaterialTheme.typography.bodyMedium)
+//
+//
+//        for (ind in states.indices)
+//            ValueButton(ind = ind, text = "${volumes[ind]} мл", states = states)
+//
+//    }
+//}
+
+//@Composable
+//fun ValueButton(
+//    ind : Int,
+//    text : String,
+//    states : SnapshotStateList<Boolean>
+//) {
+//
+//    Button(
+//        onClick = { states[ind] = !states[ind] },
+//        shape = RoundedCornerShape(10.dp),
+//        colors = ButtonDefaults.buttonColors(containerColor = Color.White),
+//        border = BorderStroke(width = 1.dp, color = if (states[ind]) Gold else Color.LightGray),
+//        contentPadding = ButtonDefaults.ContentPadding,
+//        modifier = Modifier
+//            .wrapContentWidth()
+//            .wrapContentHeight()
+//    ) {
+//
+//        Text(text = text, fontSize = 10.sp, color = Color.Black)
+//    }
+//}
+
 @Composable
-fun FilterOption(selected : MutableState<Boolean>, text: String, height: Dp) {
-    Row(modifier = Modifier
-        .fillMaxWidth()
-        .height(height)) {
-        RadioButton(selected = selected.value, onClick = { selected.value = !selected.value })
+fun IsOnHandOnlyOption(selected : MutableState<Boolean>, text: String) {
+    Row(
+        modifier = Modifier
+            .fillMaxWidth()
+            .wrapContentHeight()
+            .padding(
+                top = 5.dp,
+                bottom = 5.dp,
+                //start = 5.dp
+            ),
+        verticalAlignment = Alignment.CenterVertically
+    ) {
 
-        Spacer(modifier = Modifier.width(30.dp))
+        RadioButton(
+            modifier = Modifier
+                //.padding(end = 5.dp)
+            ,
+            selected = selected.value,
+            onClick = { selected.value = !selected.value },
+            colors = RadioButtonDefaults.colors(
+                selectedColor = MaterialTheme.colorScheme.primary,
+                unselectedColor = MaterialTheme.colorScheme.primary,
+                disabledSelectedColor = MaterialTheme.colorScheme.background,
+                disabledUnselectedColor = MaterialTheme.colorScheme.background
+            )
+        )
 
-        Text(text = text)
+        //Spacer(modifier = Modifier.width(30.dp))
+
+        Text(text = text, style = MaterialTheme.typography.bodyMedium)
     }
 }

@@ -30,7 +30,4 @@ fun NavGraphBuilder.loginScreen(
         BackPressHandler(onBackPressed = onBackPressed)
         LoginScreen(authViewModel = viewModel, onCodeSent = onCodeSent, onSuccess = onSuccess)
     }
-
-
-
 }

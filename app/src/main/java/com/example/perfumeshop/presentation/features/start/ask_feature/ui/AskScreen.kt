@@ -34,65 +34,65 @@ import com.google.firebase.auth.FirebaseAuth
 
 @Composable
 fun AskLoginScreen(onLoginClick: () -> Unit, onSkipClick: () -> Unit) {
-    Surface(modifier = Modifier.fillMaxSize()) {
-        Column(horizontalAlignment = Alignment.CenterHorizontally,
-               verticalArrangement = Arrangement.Center,
-               modifier = Modifier.fillMaxSize()) {
 
-            Spacer(modifier = Modifier.height(100.dp))
+    Column(horizontalAlignment = Alignment.CenterHorizontally,
+           verticalArrangement = Arrangement.Center,
+           modifier = Modifier.fillMaxSize()) {
 
-            Image(
-                painter = painterResource(id = R.drawable.registration_image),
-                contentDescription = "reg img",
-                modifier = Modifier
-                    .height(200.dp)
-                    .width(300.dp)
-            )
-            Text(text = stringResource(id = R.string.registration_label),
-                 fontSize = 30.sp, fontWeight = FontWeight.Bold)
+        Spacer(modifier = Modifier.height(100.dp))
 
-            Spacer(modifier = Modifier.height(20.dp))
+        Image(
+            painter = painterResource(id = R.drawable.registration_image),
+            contentDescription = "reg img",
+            modifier = Modifier
+                .height(200.dp)
+                .width(300.dp)
+        )
+        Text(text = stringResource(id = R.string.registration_label),
+             fontSize = 30.sp, fontWeight = FontWeight.Bold)
 
-            Text(text = stringResource(R.string.registration_body),
-                 fontSize = 15.sp, modifier = Modifier.fillMaxWidth(0.8f),
-            textAlign = TextAlign.Center)
+        Spacer(modifier = Modifier.height(20.dp))
 
-            Spacer(modifier = Modifier.height(30.dp))
+        Text(text = stringResource(R.string.registration_body),
+             fontSize = 15.sp, modifier = Modifier.fillMaxWidth(0.8f),
+        textAlign = TextAlign.Center)
 
-            Row(modifier = Modifier.wrapContentHeight()) {
+        Spacer(modifier = Modifier.height(30.dp))
 
-                Button(onClick = onLoginClick,
-                       modifier = Modifier
-                           .wrapContentHeight()
-                           .width(120.dp),
-                       contentPadding = PaddingValues(all = 10.dp),
-                       shape = RoundedCornerShape(10.dp),
-                       colors = ButtonDefaults.buttonColors(containerColor = Gold, contentColor = Color.Black)
-                ) {
-                    Text(text = "Регистрация", fontSize = 15.sp)
-                }
+        Row(modifier = Modifier.wrapContentHeight()) {
 
-                Spacer(modifier = Modifier.width(20.dp))
-
-                Button(onClick = {
-                            FirebaseAuth.getInstance().signInAnonymously()
-                            onSkipClick()
-                       },
-                       modifier = Modifier
-                           .wrapContentHeight()
-                           .width(120.dp),
-                       border = BorderStroke(1.dp, Color.LightGray),
-                       contentPadding = PaddingValues(all = 10.dp),
-                       shape = RoundedCornerShape(10.dp),
-                       colors = ButtonDefaults.buttonColors(containerColor = Color.White, contentColor = Color.LightGray)
-                ) {
-                    Text(text = "Пропустить", fontSize = 15.sp)
-                }
-
-
-
+            Button(onClick = onLoginClick,
+                   modifier = Modifier
+                       .wrapContentHeight()
+                       .width(120.dp),
+                   contentPadding = PaddingValues(all = 10.dp),
+                   shape = RoundedCornerShape(10.dp),
+                   colors = ButtonDefaults.buttonColors(containerColor = Gold, contentColor = Color.Black)
+            ) {
+                Text(text = "Регистрация", fontSize = 15.sp)
             }
 
+            Spacer(modifier = Modifier.width(20.dp))
+
+            Button(onClick = {
+                        FirebaseAuth.getInstance().signInAnonymously()
+                        onSkipClick()
+                   },
+                   modifier = Modifier
+                       .wrapContentHeight()
+                       .width(120.dp),
+                   border = BorderStroke(1.dp, Color.LightGray),
+                   contentPadding = PaddingValues(all = 10.dp),
+                   shape = RoundedCornerShape(10.dp),
+                   colors = ButtonDefaults.buttonColors(containerColor = Color.White, contentColor = Color.LightGray)
+            ) {
+                Text(text = "Пропустить", fontSize = 15.sp)
+            }
+
+
+
         }
+
     }
+
 }

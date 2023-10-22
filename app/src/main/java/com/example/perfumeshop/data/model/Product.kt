@@ -1,4 +1,4 @@
-package com.example.perfumeshop.data.models
+package com.example.perfumeshop.data.model
 
 import com.example.perfumeshop.data.utils.ProductSex
 import com.google.firebase.firestore.Exclude
@@ -21,7 +21,7 @@ data class Product(
     @set:PropertyName("cashless_price")
     var cashlessPrice : Double? = null, // add currency converter (BLR, USD, EUR)
 
-    var productSex : ProductSex? = null,
+    var productSex : String? = null,
 
     @get:PropertyName("is_on_hand")
     @set:PropertyName("is_on_hand")

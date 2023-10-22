@@ -5,7 +5,6 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -22,13 +21,16 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import com.example.perfumeshop.R
-import com.example.perfumeshop.data.models.Product
-import com.example.perfumeshop.data.models.ProductWithAmount
+import com.example.perfumeshop.data.model.ProductWithAmount
 import com.example.perfumeshop.data.utils.QueryType
+import com.example.perfumeshop.presentation.components.ErrorOccurred
+import com.example.perfumeshop.presentation.components.LazyProductList
 import com.example.perfumeshop.presentation.components.LoadingIndicator
+import com.example.perfumeshop.presentation.components.NothingFound
 import com.example.perfumeshop.presentation.components.showToast
 import com.example.perfumeshop.presentation.features.main.cart_feature.cart.ui.CartViewModel
 import com.example.perfumeshop.presentation.features.main.profile_feature.favourite.ui.FavouriteViewModel
+import kotlinx.coroutines.Job
 
 
 @Composable
@@ -51,19 +53,13 @@ fun SearchScreen(
         mutableStateOf(true)
     }
 
-    val showPriceType = remember {
-        mutableStateOf(false)
-    }
-
-    val isCashPriceState = rememberSaveable {
-        mutableStateOf(true)
-    }
-
     var updateQuery by rememberSaveable(inputs = arrayOf(query, queryType)) {
         mutableStateOf(true)
     }
 
     if (updateQuery) {
+        searchViewModel.initQuery = query
+        searchViewModel.initQueryType = queryType
         searchViewModel.searchQuery(query = query, queryType = queryType)
         updateQuery = false
     }
@@ -76,9 +72,7 @@ fun SearchScreen(
         mutableStateOf(false)
     }
 
-    val volumes = listOf("35", "50", "125")
-
-    val filterApplied = remember {
+    val filterApplied = rememberSaveable {
         mutableStateOf(false)
     }
 
@@ -90,7 +84,7 @@ fun SearchScreen(
         mutableStateOf(false)
     }
 
-    val sortApplied = remember {
+    val sortApplied = rememberSaveable {
         mutableStateOf(false)
     }
 
@@ -100,12 +94,15 @@ fun SearchScreen(
 
     Column(modifier = Modifier) {
 
-        SearchForm(initialQuery = query) { q ->
+        SearchForm(initialQuery =
+                   if (queryType == QueryType.brand)
+                       query
+                   else
+                       ""
+        ) { q ->
             searchViewModel.searchQuery(query = q, queryType = QueryType.brand)
         }
 
-        Divider()
-        
         Row(
             horizontalArrangement = Arrangement.SpaceBetween,
             verticalAlignment = Alignment.CenterVertically,
@@ -114,21 +111,19 @@ fun SearchScreen(
                 .height(50.dp)
         ) {
 
-            SearchOption(applied = filterApplied.value, text = "Фильтр", iconId = R.drawable.filter, showState = showFilter)
+            SearchOption(applied = filterApplied.value, text = "Фильтр", iconId = R.drawable.filter, showDialogState = showFilter)
 
-            Box {
-                SearchOption(applied = !isCashPriceState.value, text = "Цена", iconId = R.drawable.money, showState = showPriceType)
+//            Box {
+//                SearchOption(applied = !isCashPriceState.value, text = "Цена", iconId = R.drawable.money, showState = showPriceType)
+//
+//                PriceDropDownMenu(
+//                    expanded = showPriceType,
+//                    selected = isCashPriceState
+//                )
+//            }
 
-                PriceDropDownMenu(
-                    expanded = showPriceType,
-                    selected = isCashPriceState
-                )
-            }
-
-            SearchOption(applied = sortApplied.value, text = "Сортировка", iconId = R.drawable.sort, showState = showSort)
+            SearchOption(applied = sortApplied.value, text = "Сортировка", iconId = R.drawable.sort, showDialogState = showSort)
         }
-
-        Divider()
 
         Spacer(modifier = Modifier.height(5.dp))
 
@@ -141,7 +136,6 @@ fun SearchScreen(
             onRemoveFromCartClick = cartViewModel::removeFromCart,
             onRemoveFromFavouriteClick = favouriteViewModel::removeFromFavourite,
             isInFavouriteCheck = favouriteViewModel::isInFavourite,
-            isCashPriceState = isCashPriceState,
             isInCartCheck = cartViewModel::isInCart
         )
 
@@ -152,14 +146,15 @@ fun SearchScreen(
                 minInitValue = searchViewModel.minValue.toString(),
                 maxInitValue = searchViewModel.maxValue.toString(),
                 isOnHandOnlyInitValue = searchViewModel.isOnHandOnly,
-                volumesStatesInitValue = List(volumes.size) { ind -> searchViewModel.volumes.contains(volumes[ind]) },
-                volumes = volumes,
-                onApplyButtonClick = { moreThan, lessThan, isOnHand, states ->
+                isMaleOnlyInitValue = searchViewModel.isMaleOnly,
+                isFemaleOnlyInitValue = searchViewModel.isFemaleOnly,
+                onApplyButtonClick = { moreThan, lessThan, isOnHand, isMaleOnly, isFemaleOnly ->
+
                     showFilter.value = false
 
                     try {
-                        val minValue = moreThan.toFloat()
-                        val maxValue = lessThan.toFloat()
+                        val minValue = moreThan.trim().replace(",", ".").toFloat()
+                        val maxValue = lessThan.trim().replace(",", ".").toFloat()
 
                         searchViewModel.searchQuery(
                             query = query,
@@ -167,7 +162,8 @@ fun SearchScreen(
                             minValue = minValue,
                             maxValue = maxValue,
                             isOnHandOnly = isOnHand,
-                            volumes = volumes.filterIndexed{ ind, _ -> states[ind] }
+                            isMaleOnly = isMaleOnly,
+                            isFemaleOnly = isFemaleOnly
                         )
                     } catch (e: Exception) {
                         showToast(context = context, "Ошибка\nНекорректные данные")
@@ -177,9 +173,10 @@ fun SearchScreen(
                 },
                 onClearClick = {
                     searchViewModel.minValue = 0.0f
-                    searchViewModel.maxValue = 0.0f
+                    searchViewModel.maxValue = maxProductPrice
                     searchViewModel.isOnHandOnly = false
-                    searchViewModel.volumes = emptyList()
+                    searchViewModel.isMaleOnly = false
+                    searchViewModel.isFemaleOnly = false
 
                     filterApplied.value = false
                 }
@@ -213,45 +210,42 @@ fun ShowProductList(
     showProductList: MutableState<Boolean>,
     searchViewModel: SearchViewModel,
     onProductClick: (String) -> Unit,
-    onAddToFavouriteClick: (Product) -> Unit,
+    onAddToFavouriteClick: (ProductWithAmount) -> Unit,
     onAddToCartClick: (ProductWithAmount) -> Unit,
     onRemoveFromFavouriteClick: (String) -> Unit,
     onRemoveFromCartClick: (String) -> Unit,
     isInFavouriteCheck: (String) -> Boolean,
     isInCartCheck: (String) -> Boolean,
-    isCashPriceState: MutableState<Boolean>
 ) {
-
-    remember(isCashPriceState.value) {
-        searchViewModel.isCashPrice = isCashPriceState.value
-        searchViewModel.searchProducts.forEach{ it.isCashPrice = isCashPriceState.value }
-        null
-    }
 
     if (showProductList.value) {
         if (searchViewModel.isSuccess) {
             LazyProductList(
-                parentScreen = "search",
                 onProductClick = onProductClick,
                 listOfProductsWithAmounts = searchViewModel.searchProducts,
-                updateChangedAmount = { ind, amount -> searchViewModel.searchProducts[ind].amount = amount },
+
                 onAddToFavouriteClick = onAddToFavouriteClick,
                 onAddToCartClick = onAddToCartClick,
+
                 onRemoveFromFavouriteClick = onRemoveFromFavouriteClick,
                 onRemoveFromCartClick = onRemoveFromCartClick,
+
                 isInFavouriteCheck = isInFavouriteCheck,
-                isCashPriceState = isCashPriceState,
                 isInCartCheck = isInCartCheck,
+
+                onAmountChanged = searchViewModel::updateProductAmount,
+                onCashStateChanged = searchViewModel::updateProductCashState,
+
                 UploadMoreButton = { UploadMoreButton(searchViewModel = searchViewModel) }
             )
         }
 
         if (searchViewModel.isFailure)
-            Text(text = stringResource(id = R.string.error_occured))
+            ErrorOccurred()
         else if (searchViewModel.isLoading)
             LoadingIndicator()
         else if (!searchViewModel.isLoading && searchViewModel.searchProducts.isEmpty())
-            Text(text = stringResource(id = R.string.nothing_found))
+            NothingFound()
     }
 }
 

@@ -12,10 +12,10 @@ import com.example.perfumeshop.presentation.features.start.splash_feature.naviga
 
 fun NavGraphBuilder.startGraph(
     navigateAsk: () -> Unit,
-    navigateMain: () -> Unit,
+    navigateHome: () -> Unit,
     navigateAuth: () -> Unit,
 ){
-    splashScreen(navigateAsk = navigateAsk, navigateMain = navigateMain)
+    splashScreen(navigateAsk = navigateAsk, navigateMain = navigateHome)
 
-    askScreen(navigateAuth = navigateAuth, onSkipClick = navigateMain)
+    askScreen(navigateAuth = navigateAuth, onSkipClick = navigateHome)
 }

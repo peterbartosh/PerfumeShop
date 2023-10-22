@@ -1,12 +1,18 @@
 package com.example.perfumeshop.presentation.app.navigation
 
+import androidx.compose.foundation.background
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.runtime.Composable
+import androidx.compose.ui.Modifier
 import androidx.navigation.NavHostController
 import androidx.navigation.compose.NavHost
 import androidx.navigation.navOptions
 import com.example.perfumeshop.data.utils.OptionType
+import com.example.perfumeshop.data.utils.UserPreferencesType
 import com.example.perfumeshop.presentation.features.auth.authGraph
+import com.example.perfumeshop.presentation.features.auth.code_verification_feature.navigation.codeVerificationRoute
 import com.example.perfumeshop.presentation.features.auth.code_verification_feature.navigation.navigateToCodeVerification
+import com.example.perfumeshop.presentation.features.auth.login_register_feature.navigation.loginRoute
 import com.example.perfumeshop.presentation.features.auth.login_register_feature.navigation.navigateToLogin
 import com.example.perfumeshop.presentation.features.main.cart_feature.cart.navigation.navigateToCart
 import com.example.perfumeshop.presentation.features.main.cart_feature.cart.ui.CartViewModel
@@ -19,6 +25,7 @@ import com.example.perfumeshop.presentation.features.main.profile_feature.edit_p
 import com.example.perfumeshop.presentation.features.main.profile_feature.favourite.navigation.navigateToFavouritesRoute
 import com.example.perfumeshop.presentation.features.main.profile_feature.favourite.ui.FavouriteViewModel
 import com.example.perfumeshop.presentation.features.main.profile_feature.orders.navigation.navigateToOrders
+import com.example.perfumeshop.presentation.features.start.ask_feature.navigation.askRoute
 import com.example.perfumeshop.presentation.features.start.ask_feature.navigation.navigateToAsk
 import com.example.perfumeshop.presentation.features.start.splash_feature.navigation.splashRoute
 import com.example.perfumeshop.presentation.features.start.startGraph
@@ -26,15 +33,20 @@ import com.example.perfumeshop.presentation.features.start.startGraph
 
 @Composable
 fun AppNavHost(
+    modifier: Modifier = Modifier,
     navController: NavHostController,
-    onThemeChange: (Boolean) -> Unit,
     cartViewModel: CartViewModel,
     favouriteViewModel: FavouriteViewModel,
+    onUserPreferencesChanged: (UserPreferencesType, Int) -> Unit,
     onBackPressed : () -> Unit
 ) {
 
-
-    NavHost(navController = navController, startDestination = splashRoute){
+    NavHost(
+        navController = navController,
+        startDestination = splashRoute,
+        modifier = modifier
+            //.background(color = MaterialTheme.colorScheme.background)
+    ){
 
         val startDest = this.build().startDestinationId
 
@@ -52,11 +64,13 @@ fun AppNavHost(
                 navController.navigateToAsk(navOptions = navOptions)
                 navController.backQueue.removeIf{ nbse -> nbse.destination.route == splashRoute}
             },
-            navigateMain = {
+            navigateHome = {
                cartViewModel.loadUserProducts()
                favouriteViewModel.loadUserProducts()
                navController.navigateToHome(navOptions = null)
-               navController.backQueue.removeIf{ nbse -> nbse.destination.route == splashRoute}
+               navController.backQueue.removeIf{ nbse -> nbse.destination.route in
+                       listOf(splashRoute, askRoute, loginRoute, codeVerificationRoute)
+               }
             },
             navigateAuth = { navController.navigateToLogin(navOptions = navOptions) }
         )
@@ -73,10 +87,9 @@ fun AppNavHost(
         )
 
         mainGraph(
-            //homeViewModel = homeViewModel,
             cartViewModel = cartViewModel,
             favouriteViewModel = favouriteViewModel,
-            onThemeChange = onThemeChange,
+            onUserPreferencesChanged = onUserPreferencesChanged,
             navigateToCart = { navController.navigateToCart(navOptions = navOptions) },
             navigateToOrderMaking = { navController.navigateToOrderMaking(navOptions = navOptions) },
             navigateSearch = { query, queryType -> navController.navigateToSearch(query = query, queryType = queryType, navOptions = navOptions) },

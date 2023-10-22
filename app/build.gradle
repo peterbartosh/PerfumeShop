@@ -64,6 +64,9 @@ dependencies {
     //material icons - use with caution!
     //implementation "androidx.compose.material:material-icons-extended:1.5.0"
 
+    // lottie for animations
+    implementation "com.airbnb.android:lottie-compose:6.0.0"
+
 
     // poi for excel parse
     implementation ("org.apache.poi:poi:5.2.3")

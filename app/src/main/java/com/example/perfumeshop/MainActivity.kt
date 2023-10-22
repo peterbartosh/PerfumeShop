@@ -4,7 +4,7 @@ import android.annotation.SuppressLint
 import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
-import com.example.perfumeshop.presentation.app.App
+import com.example.perfumeshop.presentation.app.ui.App
 import dagger.hilt.android.AndroidEntryPoint
 
 @AndroidEntryPoint
@@ -15,8 +15,7 @@ class MainActivity : ComponentActivity() {
         super.onCreate(savedInstanceState)
         setContent {
 
-
-            App()
+            App(finishAffinity = { finishAffinity() })
 
 
         }
@@ -24,6 +23,7 @@ class MainActivity : ComponentActivity() {
 
     override fun onPause() {
         super.onPause()
+
     }
 
     override fun onStop() {

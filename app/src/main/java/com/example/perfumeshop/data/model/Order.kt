@@ -1,17 +1,8 @@
-package com.example.perfumeshop.data.models
+package com.example.perfumeshop.data.model
 
 import com.google.firebase.Timestamp
 import com.google.firebase.firestore.Exclude
 import com.google.firebase.firestore.PropertyName
-
-sealed class Status(){
-    class Canceled() : Status()
-    class Processing() : Status()
-    class Accepted() : Status()
-    class InProgress() : Status()
-    class Delivering() : Status()
-    class Success() : Status()
-}
 
 data class Order(
     @Exclude var id: String? = null,
@@ -21,6 +12,8 @@ data class Order(
     var address: String? = null,
 
     var date: Timestamp?  = null,
+
+    val status : String? = null,
 
     @get:PropertyName("user_id")
     @set:PropertyName("user_id")

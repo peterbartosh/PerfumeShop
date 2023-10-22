@@ -12,6 +12,8 @@ val Pink40 = Color(0xFF7D5260)
 
 val Gold = Color(0xFFFFBF00)
 
+val SecondGold = Color(0x8AFFBF00)
+
 val Pink = Color(0xFFFFC0CB)
 
 val DarkPurple = Color(0xFF020035)
@@ -20,3 +22,11 @@ val NormalYellow = Color(0xFFFDDA0D)
 
 val GreyLight = Color(0xFFB5B6BA)
 val GreyDark = Color(0xFF60626C)
+
+// animation colors
+
+val FingersShape1 = Color(0xFFFFBF00)
+val FingersShape2 = Color(0xFFF5D474)
+
+val ShadowShape1 = Color(0xFFF36A02)
+

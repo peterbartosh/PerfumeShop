@@ -6,9 +6,9 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.example.perfumeshop.data.models.Product
-import com.example.perfumeshop.data.models.Review
-import com.example.perfumeshop.data.repositories.FireRepository
+import com.example.perfumeshop.data.model.Product
+import com.example.perfumeshop.data.model.Review
+import com.example.perfumeshop.data.repository.FireRepository
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow

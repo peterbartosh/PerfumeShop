@@ -44,7 +44,7 @@ import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import coil.compose.AsyncImage
-import com.example.perfumeshop.data.models.Review
+import com.example.perfumeshop.data.model.Review
 import com.example.perfumeshop.data.utils.getDateTimeString
 import com.example.perfumeshop.presentation.theme.Gold
 

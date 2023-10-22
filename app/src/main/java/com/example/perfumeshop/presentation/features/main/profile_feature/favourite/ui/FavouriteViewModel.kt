@@ -8,8 +8,9 @@ import androidx.compose.runtime.setValue
 import androidx.compose.runtime.snapshots.SnapshotStateList
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.example.perfumeshop.data.models.Product
-import com.example.perfumeshop.data.repositories.FireRepository
+import com.example.perfumeshop.data.model.Product
+import com.example.perfumeshop.data.model.ProductWithAmount
+import com.example.perfumeshop.data.repository.FireRepository
 import com.google.firebase.auth.FirebaseAuth
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.catch
@@ -20,73 +21,75 @@ const val TAG = "FavouriteViewModel"
 @HiltViewModel
 class FavouriteViewModel @Inject constructor(private val repository: FireRepository) : ViewModel() {
 
-//    private var _userProducts = MutableStateFlow<MutableList<Product>>(value = mutableListOf())
-//    var userProducts: StateFlow<List<Product>> = _userProducts
+    private val _auth = FirebaseAuth.getInstance()
 
-    val userProducts = SnapshotStateList<Product>()
+    val userProducts = SnapshotStateList<ProductWithAmount>()
 
     var isLoading  by mutableStateOf(false)
     var isSuccess  by mutableStateOf(false)
     var isFailure  by mutableStateOf(false)
 
-    //var isCashPrice by mutableStateOf(true)
-
-
-//    init {
-//        if (FirebaseAuth.getInstance().currentUser?.isAnonymous == false)
-//            loadUserProducts()
-//    }
-
-    fun clear(){
-        super.onCleared()
-    }
-
-    override fun onCleared() {
-        Log.d("VM_LFC_TEST", "onCleared: cartVM cleared")
-        super.onCleared()
-    }
 
     fun clearContent(){
         userProducts.clear()
     }
 
-    fun addToFavourite(product: Product) = viewModelScope.launch {
-        userProducts.add(product)
-        FirebaseAuth.getInstance().uid.let { uid ->
+    fun updateProductAmount(ind : Int, amount : Int){
+        userProducts[ind].amount = amount
+    }
+
+    fun updateProductCashState(ind : Int, isCashPrice : Boolean){
+        userProducts[ind].isCashPrice = isCashPrice
+    }
+
+    fun addToFavourite(productWithAmount: ProductWithAmount) = viewModelScope.launch {
+        isLoading = true
+        userProducts.add(productWithAmount)
+        _auth.uid.let { uid ->
             if (uid != null)
-                repository.addFavouriteObj(product.id.toString(), uid)
+                repository.addFavouriteObj(productWithAmount, uid)?.let { result ->
+                    //
+                }
         }
+        isLoading = false
     }
 
     fun removeFromFavourite(productId: String) = viewModelScope.launch {
-        userProducts.removeIf { p -> p.id == productId }
-        FirebaseAuth.getInstance().uid.let { uid ->
-            if (uid != null)
-                repository.deleteFavouriteObj(productId, uid)
+        isLoading = true
+        userProducts.removeIf { productWithAmount -> productWithAmount.product?.id == productId }
+        _auth.uid?.let { uid ->
+             repository.deleteFavouriteObj(productId, uid)?.let { result ->
+                 //
+             }
         }
-
+        isLoading = false
     }
 
-    fun isInFavourite(productId : String) =
-        userProducts.find { p -> p.id!! == productId } != null
+    fun isInFavourite(productId : String) : Boolean {
+        isLoading = true
+        val result = userProducts.find { productWithAmount ->
+            productWithAmount.product?.id == productId
+        } != null
+        isLoading = false
+        return result
+    }
 
     fun loadUserProducts() {
-        val auth = FirebaseAuth.getInstance()
-        val id = auth.uid
+        val uid = _auth.uid
 
         userProducts.clear()
 
-        if (auth.currentUser?.isAnonymous != true && !id.isNullOrEmpty())
+        if (_auth.currentUser?.isAnonymous != true && !uid.isNullOrEmpty())
             viewModelScope.launch {
                 isLoading = true
                 isSuccess = false
                 isFailure = false
 
-                repository.getUserFavouriteProducts(id).catch { e ->
-                        Log.d("ERROR_ERROR", "searchQuery: ${e.message}")
+                repository.getUserFavouriteProducts(uid).catch { e ->
+                        Log.d(TAG, "searchQuery: ${e.message}")
                         isFailure = true
-                    }.collect { product ->
-                        userProducts.add(product)
+                    }.collect { productWithAmount ->
+                        userProducts.add(productWithAmount)
                     }
                 isLoading = false
                 isSuccess = !isFailure

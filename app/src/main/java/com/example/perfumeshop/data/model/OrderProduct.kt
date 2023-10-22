@@ -1,4 +1,4 @@
-package com.example.perfumeshop.data.models
+package com.example.perfumeshop.data.model
 
 import com.google.firebase.firestore.PropertyName
 

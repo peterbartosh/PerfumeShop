@@ -10,11 +10,12 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.perfumeshop.data.user.UserData
 import com.example.perfumeshop.data.mail.EmailSender
-import com.example.perfumeshop.data.models.User
-import com.example.perfumeshop.data.repositories.FireRepository
+import com.example.perfumeshop.data.model.User
+import com.example.perfumeshop.data.repository.FireRepository
 import com.example.perfumeshop.data.utils.UserSex
-import com.example.perfumeshop.presentation.app.ERROR_TAG
+import com.example.perfumeshop.presentation.app.ui.ERROR_TAG
 import com.google.firebase.auth.FirebaseAuth
+import com.google.firebase.auth.FirebaseAuthInvalidCredentialsException
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.tasks.await
@@ -37,7 +38,7 @@ class AuthViewModel @Inject constructor(private val repository: FireRepository) 
     private var passwordState by mutableStateOf("")
 
     private fun checkBlackList(phoneNumber: String) = viewModelScope.launch {
-        repository.checkBlackList(phoneNumber)
+        repository.isInBlackList(phoneNumber)
     }
 
     fun notifyAdmin(
@@ -48,13 +49,10 @@ class AuthViewModel @Inject constructor(private val repository: FireRepository) 
         onAdminNotified : () -> Unit
     ) = viewModelScope.launch {
 
-        if (repository.checkBlackList(phoneNumber)) {
+        if (repository.isInBlackList(phoneNumber)) {
             isInBlackList()
             return@launch
         }
-
-
-
 
         firstNameState = firstName
         secondNameState = secondName
@@ -88,21 +86,35 @@ class AuthViewModel @Inject constructor(private val repository: FireRepository) 
         }.await()
     }
 
-    fun signIn(phoneNumber: String, password : String, onSuccess : () -> Unit) = viewModelScope.launch {
-        _auth.signInWithEmailAndPassword("$phoneNumber@gmail.com", password)
-            .addOnCompleteListener {
-                if(it.isSuccessful){
-                    UserData.loadUserData()
-                    onSuccess()
-                }
-                else
-                    Log.d(ERROR_TAG, "signIn: ${it.isSuccessful} ${it.isComplete} ${it.isCanceled}")
-            }.await()
+    fun signIn(
+        phoneNumber: String,
+        password : String,
+        onSuccess : () -> Unit,
+        errorCallback : (String) -> Unit
+    ) = viewModelScope.launch {
+        try {
+            _auth.signInWithEmailAndPassword("$phoneNumber@gmail.com", password)
+                .addOnCompleteListener {
+                    if (it.isSuccessful) {
+                        UserData.loadUserData()
+                        onSuccess()
+                    } else {
+                        Log.d(ERROR_TAG, "signIn: ${it.exception?.message}")
+                        errorCallback(it.exception?.message.toString())
+                    }
+
+                }.await()
+        } catch (e : FirebaseAuthInvalidCredentialsException){
+            Log.d(ERROR_TAG, "signIn: invalid credentials")
+            errorCallback("Ошибка.\nПользователь не найден.")
+        } catch (e : Exception){
+            Log.d(ERROR_TAG, "signIn: ${e.message}")
+            errorCallback(e.message.toString())
+        }
     }
 
     private fun createUserInDatabase() = viewModelScope.launch {
         val uid = _auth.uid
-        //val sexes = listOf(Sex.Male, Sex.Female, Sex.Unisex)
         if (uid != null) {
            val user = User(
                 id = uid,
@@ -111,7 +123,9 @@ class AuthViewModel @Inject constructor(private val repository: FireRepository) 
                 phoneNumber = phoneNumberState,
                 sex = UserSex.entries[sexState].name
             )
-            repository.createUser(user)
+            repository.createUser(user).let { result ->
+                //
+            }
         }
     }
 }

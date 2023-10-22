@@ -1,5 +1,6 @@
 package com.example.perfumeshop.presentation.features.main.profile_feature.profile.navigation
 
+import androidx.compose.animation.AnimatedVisibility
 import androidx.navigation.NavController
 import androidx.navigation.NavGraphBuilder
 import androidx.navigation.NavOptions
@@ -23,8 +24,10 @@ fun NavGraphBuilder.profileScreen(
 ) {
     composable(route = profileRoute) {
         BackPressHandler(onBackPressed = onBackPressed)
-        ProfileScreen(onOptionClick = onOptionClick,
-                      cartViewModel = cartViewModel,
-                      favouriteViewModel = favouriteViewModel)
+        ProfileScreen(
+            onOptionClick = onOptionClick,
+            cartViewModel = cartViewModel,
+            favouriteViewModel = favouriteViewModel
+        )
     }
 }

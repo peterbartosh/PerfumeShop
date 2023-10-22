@@ -3,6 +3,7 @@ package com.example.perfumeshop.presentation.features.main
 import androidx.navigation.NavGraphBuilder
 import com.example.perfumeshop.data.utils.OptionType
 import com.example.perfumeshop.data.utils.QueryType
+import com.example.perfumeshop.data.utils.UserPreferencesType
 import com.example.perfumeshop.presentation.features.main.cart_feature.cart.navigation.cartRoute
 import com.example.perfumeshop.presentation.features.main.cart_feature.cartActiveChild
 import com.example.perfumeshop.presentation.features.main.cart_feature.cart.ui.CartViewModel
@@ -27,19 +28,8 @@ fun getActiveChild(parentRoute : String) : String{
     }
 }
 
-//@Composable
-//inline fun <reified T : ViewModel> NavBackStackEntry.sharedViewModel(
-//    navController: NavHostController,
-//): T {
-//    val navGraphRoute = destination.parent?.route ?: return hiltViewModel()
-//    val parentEntry = remember(this) {
-//        navController.getBackStackEntry(navGraphRoute)
-//    }
-//    return hiltViewModel(parentEntry)
-//}
-
 fun NavGraphBuilder.mainGraph(
-    onThemeChange: (Boolean) -> Unit,
+    onUserPreferencesChanged: (UserPreferencesType, Int) -> Unit,
     navigateSearch: (String, QueryType) -> Unit,
     navigateOption: (OptionType) -> Unit,
     navigateProduct: (String) -> Unit,
@@ -84,8 +74,7 @@ fun NavGraphBuilder.mainGraph(
         )
 
         settingsScreen(
-            onClick = {},
-            onThemeChange = onThemeChange,
+            onUserPreferencesChanged = onUserPreferencesChanged,
             onBackPressed = onBackPressed
         )
 

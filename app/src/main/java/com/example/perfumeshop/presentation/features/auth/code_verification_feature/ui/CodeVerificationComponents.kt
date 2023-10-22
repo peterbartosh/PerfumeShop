@@ -7,7 +7,9 @@ import androidx.compose.foundation.text.BasicTextField
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextFieldDefaults
 import androidx.compose.runtime.Composable
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.TextRange
 import androidx.compose.ui.text.input.ImeAction
@@ -15,6 +17,7 @@ import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.input.TextFieldValue
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import com.example.perfumeshop.presentation.theme.GreyDark
 import com.example.perfumeshop.presentation.theme.GreyLight
 
@@ -49,7 +52,10 @@ fun OtpTextField(
                     Spacer(modifier = Modifier.width(8.dp))
                 }
             }
-        }
+        },
+//        colors = TextFieldDefaults.textFieldColors(
+//            cursorColor = MaterialTheme.colorScheme.primary
+//        )
     )
 }
 @Composable
@@ -63,18 +69,25 @@ private fun CharView(
         index > text.length -> ""
         else -> text[index].toString()
     }
-    Text(
+
+    Box(
         modifier = Modifier
-            .width(40.dp)
+            .height(100.dp)
+            .width(60.dp)
             .border(
                 width = 1.dp,
-                color = if (isFocused) GreyDark else GreyLight,
+                color = if (isFocused) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onBackground,
                 shape = RoundedCornerShape(8.dp)
             )
             .padding(2.dp),
-        text = char,
-        style = MaterialTheme.typography.bodyMedium,
-        color = if (isFocused) GreyLight else GreyDark,
-        textAlign = TextAlign.Center
-    )
+        contentAlignment = Alignment.Center
+    ) {
+        Text(
+            text = char,
+            fontSize = 30.sp,
+            //style = MaterialTheme.typography.bodyMedium,
+            color = if (isFocused) GreyLight else GreyDark,
+            textAlign = TextAlign.Center
+        )
+    }
 }

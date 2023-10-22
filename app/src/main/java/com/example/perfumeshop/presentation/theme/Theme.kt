@@ -12,6 +12,7 @@ import androidx.compose.material3.dynamicLightColorScheme
 import androidx.compose.material3.lightColorScheme
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.SideEffect
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.toArgb
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalView
@@ -20,13 +21,25 @@ import androidx.core.view.WindowCompat
 private val DarkColorScheme = darkColorScheme(
     primary = Gold,
     secondary = Gold,
-    tertiary = Gold
+    tertiary = Gold,
+
+    background = Color(0xFF212121),
+    onBackground = Color(0xFFFDF5E2),
+    primaryContainer = Color(0XFF424242),
+    secondaryContainer = Color(0XFF424242),
 )
 
 private val LightColorScheme = lightColorScheme(
     primary = Gold,
     secondary = Gold,
-    tertiary = Gold
+    tertiary = Gold,
+    background = Color(0xFFFDF5E2),
+    onBackground = Color(0xFF212121),
+
+    //primaryContainer = Color(0xFFfdf1cb),
+    primaryContainer = Color(0xFFFBE5BA),
+    secondaryContainer = Color(0xFFFBE5BA)
+
 
     /* Other default colors to override
     background = Color(0xFFFFFBFE),
@@ -46,6 +59,7 @@ fun PerfumeShopTheme(
     darkTheme: Boolean = isSystemInDarkTheme(),
     // Dynamic color is available on Android 12+
     dynamicColor: Boolean = true,
+    fontSize : Int = 0,
     content: @Composable () -> Unit
 ) {
 
@@ -58,7 +72,11 @@ fun PerfumeShopTheme(
         darkTheme -> DarkColorScheme
         else -> LightColorScheme
     }
+
+    val typography = getTypography(fontSize = fontSize)
+
     val view = LocalView.current
+
     if (!view.isInEditMode) {
         SideEffect {
             val window = (view.context as Activity).window
@@ -69,58 +87,7 @@ fun PerfumeShopTheme(
 
     MaterialTheme(
         colorScheme = colorScheme,
-        typography = Typography,
+        typography = typography,
         content = content
     )
 }
-
-class PreferencesManager(context: Context) {
-    private val sharedPreferences: SharedPreferences =
-        context.getSharedPreferences("DarkThemeOn", Context.MODE_PRIVATE)
-
-    fun saveData(value: Boolean) {
-        val editor = sharedPreferences.edit()
-        editor.putBoolean("themeState", value)
-        editor.apply()
-    }
-
-    fun getData(defaultValue: Boolean): Boolean {
-        return sharedPreferences.getBoolean("themeState", defaultValue) ?: defaultValue
-    }
-}
-
-//
-//
-//interface UserSettings {
-//    val isDarkStream: StateFlow<Boolean>
-//    var isDark: Boolean
-//}
-//
-//class UserSettingsImpl ( context: Context) : UserSettings {
-//
-//    override val isDarkStream: MutableStateFlow<Boolean>
-//    override var isDark: Boolean by AppThemePreferenceDelegate("app_theme", false)
-//
-//    private val preferences: SharedPreferences =
-//        context.getSharedPreferences("sample_theme", Context.MODE_PRIVATE)
-//
-//    init {
-//        isDarkStream = MutableStateFlow(isDark)
-//    }
-//
-//    inner class AppThemePreferenceDelegate(
-//        private val name: String,
-//        private val default: Boolean,
-//    ) : ReadWriteProperty<Any?, Boolean> {
-//
-//        override fun getValue(thisRef: Any?, property: KProperty<*>): Boolean =
-//            preferences.getBoolean(name, default)
-//
-//        override fun setValue(thisRef: Any?, property: KProperty<*>, value: Boolean) {
-//            isDarkStream.value = value
-//            preferences.edit {
-//                putBoolean(name, value)
-//            }
-//        }
-//    }
-//}

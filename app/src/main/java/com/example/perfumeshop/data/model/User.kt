@@ -1,6 +1,5 @@
-package com.example.perfumeshop.data.models
+package com.example.perfumeshop.data.model
 
-import com.example.perfumeshop.data.utils.UserSex
 import com.google.firebase.firestore.Exclude
 import com.google.firebase.firestore.PropertyName
 

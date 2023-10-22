@@ -2,8 +2,6 @@ package com.example.perfumeshop.data.utils
 
 import android.content.Context
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.mutableStateListOf
-import androidx.compose.runtime.saveable.Saver
 import androidx.compose.runtime.saveable.listSaver
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.snapshots.SnapshotStateList
@@ -18,22 +16,6 @@ import java.time.ZoneId
 import java.time.ZoneOffset
 import java.time.format.DateTimeFormatter
 import kotlin.math.round
-
-//sealed class TaskState(loading : Boolean? = null, success : Boolean ? = null){
-//    class Success() : TaskState()
-//    class Failed(e : Exception) : TaskState()
-//    class InProgress() : TaskState()
-//}
-
-
-
-//fun createProducts(collectionName : String = "hot") {
-//    for (i in 0..20) {
-//        val product = Product(type = "type$i", volume = i*5, brand = "Tom Ford", collection = "Mustang",
-//                              price = Random.nextDouble(5.0, 40.0), sex = if (i % 2 == 0) Sex.Male else Sex.Female, isOnHand = true)
-//        saveToFirebase(product, collectionName = collectionName)
-//    }
-//}
 
 @Composable
 fun getWidthPercent(context: Context): Dp {
@@ -74,7 +56,7 @@ fun Double.round(decimals: Int): Double {
     return round(this * multiplier) / multiplier
 }
 @Composable
-fun <T : Any> rememberMutableStateList(vararg elements : T) : SnapshotStateList<T>{
+fun <T : Any> rememberSaveableMutableStateList(vararg elements : T) : SnapshotStateList<T>{
     return rememberSaveable(
         saver = listSaver(
             save = { stateList ->
@@ -91,4 +73,30 @@ fun <T : Any> rememberMutableStateList(vararg elements : T) : SnapshotStateList<
     ) {
         elements.toList().toMutableStateList()
     }
+}
+
+fun String.firstLetterToUpperCase() : String {
+    if (this.isEmpty()) return ""
+    val firstLetter = this.first().uppercase()
+    return firstLetter + this.substring(1)
+}
+
+fun String.getVolume(defaultValue : String) : String {
+    return this.split(" ").find { it.contains("ml") }?.replace("ml", "мл.") ?: defaultValue
+}
+
+fun String.toBrandFormat(defaultValue: String) : String {
+    var lastItem = ""
+    val items = this.split(" ")
+
+    items.forEach { item ->
+        if ((item.contains("(") || item.contains("ml")) && lastItem.isEmpty()) {
+            lastItem = item
+        }
+    }
+
+    if (lastItem.isEmpty()) return defaultValue
+
+    val brand = this.substring(0, this.indexOf(lastItem) - 1).trim()
+    return brand.split(" ").joinToString(separator = " ") { it.firstLetterToUpperCase() }
 }
