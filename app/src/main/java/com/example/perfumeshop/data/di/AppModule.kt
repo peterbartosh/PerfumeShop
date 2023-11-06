@@ -1,24 +1,39 @@
 package com.example.perfumeshop.data.di
 
+import android.content.Context
+import androidx.room.Room
 import com.example.perfumeshop.data.mail.EmailSender
 import com.example.perfumeshop.data.repository.FireRepository
+import com.example.perfumeshop.data.room.LocalDao
+import com.example.perfumeshop.data.room.LocalDatabase
 import com.google.firebase.firestore.FirebaseFirestore
-import com.google.firebase.firestore.FirebaseFirestoreSettings
-import com.google.firebase.firestore.LocalCacheSettings
 import dagger.Module
 import dagger.Provides
 import dagger.hilt.InstallIn
+import dagger.hilt.android.qualifiers.ApplicationContext
 import dagger.hilt.components.SingletonComponent
-import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.Job
-import kotlinx.coroutines.async
-import kotlinx.coroutines.launch
-import kotlinx.coroutines.tasks.await
 import javax.inject.Singleton
 
 @Module
 @InstallIn(SingletonComponent::class)
 object AppModule {
+
+    @Singleton
+    @Provides
+    fun provideAppDatabase(@ApplicationContext context: Context): LocalDatabase =
+        Room.databaseBuilder(
+            context,
+            LocalDatabase::class.java,
+            "local_database"
+        )
+        .fallbackToDestructiveMigration()
+        .build()
+
+    @Singleton
+    @Provides
+    fun provideWeatherDao(localDatabase: LocalDatabase): LocalDao
+            = localDatabase.localDao()
+
     @Singleton
     @Provides
     fun provideFireRepository() : FireRepository {
@@ -32,28 +47,10 @@ object AppModule {
             ordersCollection = repository.collection("orders"),
             ordersProductsCollection = repository.collection("orders_products"),
             blackListCollection = repository.collection("black_list"),
-            reviewsCollection = repository.collection("reviews")
         )
     }
 
     @Singleton
     @Provides
-    fun provideEmailSender()
-            = EmailSender()
-//    @Composable
-//    @Singleton
-//    @Provides
-//    fun provideUserSettings() = UserSettingsImpl(LocalContext.current)
-
-//    @Singleton
-//    @Provides
-//    fun provideWeatherDao(database: UserDatabase): UserDao
-//            = database.weatherDao()
-//
-//    @Singleton
-//    @Provides
-//    fun provideAppDatabase(@ApplicationContext context: Context): UserDatabase = Room
-//        .databaseBuilder(context, UserDatabase::class.java, "user_database")
-//        .fallbackToDestructiveMigration()
-//        .build()
+    fun provideEmailSender() = EmailSender()
 }

@@ -17,7 +17,7 @@ fun NavGraphBuilder.homeGraph(
     cartViewModel: CartViewModel,
     favouriteViewModel: FavouriteViewModel,
     onSearchClick: (String, QueryType) -> Unit,
-    onProductClick: (String) -> Unit,
+    //onProductClick: (String) -> Unit,
     onBackPressed : () -> Unit
 ){
         homeScreen(
@@ -28,7 +28,7 @@ fun NavGraphBuilder.homeGraph(
         searchScreen(
             cartViewModel = cartViewModel,
             favouriteViewModel = favouriteViewModel,
-            onProductClick = onProductClick,
+           // onProductClick = onProductClick,
             onBackPressed = onBackPressed
         )
 

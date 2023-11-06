@@ -18,7 +18,7 @@ fun NavController.navigateToCart(navOptions: NavOptions? = null) {
 }
 
 fun NavGraphBuilder.cartScreen(
-    onProductClick: (String) -> Unit,
+    //onProductClick: (String) -> Unit,
     cartViewModel: CartViewModel,
     favouriteViewModel: FavouriteViewModel,
     onOrderMakeClick: () -> Unit,
@@ -29,7 +29,7 @@ fun NavGraphBuilder.cartScreen(
         CartScreen(
             favouriteViewModel = favouriteViewModel,
             cartViewModel = cartViewModel,
-            onProductClick = onProductClick,
+            //onProductClick = onProductClick,
             onOrderMakeClick = onOrderMakeClick
         )
     }

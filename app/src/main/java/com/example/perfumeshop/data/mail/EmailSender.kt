@@ -2,16 +2,14 @@ package com.example.perfumeshop.data.mail
 
 
 import android.util.Log
-import com.example.perfumeshop.data.user.UserData
+import com.example.perfumeshop.PersonalData
 import com.example.perfumeshop.data.model.Order
 import com.example.perfumeshop.data.model.ProductWithAmount
+import com.example.perfumeshop.data.user.UserData
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.Job
 import kotlinx.coroutines.async
 import kotlinx.coroutines.delay
-import kotlinx.coroutines.launch
-import java.lang.StringBuilder
 import javax.mail.Authenticator
 import javax.mail.Message
 import javax.mail.MessagingException
@@ -24,55 +22,62 @@ import javax.mail.internet.MimeMessage
 const val TAG = "EmailSender"
 class EmailSender() {
 
-    fun sendRegisterRequestEmail(fN: String, sN: String, pN: String, code: Int) {
+    suspend fun sendRegisterRequestEmail(
+        fN: String,
+        sN: String,
+        pN: String,
+        code: Int,
+        scope: CoroutineScope
+    ) : Result<String> {
 
-        val stringSenderEmail = "goldappsender@gmail.com"
-        val stringReceiverEmail = "pt.bartosh54321@gmail.com"
-        val stringPasswordSenderEmail = "tccw syra ghsy reib"
-        val stringHost = "smtp.gmail.com"
-        val properties = System.getProperties()
+        val deferred = scope.async(Dispatchers.Default) {
 
-        properties["mail.smtp.host"] = stringHost
-        properties["mail.smtp.port"] = "465"
-        properties["mail.smtp.ssl.enable"] = "true"
-        properties["mail.smtp.auth"] = "true"
-        properties["mail.debug"] = "true"
+            val stringSenderEmail = PersonalData.SENDER_EMAIL
+            val stringReceiverEmail = PersonalData.RECEIVER_EMAIL
+            val stringPasswordSenderEmail = PersonalData.SENDER_PASSWORD
 
-        val session = Session.getInstance(properties, object : Authenticator() {
-            override fun getPasswordAuthentication(): PasswordAuthentication {
-                return PasswordAuthentication(stringSenderEmail, stringPasswordSenderEmail)
-            }
-        })
+            val stringHost = "smtp.gmail.com"
+            val properties = System.getProperties()
 
-        val mimeMessage = MimeMessage(session)
+            properties["mail.smtp.host"] = stringHost
+            properties["mail.smtp.port"] = "465"
+            properties["mail.smtp.ssl.enable"] = "true"
+            properties["mail.smtp.auth"] = "true"
+            properties["mail.debug"] = "true"
 
-        mimeMessage.addRecipient(
-            Message.RecipientType.TO,
-            InternetAddress(stringReceiverEmail)
-        )
+            val session = Session.getInstance(properties, object : Authenticator() {
+                override fun getPasswordAuthentication(): PasswordAuthentication {
+                    return PasswordAuthentication(stringSenderEmail, stringPasswordSenderEmail)
+                }
+            })
 
-        mimeMessage.subject = "Заявка на регистрацию."
+            val mimeMessage = MimeMessage(session)
 
-        mimeMessage.setContent(
-//            "<h2> Подтвердить регистрацию.\n </h2>" +
-            "<h3>Имя: $sN $fN</h3>" +
-                    "<h3>Номер телефона: $pN</h3>" +
-                    "<h3>Код: $code</h3>",
-            "text/html; charset=utf-8"
-        )
+            mimeMessage.addRecipient(
+                Message.RecipientType.TO,
+                InternetAddress(stringReceiverEmail)
+            )
 
+            mimeMessage.subject = "Заявка на регистрацию."
 
-        CoroutineScope(Job() + Dispatchers.Default).launch {
+            mimeMessage.setContent(
+    //            "<h2> Подтвердить регистрацию.\n </h2>" +
+                "<h3>Имя: $sN $fN</h3>" +
+                        "<h3>Номер телефона: $pN</h3>" +
+                        "<h3>Код: $code</h3>",
+                "text/html; charset=utf-8"
+            )
 
             try {
                 Transport.send(mimeMessage)
+                Result.success("success")
             } catch (e: Exception) {
                 Log.d(TAG, e.message.toString())
+                Result.failure(e)
             }
-
         }
 
-
+        return deferred.await()
         // create mime message
     }
 
@@ -82,7 +87,7 @@ class EmailSender() {
         scope: CoroutineScope
     ) : Result<String>? {
 
-        val deferred = scope.async {
+        val deferred =  scope.async(Dispatchers.Default) {
 
             val stringSenderEmail = "goldappsender@gmail.com"
             val stringReceiverEmail = "pt.bartosh54321@gmail.com"
@@ -109,8 +114,6 @@ class EmailSender() {
             )
 
             mimeMessage.subject = "Заказ-${order.number}"
-
-            val sep = ","
 
             val values = mutableListOf(
                 order.number, order.address, UserData.user?.firstName,
@@ -143,7 +146,8 @@ class EmailSender() {
                 orderDesc.append(
                     "  ${ind + 1}) Идентификатор товара: ${productWithAmount.product?.id}\n" +
                             "      Брэнд: ${productWithAmount.product?.brand}\n" +
-                            "      Количество: ${productWithAmount.amount}\n"
+                            "      Количество (Нал): ${productWithAmount.amountCash}\n" +
+                            "      Количество (Безнал): ${productWithAmount.amountCashless}\n"
                 )
             }
 

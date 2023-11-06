@@ -8,7 +8,7 @@ import androidx.navigation.NavOptions
 import androidx.navigation.compose.composable
 import com.example.perfumeshop.presentation.app.navigation.BackPressHandler
 import com.example.perfumeshop.presentation.features.auth.code_verification_feature.ui.CodeVerificationScreen
-import com.example.perfumeshop.presentation.features.auth.login_register_feature.ui.AuthViewModel
+import com.example.perfumeshop.presentation.features.auth.login_feature.ui.AuthViewModel
 
 
 const val codeVerificationRoute = "code"

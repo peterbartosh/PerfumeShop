@@ -1,14 +1,16 @@
 package com.example.perfumeshop.presentation.components
 
 import android.content.Context
+import android.util.Log
 import android.widget.Toast
 import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.core.Animatable
 import androidx.compose.animation.core.MutableTransitionState
+import androidx.compose.animation.core.tween
 import androidx.compose.animation.expandVertically
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
 import androidx.compose.animation.shrinkVertically
-import androidx.compose.animation.slideInHorizontally
 import androidx.compose.animation.slideInVertically
 import androidx.compose.animation.slideOutVertically
 import androidx.compose.foundation.BorderStroke
@@ -47,6 +49,8 @@ import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
+import androidx.compose.material3.Divider
+import androidx.compose.material3.DropdownMenu
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
@@ -65,6 +69,7 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.draw.scale
 import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.focus.onFocusChanged
 import androidx.compose.ui.graphics.Color
@@ -74,6 +79,7 @@ import androidx.compose.ui.graphics.toArgb
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.text.AnnotatedString
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.buildAnnotatedString
 import androidx.compose.ui.text.input.ImeAction
@@ -94,14 +100,13 @@ import com.airbnb.lottie.compose.rememberLottieDynamicProperty
 import com.example.perfumeshop.R
 import com.example.perfumeshop.data.model.ProductWithAmount
 import com.example.perfumeshop.data.user_preferences.PreferencesManager
-import com.example.perfumeshop.data.utils.getVolume
+import com.example.perfumeshop.data.utils.ProductType
 import com.example.perfumeshop.data.utils.getWidthPercent
 import com.example.perfumeshop.data.utils.round
 import com.example.perfumeshop.data.utils.toBrandFormat
-import com.example.perfumeshop.presentation.features.auth.login_register_feature.ui.SegmentButton
-import com.example.perfumeshop.presentation.theme.Gold
 import com.example.perfumeshop.presentation.theme.FingersShape1
 import com.example.perfumeshop.presentation.theme.FingersShape2
+import com.example.perfumeshop.presentation.theme.Gold
 import com.google.firebase.auth.FirebaseAuth
 
 @Composable
@@ -368,17 +373,13 @@ fun LoadingAnimation() {
 }
 
 @Composable
-fun LoadingIndicator(progress : MutableState<Float> = mutableStateOf(0.0f)) {
+fun Loading() {
     Column(
         modifier = Modifier.fillMaxWidth(),
         horizontalAlignment = Alignment.CenterHorizontally,
         verticalArrangement = Arrangement.Center
     ) {
-
         LoadingAnimation()
-
-//        Text(text = "Loading...")
-//        LinearProgressIndicator(modifier = Modifier.fillMaxWidth())
     }
 }
 
@@ -464,18 +465,18 @@ fun LazyProductList(
     modifier: Modifier = Modifier,
     paddingValues: PaddingValues = PaddingValues(start = 5.dp, end = 5.dp),
     listOfProductsWithAmounts : List<ProductWithAmount>,
-    onProductClick : (String) -> Unit,
+    //onProductClick : (String) -> Unit,
     onAddToFavouriteClick : (ProductWithAmount) -> Unit,
     onAddToCartClick : (ProductWithAmount) -> Unit,
-    onRemoveFromFavouriteClick : (String) -> Unit,
-    onRemoveFromCartClick : (String) -> Unit,
+    onRemoveFromFavouriteClick : (ProductWithAmount) -> Unit,
+    onRemoveFromCartClick : (ProductWithAmount) -> Unit,
     isInFavouriteCheck : (String) -> Boolean,
     isInCartCheck : (String) -> Boolean,
 
-    onAmountChanged: (Int, Int) -> Unit = { _, _ ->},
-    onCashStateChanged : (Int, Boolean) -> Unit = { _,_ -> },
+    onAmountChanged: (Int, Int, Int) -> Unit = { _, _, _ ->},
 
     userScrollEnabled : Boolean = true,
+    showNotValidProducts: MutableState<Boolean>? = null,
     UploadMoreButton :  @Composable () -> Unit = { Box{} }
 ) {
 
@@ -493,21 +494,21 @@ fun LazyProductList(
         itemsIndexed(
             items = listOfProductsWithAmounts,
             key = { ind, productWithAmount ->
-                productWithAmount.product?.id ?: ind
+                productWithAmount.product?.id ?: ind.toString()
             }
         ) { ind, productWithAmount ->
 
             ProductRow(
                 productWithAmount = productWithAmount,
-                onProductClick = onProductClick,
+                //onProductClick = onProductClick,
                 onAddToFavouriteClick = onAddToFavouriteClick,
                 onAddToCartClick = onAddToCartClick,
                 onRemoveFromFavouriteClick = onRemoveFromFavouriteClick,
                 onRemoveFromCartClick = onRemoveFromCartClick,
                 isInFavouriteCheck = isInFavouriteCheck,
                 isInCartCheck = isInCartCheck,
-                onAmountChange = { value -> onAmountChanged(ind, value) },
-                onCashStateChanged = { value -> onCashStateChanged(ind, value == 0) }
+                onAmountChange = { cashAmount, cashlessAmount -> onAmountChanged(ind, cashAmount, cashlessAmount) },
+                showNotValidProducts = showNotValidProducts
             )
         }
 
@@ -522,19 +523,20 @@ fun ProductRow(
     paddingValues: PaddingValues = PaddingValues(2.dp),
     showEditableAmount : Boolean = true,
     productWithAmount: ProductWithAmount,
-    onProductClick : (String) -> Unit,
+    //onProductClick : (String) -> Unit,
     onAddToFavouriteClick : (ProductWithAmount) -> Unit,
     onAddToCartClick : (ProductWithAmount) -> Unit,
-    onRemoveFromFavouriteClick : (String) -> Unit,
-    onRemoveFromCartClick : (String) -> Unit,
+    onRemoveFromFavouriteClick : (ProductWithAmount) -> Unit,
+    onRemoveFromCartClick : (ProductWithAmount) -> Unit,
     isInFavouriteCheck : (String) -> Boolean,
     isInCartCheck : (String) -> Boolean,
+    showNotValidProducts: MutableState<Boolean>? = null,
 
-    onAmountChange : (Int) -> Unit = {},
-    onCashStateChanged : (Int) -> Unit = {}
+    onAmountChange : (Int, Int) -> Unit = {_,_->}
 ) {
 
     val context = LocalContext.current
+
 
     val isInCart = remember {
         mutableStateOf(isInCartCheck(productWithAmount.product?.id ?: ""))
@@ -544,128 +546,137 @@ fun ProductRow(
         mutableStateOf(isInFavouriteCheck(productWithAmount.product?.id ?: ""))
     }
 
-    // 0 - yes, 1 - no
-    val isCashPrice = rememberSaveable {
-        mutableStateOf(if (productWithAmount.isCashPrice == true) 0 else 1)
+    val amountCashPrice = rememberSaveable {
+        mutableStateOf(productWithAmount.amountCash ?: 1)
     }
 
-    LaunchedEffect(key1 = isCashPrice.value){
-        onCashStateChanged(isCashPrice.value)
+    val amountCashlessPrice = rememberSaveable {
+        mutableStateOf(productWithAmount.amountCashless ?: 1)
+    }
+
+    val scale = remember {
+        Animatable(1f)
+    }
+
+    var saveErrorState by remember {
+        mutableStateOf(false)
+    }
+
+    if (showNotValidProducts?.value == true) {
+        LaunchedEffect(key1 = true) {
+            scale.animateTo(
+                targetValue = 0.8f,
+                animationSpec = tween(200)
+            )
+            scale.animateTo(
+                targetValue = 1f,
+                animationSpec = tween(200)
+                //tween(durationMillis = 200)
+            )
+            saveErrorState = true
+            showNotValidProducts.value = false
+        }
     }
 
     Card(
         colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.primaryContainer),
         shape = RoundedCornerShape(10.dp),
-        border = BorderStroke(
-            width = 1.dp,
-            color = if (isInCart.value) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onBackground
-        ),
+        border = if (
+            saveErrorState && amountCashPrice.value == 0 && amountCashlessPrice.value == 0
+        )
+            BorderStroke(width = 2.dp, color = Color.Red)
+        else {
+            if (productWithAmount.product?.isOnHand == false)
+                BorderStroke(width = 2.dp, color = Color.Red)
+            else if (isInCart.value)
+                BorderStroke(width = 3.dp, color = MaterialTheme.colorScheme.primary)
+            else
+                BorderStroke(width = 1.dp, color = MaterialTheme.colorScheme.onBackground)
+        },
         modifier = Modifier
             .fillMaxWidth()
             .wrapContentHeight()
             .padding(paddingValues)
             .clip(RoundedCornerShape(10.dp))
             .shadow(elevation = 5.dp)
+            .scale(if (amountCashPrice.value == 0 && amountCashlessPrice.value == 0) scale.value else 1f)
     ) {
 
-        Row(
+        Column(
             modifier = Modifier
                 .fillMaxWidth()
-                .wrapContentHeight()
-                .clickable { onProductClick(productWithAmount.product?.id.toString()) },
-            verticalAlignment = Alignment.CenterVertically,
-            horizontalArrangement = Arrangement.SpaceBetween
+                .wrapContentHeight(),
+                //.clickable { onProductClick(productWithAmount.product?.id.toString()) },
+            //verticalArrangement = Arr,
+            //horizontalArrangement = Arrangement.SpaceBetween
         ) {
 
-            Column(
+            Row(
                 modifier = Modifier
-                    .fillMaxWidth(0.7f)
+                    .fillMaxWidth()
                     .wrapContentHeight()
-                    .padding(start = 10.dp, top = 5.dp, bottom = 5.dp)
+                    .padding(start = 10.dp, end = 5.dp, top = 5.dp, bottom = 5.dp),
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.SpaceBetween
             ) {
-                Text(
-                    text = productWithAmount.product?.brand.toString().toBrandFormat("Не найдено"),
-                    style = MaterialTheme.typography.bodyLarge
-                )
 
-                Text(
-                    text = productWithAmount.product?.brand.toString().getVolume("Не найдено"),
-                    //productWithAmount.product?.volume.toString() + " мл.",
-                    style = MaterialTheme.typography.bodyMedium
-                )
+                Column(
+                    modifier = Modifier
+                        .fillMaxWidth(0.65f)
+                        .wrapContentHeight()
+                ) {
 
-                val cashPrice = buildAnnotatedString {
-                    withStyle(style = MaterialTheme.typography.bodyLarge.toSpanStyle()) {
-                        append(productWithAmount.product?.cashPrice?.round(2).toString())
-                    }
-                    withStyle(style = MaterialTheme.typography.bodySmall.toSpanStyle()){
-                        append(" (нал.)")
-                    }
-                }
-
-                val cashlessPrice = buildAnnotatedString {
-                    withStyle(style = MaterialTheme.typography.bodyLarge.toSpanStyle()) {
-                        append(productWithAmount.product?.cashlessPrice?.round(2).toString())
-                    }
-                    withStyle(style = MaterialTheme.typography.bodySmall.toSpanStyle()){
-                        append(" (безнал.)")
-                    }
-                }
+                    Text(
+                        text = productWithAmount.product?.brand.toString().toBrandFormat(),
+                        style = MaterialTheme.typography.bodyLarge
+                    )
 
 
-                if (FirebaseAuth.getInstance().currentUser?.isAnonymous == false)
-                    Row {
-                        SegmentButton(
-                            text = "",
-                            ind = 0,
-                            defaultInd = 0,
-                            borderWidth = 2,
-                            selectedInd = isCashPrice,
-                            contentPadding = PaddingValues(5.dp),
-                            shape = RoundedCornerShape(topStart = 10.dp, bottomStart = 10.dp)
-                        ){
-                            Text(
-                                text = cashPrice,
-                                //style = MaterialTheme.typography.bodySmall,
-                                color = MaterialTheme.colorScheme.onBackground
-                            )
+                    productWithAmount.product?.type?.let { type ->
+                        val typeText = try {
+                            ProductType.valueOf(type).toRus()
+                        } catch (e : Exception){
+                            ProductType.NotSpecified.toRus()
                         }
 
-                        SegmentButton(
-                            text = "",
-                            ind = 1,
-                            defaultInd = 0,
-                            borderWidth = 2,
-                            selectedInd = isCashPrice,
-                            contentPadding = PaddingValues(5.dp),
-                            shape = RoundedCornerShape(topEnd = 10.dp, bottomEnd = 10.dp)
-                        ){
-                            Text(
-                                text = cashlessPrice,
-                                //style = MaterialTheme.typography.bodySmall,
-                                color = MaterialTheme.colorScheme.onBackground
-                            )
-                        }
-
+                        Text(
+                            text = typeText,
+                            style = MaterialTheme.typography.bodyMedium
+                        )
                     }
 
-            }
+                    val volumeDouble = productWithAmount.product?.volume?.round(1)
 
+                    val volume = try {
+                        val volumeInt = volumeDouble?.toInt()
+                        if (volumeInt == 0)
+                            null
+                        else if (volumeInt == 60 && productWithAmount.product?.type == ProductType.Compact.name)
+                            "3x20"
+                        else
+                            volumeInt?.toString()
+                    } catch (e: Exception) {
+                        volumeDouble?.toString()
+                    }
 
-            Column(
-                modifier = Modifier
-                    .wrapContentWidth()
-                    .wrapContentHeight()
-                    .padding(end = 10.dp),
-                //verticalArrangement = Arrangement.SpaceBetween,
-                horizontalAlignment = Alignment.End
-            ) {
+                    if (volume != null)
+                        Text(
+                            text = volume + "мл.",
+                            style = MaterialTheme.typography.bodyMedium
+                        )
+                }
+
                 Row(
                     modifier = Modifier
                         .wrapContentWidth()
                         .fillMaxHeight()
-                        .padding(top = 5.dp, end = 5.dp)
+                        .padding(top = 5.dp, end = 5.dp),
+                    verticalAlignment = Alignment.CenterVertically
                 ) {
+
+                    MoreOption(brand = productWithAmount.product?.brand.toString())
+
+                    Spacer(modifier = Modifier.width(5.dp))
 
                     IconButton(
                         modifier = Modifier.size(30.dp),
@@ -674,9 +685,9 @@ fun ProductRow(
                                 showToast(context, "Вы не авторизованы")
                             else {
                                 if (isInFavourite.value)
-                                    productWithAmount.product?.id?.let { id ->
-                                        onRemoveFromFavouriteClick(id)
-                                    }
+                                //productWithAmount.product?.id?.let { id ->
+                                    onRemoveFromFavouriteClick(productWithAmount)
+                                //}
                                 else
                                     onAddToFavouriteClick(productWithAmount)
 
@@ -692,9 +703,9 @@ fun ProductRow(
                                 Icons.Outlined.FavoriteBorder,
                             contentDescription = "fav icon",
                             tint = if (isInFavourite.value)
-                                        MaterialTheme.colorScheme.primary
-                                    else
-                                        MaterialTheme.colorScheme.onBackground
+                                MaterialTheme.colorScheme.primary
+                            else
+                                MaterialTheme.colorScheme.onBackground
                         )
                     }
 
@@ -703,25 +714,29 @@ fun ProductRow(
                     IconButton(
                         modifier = Modifier.size(30.dp),
                         onClick = {
+
                             if (FirebaseAuth.getInstance().currentUser?.isAnonymous == true)
                                 showToast(context, "Вы не авторизованы")
-                            else {
+                            else if (productWithAmount.product?.isOnHand == true) {
                                 if (isInCart.value) {
-                                    productWithAmount.product?.id?.let { pid ->
-                                        onRemoveFromCartClick(pid)
-                                    }
-                                }
-                                else
+                                    onRemoveFromCartClick(productWithAmount)
+                                } else
                                     onAddToCartClick(
                                         ProductWithAmount(
                                             product = productWithAmount.product,
-                                            amount = productWithAmount.amount,
-                                            isCashPrice = isCashPrice.value == 0
+                                            amountCash = amountCashPrice.value,
+                                            amountCashless = amountCashlessPrice.value
                                         )
                                     )
 
                                 isInCart.value = !isInCart.value
+                            } else if (isInCart.value) {
+                                onRemoveFromCartClick(productWithAmount)
+                                isInCart.value = !isInCart.value
+                            } else {
+                                showToast(context, "Данного продукта нет в наличии.")
                             }
+
                         }
                     ) {
                         Icon(
@@ -732,23 +747,183 @@ fun ProductRow(
                                 Icons.Outlined.ShoppingCart,
                             contentDescription = "cart icon",
                             tint = if (isInCart.value)
-                                       MaterialTheme.colorScheme.primary
-                                   else
-                                       MaterialTheme.colorScheme.onBackground
+                                MaterialTheme.colorScheme.primary
+                            else
+                                MaterialTheme.colorScheme.onBackground
                         )
                     }
                 }
-
-                Spacer(modifier = Modifier.height(20.dp))
-
-                if (showEditableAmount)
-                    PlusMinus(
-                        initValue = productWithAmount.amount ?: 1,
-                        onValueChange = onAmountChange
-                    )
-                else
-                    Text(text = productWithAmount.amount?.toString() ?: "1", style = MaterialTheme.typography.bodyLarge)
             }
+
+            if (FirebaseAuth.getInstance().currentUser?.isAnonymous == false) {
+
+                Divider()
+                Spacer(modifier = Modifier.height(5.dp))
+
+                repeat(2) { ind ->
+
+                    val priceAnnotatedStrings =
+                        buildPriceAnnotationStrings(productWithAmount = productWithAmount)
+                    val prices = listOf(
+                        (productWithAmount.amountCash ?: 1),
+                        (productWithAmount.amountCashless ?: 1)
+                    )
+
+                    Row(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .wrapContentHeight()
+                            .padding(start = 10.dp, bottom = 5.dp, end = 10.dp),
+                        horizontalArrangement = Arrangement.SpaceBetween
+                        //verticalArrangement = Arrangement.SpaceBetween,
+                        //horizontalAlignment = Alignment.End
+                    ) {
+
+                        Text(
+                            modifier = Modifier,
+                            text = priceAnnotatedStrings[ind],
+                            color = MaterialTheme.colorScheme.onBackground
+                        )
+
+                        if (!showEditableAmount) {
+                            Text(
+                                modifier = Modifier,
+                                text = prices[ind].toString(),
+                                style = MaterialTheme.typography.bodyLarge
+                            )
+                        } else {
+                            if (productWithAmount.product?.isOnHand == false) {
+                                if (ind == 1)
+                                    Text(
+                                        modifier = Modifier.padding(bottom = 5.dp),
+                                        text = "Нет в наличии",
+                                        style = MaterialTheme.typography.bodyLarge,
+                                        softWrap = true,
+                                        lineHeight = 15.sp,
+                                        color = Color.Red
+                                    )
+                            }
+                            else
+                                PlusMinus(
+                                    initValue = prices[ind],
+                                    onValueChange = { changedAmount ->
+                                        if (ind == 0)
+                                            amountCashPrice.value = changedAmount
+                                        else
+                                            amountCashlessPrice.value = changedAmount
+
+                                        onAmountChange(
+                                            amountCashPrice.value,
+                                            amountCashlessPrice.value
+                                        )
+                                    }
+                                )
+                        }
+                    }
+                }
+            }
+        }
+    }
+}
+
+@Composable
+fun buildPriceAnnotationStrings(productWithAmount: ProductWithAmount) : List<AnnotatedString> {
+    val cashPrice = buildAnnotatedString {
+        withStyle(style = MaterialTheme.typography.labelLarge.toSpanStyle()) {
+            val first = productWithAmount.product?.cashPrice?.round(2).toString().split(".").first()
+            append(first)
+        }
+        withStyle(style = MaterialTheme.typography.bodySmall.toSpanStyle()) {
+            append("р.")
+        }
+        withStyle(style = MaterialTheme.typography.labelLarge.toSpanStyle()) {
+            val second = productWithAmount.product?.cashPrice?.round(2).toString().split(".").last()
+            append(second)
+        }
+        withStyle(style = MaterialTheme.typography.bodySmall.toSpanStyle()) {
+            append("к. (нал.)")
+        }
+    }
+
+    val cashlessPrice = buildAnnotatedString {
+        withStyle(style = MaterialTheme.typography.labelLarge.toSpanStyle()) {
+            val first = productWithAmount.product?.cashlessPrice?.round(2).toString().split(".").first()
+            append(first)
+        }
+        withStyle(style = MaterialTheme.typography.bodySmall.toSpanStyle()) {
+            append("р.")
+        }
+        withStyle(style = MaterialTheme.typography.labelLarge.toSpanStyle()) {
+            val second = productWithAmount.product?.cashlessPrice?.round(2).toString().split(".").last()
+            append(second)
+        }
+        withStyle(style = MaterialTheme.typography.bodySmall.toSpanStyle()) {
+            append("к. (безнал.)")
+        }
+    }
+
+    return listOf(cashPrice, cashlessPrice)
+}
+
+
+@Composable
+fun MoreOption(brand: String) {
+
+    val context = LocalContext.current
+
+    val wp = getWidthPercent(context = context)
+
+    var showFullProductName by remember {
+        mutableStateOf(false)
+    }
+
+    Text(
+        modifier = Modifier
+            .size(25.dp)
+            .border(
+                border = BorderStroke(
+                    width = 1.dp,
+                    color = MaterialTheme.colorScheme.primary
+                ),
+                shape = CircleShape
+            )
+            .clip(shape = CircleShape)
+            //.shadow(elevation = 5.dp)
+            .clickable {
+                showFullProductName = true
+            },
+        text = "?",
+        textAlign = TextAlign.Center,
+        style = MaterialTheme.typography.bodyLarge
+    )
+
+    DropdownMenu(
+        modifier = Modifier
+            .width(wp * 80)
+            .wrapContentHeight()
+            .border(
+                border = BorderStroke(
+                    width = 2.dp,
+                    color = MaterialTheme.colorScheme.primary
+                ),
+                shape = RoundedCornerShape(5.dp)
+            ),
+        expanded = showFullProductName,
+        onDismissRequest = { showFullProductName = false }) {
+
+        Column(
+            modifier = Modifier
+                .wrapContentWidth()
+            //.wrapContentHeight()
+
+        ) {
+            Text(
+                text = brand,
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(5.dp),
+                style = MaterialTheme.typography.bodySmall
+            )
         }
     }
 }
@@ -768,20 +943,21 @@ fun PlusMinus(
 
     Row(
         modifier = Modifier
-            .wrapContentHeight()
-            .padding(bottom = 5.dp)
+            .wrapContentHeight(),
+        verticalAlignment = Alignment.CenterVertically
     ) {
 
         IconButton(
             modifier = Modifier
                 .size(25.dp)
-                .clip(CircleShape)
-                .padding(end = 3.dp),
+                .padding(end = 3.dp)
+                .clip(CircleShape),
             onClick = {
 
                 try {
+                    if (valueState.value.isEmpty()) valueState.value = "0"
                     var amount = valueState.value.toInt()
-                    if (amount > 1) amount--
+                    if (amount > 0) amount--
                     valueState.value = amount.toString()
                     onValueChange(amount)
 
@@ -799,9 +975,10 @@ fun PlusMinus(
             mutableStateOf(false)
         }
 
-        LaunchedEffect(key1 = valueState.value){
+        LaunchedEffect(key1 = valueState.value, key2 = isFocused){
+            Log.d("DKOSJIO", "PlusMinus: ${valueState.value} ${isFocused}")
             if (valueState.value.isEmpty() && !isFocused)
-                valueState.value = "1"
+                valueState.value = "0"
         }
 
         val preferencesManager = remember {
@@ -863,10 +1040,11 @@ fun PlusMinus(
         IconButton(
             modifier = Modifier
                 .size(25.dp)
-                .clip(CircleShape)
-                .padding(start = 3.dp),
+                .padding(start = 3.dp)
+                .clip(CircleShape),
             onClick = {
                 try {
+                    if (valueState.value.isEmpty()) valueState.value = "0"
                     var amount = valueState.value.toInt()
                     amount++
                     valueState.value = amount.toString()

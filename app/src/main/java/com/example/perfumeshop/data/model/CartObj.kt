@@ -11,9 +11,11 @@ data class CartObj(
     @set:PropertyName("product_id")
     var productId : String? = null,
 
-    @get:PropertyName("is_cash_price")
-    @set:PropertyName("is_cash_price")
-    var isCashPrice : Boolean? = null,
+    @get:PropertyName("cash_price_amount")
+    @set:PropertyName("cash_price_amount")
+    var cashPriceAmount : Int? = null,
 
-    var amount : Int? = null,
+    @get:PropertyName("cashless_price_amount")
+    @set:PropertyName("cashless_price_amount")
+    var cashlessPriceAmount : Int? = null,
 )

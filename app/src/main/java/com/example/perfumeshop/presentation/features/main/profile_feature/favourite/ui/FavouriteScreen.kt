@@ -2,6 +2,7 @@ package com.example.perfumeshop.presentation.features.main.profile_feature.favou
 
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxHeight
@@ -12,13 +13,16 @@ import androidx.compose.foundation.layout.wrapContentSize
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.collectAsState
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.style.TextDecoration
 import androidx.compose.ui.unit.dp
+import com.example.perfumeshop.data.utils.UiState
 import com.example.perfumeshop.presentation.components.ErrorOccurred
 import com.example.perfumeshop.presentation.components.LazyProductList
+import com.example.perfumeshop.presentation.components.Loading
 import com.example.perfumeshop.presentation.components.NothingFound
 import com.example.perfumeshop.presentation.components.showToast
 import com.example.perfumeshop.presentation.features.main.cart_feature.cart.ui.CartViewModel
@@ -27,7 +31,7 @@ import com.example.perfumeshop.presentation.features.main.cart_feature.cart.ui.C
 fun FavouriteScreen(
     cartViewModel: CartViewModel,
     favouriteViewModel: FavouriteViewModel,
-    onProductClick: (String) -> Unit
+    //onProductClick: (String) -> Unit
 ) {
 
     val context = LocalContext.current
@@ -56,7 +60,7 @@ fun FavouriteScreen(
                     .wrapContentSize()
                     .padding(end = 10.dp)
                     .clickable {
-                        favouriteViewModel.clearContent()
+                        favouriteViewModel.clearData().onJoin
                         showToast(context = context, "Очищено.")
                     },
                 textDecoration = TextDecoration.Underline,
@@ -66,24 +70,29 @@ fun FavouriteScreen(
             )
         }
 
-        if (favouriteViewModel.isSuccess && favouriteViewModel.userProducts.isNotEmpty())
-            LazyProductList(
-                listOfProductsWithAmounts = favouriteViewModel.userProducts,
-                onProductClick = onProductClick,
-                onAddToFavouriteClick = favouriteViewModel::addToFavourite,
-                onAddToCartClick = cartViewModel::addToCart,
-                onRemoveFromFavouriteClick = favouriteViewModel::removeFromFavourite,
-                onRemoveFromCartClick = cartViewModel::removeFromCart,
-                isInFavouriteCheck = favouriteViewModel::isInFavourite,
-                isInCartCheck = cartViewModel::isInCart,
+        val uiState = favouriteViewModel.uiState.collectAsState()
 
-                onCashStateChanged = favouriteViewModel::updateProductCashState,
-                onAmountChanged = favouriteViewModel::updateProductAmount
-            )
-        else if (favouriteViewModel.isFailure)
-            ErrorOccurred()
-        else if (!favouriteViewModel.isLoading && favouriteViewModel.userProducts.isEmpty())
-            NothingFound()
+        when (uiState.value){
+            is UiState.Success -> if (favouriteViewModel.userProducts.isNotEmpty())
+                LazyProductList(
+                    listOfProductsWithAmounts = favouriteViewModel.userProducts,
+                    //onProductClick = onProductClick,
+                    onAddToFavouriteClick = favouriteViewModel::addProduct,
+                    onAddToCartClick = cartViewModel::addProduct,
+                    onRemoveFromFavouriteClick = favouriteViewModel::removeProduct,
+                    onRemoveFromCartClick = cartViewModel::removeProduct,
+                    isInFavouriteCheck = favouriteViewModel::isInFavourites,
+                    isInCartCheck = cartViewModel::isInCart,
 
+                    onAmountChanged = favouriteViewModel::updateProductAmount
+                )
+            else
+                NothingFound()
+            is UiState.Failure ->
+                ErrorOccurred()
+            is UiState.Loading ->
+                Loading()
+            else -> Box{}
+        }
     }
 }

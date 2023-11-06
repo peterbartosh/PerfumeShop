@@ -2,7 +2,6 @@ package com.example.perfumeshop.presentation.features.main.profile_feature.profi
 
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Spacer
-import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.height
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.AccountBox
@@ -10,7 +9,6 @@ import androidx.compose.material.icons.filled.Email
 import androidx.compose.material.icons.filled.Favorite
 import androidx.compose.material.icons.filled.Phone
 import androidx.compose.material.icons.outlined.ArrowForward
-import androidx.compose.material3.Surface
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -22,6 +20,10 @@ import com.example.perfumeshop.data.utils.OptionType
 import com.example.perfumeshop.presentation.features.main.cart_feature.cart.ui.CartViewModel
 import com.example.perfumeshop.presentation.features.main.profile_feature.favourite.ui.FavouriteViewModel
 import com.google.firebase.auth.FirebaseAuth
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Job
+import kotlinx.coroutines.joinAll
+import kotlinx.coroutines.launch
 
 
 @Composable
@@ -42,12 +44,18 @@ fun ProfileScreen(
             RegisteredSection(
                 onOptionClick = onOptionClick,
                 onSignOutClick = {
-                    //FirebaseAuth.getInstance().
-                    FirebaseAuth.getInstance().signOut()
-                    FirebaseAuth.getInstance().signInAnonymously()
+                    CoroutineScope(Job()).launch {
+                        val cartSaveJob = cartViewModel.saveProductsToRemoteDatabase()
+                        val favouriteSaveJob = favouriteViewModel.saveProductsToRemoteDatabase()
+                        val cartClearJob = cartViewModel.clearData()
+                        val favouriteClearJob = favouriteViewModel.clearData()
+
+                        joinAll(cartSaveJob, favouriteSaveJob, cartClearJob, favouriteClearJob)
+                        //delay(1500)
+                        FirebaseAuth.getInstance().signOut()
+                        FirebaseAuth.getInstance().signInAnonymously()
+                    }
                     isAnonymous.value = true
-                    cartViewModel.clearContent()
-                    favouriteViewModel.clearContent()
                 }
             )
     }

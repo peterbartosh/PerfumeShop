@@ -15,10 +15,9 @@ fun NavController.navigateToSplash(navOptions: NavOptions? = null) {
 
 fun NavGraphBuilder.splashScreen(
     navigateAsk: () -> Unit,
-    navigateMain: () -> Unit,
+    navigateMain: () -> Unit
 ) {
-    //naviga
-        composable(route = splashRoute) {
-            SplashScreen(navigateAsk = navigateAsk, navigateMain = navigateMain)
-        }
+    composable(route = splashRoute) {
+        SplashScreen(navigateAsk = navigateAsk, navigateHome = navigateMain)
     }
+}

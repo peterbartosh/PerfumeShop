@@ -12,8 +12,6 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
-import androidx.compose.foundation.layout.fillMaxHeight
-import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
@@ -30,6 +28,7 @@ import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
+import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Divider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
@@ -44,7 +43,6 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.shadow
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.platform.LocalClipboardManager
 import androidx.compose.ui.platform.LocalContext
@@ -53,15 +51,11 @@ import androidx.compose.ui.text.AnnotatedString
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.sp
-import androidx.compose.ui.window.DialogProperties
 import androidx.core.content.ContextCompat
 import com.example.perfumeshop.R
 import com.example.perfumeshop.data.user.UserData
 import com.example.perfumeshop.data.utils.OptionType
 import com.example.perfumeshop.data.utils.firstLetterToUpperCase
-import com.example.perfumeshop.data.utils.getSexByName
-import com.example.perfumeshop.data.utils.getWidthPercent
 import com.example.perfumeshop.presentation.components.showToast
 import java.util.StringJoiner
 
@@ -247,20 +241,13 @@ fun OptionsSection(
 @Composable
 fun ProfileSection(onEditProfileClick: () -> Unit = {}, onSignOutClick: () -> Unit) {
 
-    val context = LocalContext.current
-
-    val hp = getWidthPercent(context = context)
-
     var showDialog by remember { mutableStateOf(false) }
-
-    val sexes = listOf("Мужской", "Женский", "Не указано")
 
     val notSpecified = "Не указано"
     val shortNotSpecified = "_"
 
     val firstName = UserData.user?.firstName ?: notSpecified
     val secondName = UserData.user?.secondName ?: notSpecified
-    val sexInd = getSexByName(UserData.user?.sex).ordinal
     val phoneNumber = UserData.user?.phoneNumber ?: notSpecified
     val address = StringJoiner(", ")
         .add(UserData.user?.street?.firstLetterToUpperCase() ?: notSpecified)
@@ -400,7 +387,7 @@ fun ProfileSection(onEditProfileClick: () -> Unit = {}, onSignOutClick: () -> Un
                             showDialog = false
                         },
                         colors = ButtonDefaults.buttonColors(
-                            contentColor = MaterialTheme.colorScheme.onBackground,
+                            contentColor = MaterialTheme.colorScheme.background,
                             containerColor = MaterialTheme.colorScheme.primary
                         )
                     ) {
@@ -408,18 +395,30 @@ fun ProfileSection(onEditProfileClick: () -> Unit = {}, onSignOutClick: () -> Un
                     }
                 },
                 confirmButton = {
-                    Button(
-                        onClick = {
-                            onSignOutClick()
-                            showDialog = false
-                        },
-                        colors = ButtonDefaults.buttonColors(
-                            contentColor = MaterialTheme.colorScheme.onBackground,
-                            containerColor = MaterialTheme.colorScheme.primary
-                        )
-                    ) {
-                        Text(text = "Да", style = MaterialTheme.typography.bodyMedium)
+                    var clicked by remember {
+                        mutableStateOf(false)
                     }
+                    if (!clicked)
+                        Button(
+                            onClick = {
+                                clicked = true
+                                onSignOutClick()
+                                showDialog = false
+                                clicked = false
+                            },
+                            colors = ButtonDefaults.buttonColors(
+                                contentColor = MaterialTheme.colorScheme.background,
+                                containerColor = MaterialTheme.colorScheme.primary
+                            )
+                        ) {
+                            Text(text = "Да", style = MaterialTheme.typography.bodyMedium)
+                        }
+                    else
+                        CircularProgressIndicator(
+                            modifier = Modifier.size(20.dp),
+                            strokeWidth = 3.dp,
+                            color = MaterialTheme.colorScheme.primary
+                        )
                 }
             )
     }

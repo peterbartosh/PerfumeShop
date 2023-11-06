@@ -17,7 +17,7 @@ var profileActiveChild by mutableStateOf(profileRoute)
 
 fun NavGraphBuilder.profileGraph(
     onOptionClick: (OptionType) -> Unit,
-    onProductClick: (String) -> Unit,
+    //onProductClick: (String) -> Unit,
     cartViewModel: CartViewModel,
     favouriteViewModel: FavouriteViewModel,
     onBackPressed: () -> Unit
@@ -35,7 +35,7 @@ fun NavGraphBuilder.profileGraph(
         )
 
         favouriteScreen(
-            onProductClick = onProductClick,
+            //onProductClick = onProductClick,
             favouriteViewModel = favouriteViewModel,
             cartViewModel = cartViewModel,
             onBackPressed = onBackPressed
@@ -44,7 +44,7 @@ fun NavGraphBuilder.profileGraph(
         ordersScreen(
             favouriteViewModel = favouriteViewModel,
             cartViewModel = cartViewModel,
-            onProductClick = onProductClick,
+            //onProductClick = onProductClick,
             onBackPressed = onBackPressed
         )
 

@@ -4,16 +4,15 @@ import android.util.Log
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Spacer
-import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.wrapContentHeight
 import androidx.compose.material3.Button
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -22,12 +21,17 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.text.TextStyle
+import androidx.compose.ui.text.buildAnnotatedString
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.text.withStyle
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.sp
 import com.example.perfumeshop.R
+import com.example.perfumeshop.data.utils.UiState
+import com.example.perfumeshop.presentation.components.Loading
 import com.example.perfumeshop.presentation.components.showToast
-import com.example.perfumeshop.presentation.features.auth.login_register_feature.ui.AuthViewModel
+import com.example.perfumeshop.presentation.features.auth.login_feature.ui.AuthViewModel
 
 const val TAG = "CodeVerificationScreen"
 @Composable
@@ -45,6 +49,9 @@ fun CodeVerificationScreen(
         mutableStateOf(false)
     }
 
+    val uiState = authViewModel.uiState.collectAsState()
+
+    if (uiState.value is UiState.Loading) Loading()
 
     Column(
         horizontalAlignment = Alignment.CenterHorizontally,
@@ -66,13 +73,24 @@ fun CodeVerificationScreen(
             textAlign = TextAlign.Center
         )
 
+        val alertText = buildAnnotatedString {
+            withStyle(MaterialTheme.typography.bodyMedium.toSpanStyle()){
+                append(stringResource(id = R.string.code_verification_alert_bef))
+            }
+            withStyle(TextStyle(fontWeight = FontWeight.SemiBold).toSpanStyle()){
+                append(" ${authViewModel.phoneNumberState} ")
+            }
+            withStyle(MaterialTheme.typography.bodyMedium.toSpanStyle()){
+                append(stringResource(id = R.string.code_verification_alert_aft))
+            }
+        }
+
         Text(
             modifier = Modifier
                 .fillMaxWidth(0.8f)
                 .wrapContentHeight()
                 .padding(bottom = 30.dp),
-            text = stringResource(id = R.string.code_verification_alert),
-            style = MaterialTheme.typography.bodyMedium,
+            text = alertText,
             textAlign = TextAlign.Center
         )
 
@@ -89,12 +107,16 @@ fun CodeVerificationScreen(
                enabled = inputFilled,
                onClick = {
                  try {
-                     if (authViewModel.verifyCode(codeState)){
-                         authViewModel.register()
-                         onSuccess()
-                     } else {
-                         showToast(context = context, "Неверный код")
-                     }
+                     authViewModel.verifyCode(
+                         code = codeState,
+                         onSuccess = {
+                             authViewModel.register()
+                             onSuccess()
+                         },
+                         onFailure = {
+                             showToast(context = context, "Неверный код")
+                         }
+                     )
                  } catch (e : Exception){
                      showToast(context = context, "Некорректные данные")
                  }

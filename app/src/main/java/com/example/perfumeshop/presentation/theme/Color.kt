@@ -30,3 +30,5 @@ val FingersShape2 = Color(0xFFF5D474)
 
 val ShadowShape1 = Color(0xFFF36A02)
 
+val Red =  Color(0xEBA20A0A)
+

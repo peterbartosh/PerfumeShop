@@ -23,7 +23,7 @@ fun NavController.navigateToOrders(navOptions: NavOptions? = null) {
 fun NavGraphBuilder.ordersScreen(
     favouriteViewModel: FavouriteViewModel,
     cartViewModel: CartViewModel,
-    onProductClick: (String) -> Unit,
+    //onProductClick: (String) -> Unit,
     onBackPressed: () -> Unit
 ) {
     composable(route = ordersRoute) {
@@ -34,7 +34,7 @@ fun NavGraphBuilder.ordersScreen(
             ordersViewModel = ordersViewModel,
             favouriteViewModel = favouriteViewModel,
             cartViewModel = cartViewModel,
-            onProductClick = onProductClick
+            //onProductClick = onProductClick
         )
     }
 }

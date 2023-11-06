@@ -3,8 +3,6 @@ package com.example.perfumeshop.data.model
 import com.google.firebase.firestore.PropertyName
 
 data class OrderProduct(
-    //var id : String? = null,
-
     @get:PropertyName("order_id")
     @set:PropertyName("order_id")
     var orderId : String? = null,
@@ -13,9 +11,11 @@ data class OrderProduct(
     @set:PropertyName("product_id")
     var productId : String? = null,
 
-    var amount : Int? = null,
+    @get:PropertyName("cash_price_amount")
+    @set:PropertyName("cash_price_amount")
+    var cashPriceAmount : Int? = null,
 
-    @get:PropertyName("is_cash_price")
-    @set:PropertyName("is_cash_price")
-    var isCashPrice : Boolean? = null
+    @get:PropertyName("cashless_price_amount")
+    @set:PropertyName("cashless_price_amount")
+    var cashlessPriceAmount : Int? = null,
 )

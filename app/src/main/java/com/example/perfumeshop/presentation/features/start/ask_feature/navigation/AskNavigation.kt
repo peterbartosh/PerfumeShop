@@ -17,8 +17,7 @@ fun NavGraphBuilder.askScreen(
     navigateAuth: () -> Unit,
     onSkipClick: () -> Unit,
 ) {
-    // TODO: Handle back stack for each top-level destination. At the moment each top-level
-    // destination may have own search screen's back stack.
+
     composable(route = askRoute) {
         AskLoginScreen(onLoginClick = navigateAuth, onSkipClick = onSkipClick)
     }

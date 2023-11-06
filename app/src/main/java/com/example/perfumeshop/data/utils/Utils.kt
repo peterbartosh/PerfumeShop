@@ -8,13 +8,6 @@ import androidx.compose.runtime.snapshots.SnapshotStateList
 import androidx.compose.runtime.toMutableStateList
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
-import java.sql.Timestamp
-import java.time.Instant
-import java.time.LocalDateTime
-import java.time.OffsetDateTime
-import java.time.ZoneId
-import java.time.ZoneOffset
-import java.time.format.DateTimeFormatter
 import kotlin.math.round
 
 @Composable
@@ -28,33 +21,19 @@ fun getHeightPercent(context: Context): Dp {
     val displayMetrics = context.resources.displayMetrics
     return ((displayMetrics.heightPixels / displayMetrics.density) / 100).dp
 }
-fun getDateTimeTimestamp(timestamp: Timestamp?) : Timestamp {
-    if (timestamp == null)
-        return Timestamp.valueOf(LocalDateTime.now().toString())
-    val offset = ZoneOffset.ofHoursMinutes(+6, +9)
-    val dateTime = LocalDateTime.ofInstant(Instant.ofEpochMilli(timestamp.time), ZoneId.systemDefault())
-    val odt = OffsetDateTime.of(dateTime, offset)
-    val output = odt.toLocalDateTime()
-        .format(DateTimeFormatter.ofPattern("yyyy.MM.dd|HH:mm"))
-
-    return Timestamp.valueOf(odt.toString())
-}
-
-fun getDateTimeString(timestamp: Timestamp?): String {
-    if (timestamp == null) return ""
-    val offset = ZoneOffset.ofHoursMinutes(+6, +9)
-    val dateTime = LocalDateTime.ofInstant(Instant.ofEpochMilli(timestamp.time), ZoneId.systemDefault())
-    val odt = OffsetDateTime.of(dateTime, offset)
-
-    return odt.toLocalDateTime()
-        .format(DateTimeFormatter.ofPattern("yyyy.MM.dd|HH:mm"))
-}
 
 fun Double.round(decimals: Int): Double {
     var multiplier = 1.0
     repeat(decimals) { multiplier *= 10 }
     return round(this * multiplier) / multiplier
 }
+
+fun Float.round(decimals: Int): Float {
+    var multiplier = 1.0f
+    repeat(decimals) { multiplier *= 10 }
+    return round(this * multiplier) / multiplier
+}
+
 @Composable
 fun <T : Any> rememberSaveableMutableStateList(vararg elements : T) : SnapshotStateList<T>{
     return rememberSaveable(
@@ -81,22 +60,53 @@ fun String.firstLetterToUpperCase() : String {
     return firstLetter + this.substring(1)
 }
 
-fun String.getVolume(defaultValue : String) : String {
-    return this.split(" ").find { it.contains("ml") }?.replace("ml", "мл.") ?: defaultValue
+fun String.allFirstLettersToUpperCase() : String {
+    return this.split(" ").joinToString(separator = " "){ it.firstLetterToUpperCase() }
 }
 
-fun String.toBrandFormat(defaultValue: String) : String {
+fun String.toBrandFormat(defaultValue: String = this) : String {
+    val rusAlphabet = "абвгдеёжзийклмнопрстуфхцчшщъыьэюя"
     var lastItem = ""
     val items = this.split(" ")
 
     items.forEach { item ->
-        if ((item.contains("(") || item.contains("ml")) && lastItem.isEmpty()) {
+        if ((item.toCharArray().any{ ch -> ch in rusAlphabet } ||
+                    item.contains("(") || item.contains(")") || item.contains("ml", true)) && lastItem.isEmpty()) {
             lastItem = item
         }
     }
 
-    if (lastItem.isEmpty()) return defaultValue
+    if (lastItem.isEmpty()) return defaultValue.allFirstLettersToUpperCase()
 
-    val brand = this.substring(0, this.indexOf(lastItem) - 1).trim()
+    val lastInd = this.indexOf(lastItem) - 1
+    val brand = this.substring(0, if (lastInd == -1) 0 else lastInd).trim()
     return brand.split(" ").joinToString(separator = " ") { it.firstLetterToUpperCase() }
+}
+
+fun generateNumber(
+    orderId: String?,
+    userId : String?
+) : String {
+
+    return if (orderId == null || userId == null) {
+        val arr = (System.currentTimeMillis() % 1000000).toString().toCharArray()
+        arr.shuffle()
+        arr.joinToString("")
+    }
+    else {
+        val finalNumber = mutableListOf<Int>()
+        // 0-4, 5-9, 10-14, 15-19
+        for (i in 0..3) {
+            val sub = orderId.substring(i * 5, (i + 1) * 4 + i)
+            val digit = sub.map { ch -> ch.code }.sum() % 10
+            finalNumber.add(digit)
+        }
+
+        finalNumber.add(userId.substring(0, 13).map { it.code }.sum() % 10)
+        finalNumber.add(userId.substring(14, 28).map { it.code }.sum() % 10)
+
+        finalNumber.shuffle()
+
+        finalNumber.joinToString("")
+    }
 }

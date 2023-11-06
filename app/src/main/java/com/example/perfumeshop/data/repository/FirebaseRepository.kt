@@ -7,17 +7,21 @@ import com.example.perfumeshop.data.model.Order
 import com.example.perfumeshop.data.model.OrderProduct
 import com.example.perfumeshop.data.model.Product
 import com.example.perfumeshop.data.model.ProductWithAmount
-import com.example.perfumeshop.data.model.Review
 import com.example.perfumeshop.data.model.User
 import com.example.perfumeshop.data.utils.QueryType
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.firestore.CollectionReference
+import com.google.firebase.firestore.Filter
 import com.google.firebase.firestore.FirebaseFirestore
 import com.google.firebase.firestore.Query
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.async
+import kotlinx.coroutines.awaitAll
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.asFlow
 import kotlinx.coroutines.flow.drop
 import kotlinx.coroutines.tasks.await
+import kotlinx.coroutines.withContext
 import javax.inject.Inject
 
 const val TAG = "FireRepository"
@@ -29,9 +33,18 @@ class FireRepository @Inject constructor(
         private val favouriteCollection: CollectionReference,
         private val ordersCollection: CollectionReference,
         private val ordersProductsCollection: CollectionReference,
-        private val blackListCollection: CollectionReference,
-        private val reviewsCollection: CollectionReference
-    ) {
+        private val blackListCollection: CollectionReference
+) {
+
+    private var _filter : Filter? = null
+
+    companion object {
+        suspend fun isAppBlocked() =
+            FirebaseFirestore.getInstance()
+                .collection("main_app_blocker")
+                .document("blocker_id")
+                .get().await().getBoolean("is_blocked_for_maintenance")
+    }
 
     private suspend inline fun <reified T> Query.queryToFlow(methodNane : String) : Flow<T> {
         return this.get()
@@ -42,8 +55,29 @@ class FireRepository @Inject constructor(
     }
 
     // -------------------------------------------------------------
-    // common save operation
-    suspend fun saveToFirebase(
+    // common operations
+
+    suspend fun updateInDatabase(
+        docId: String?,
+        collectionName: String,
+        fieldToUpdate: String,
+        newValue: Any
+    ) : Result<String>? {
+        var result : Result<String>? = null
+
+        if (docId == null) return Result.failure(NullPointerException("id == null"))
+
+        FirebaseFirestore.getInstance().collection(collectionName)
+            .document(docId).update(fieldToUpdate, newValue)
+            .addOnCompleteListener { task ->
+                result = if (task.isSuccessful) Result.success("s")
+                else Result.failure(task.exception ?: Exception("null exception"))
+            }.await()
+
+        return result
+    }
+
+    suspend fun saveToDatabase(
         item: Any,
         collectionName: String,
         updateId : Boolean = true,
@@ -77,13 +111,12 @@ class FireRepository @Inject constructor(
                 Log.d(TAG, "getProduct: isSuccess = ${task.isSuccessful}, exceptionMessage = ${task.exception?.message}")
             }.await()
 
-//        if (result?.exceptionOrNull()?.message == "null exception")
-//            result = Result.success(doc.id)
 
         Log.d("FINAL_LOG", "getProduct: isSuccess = ${result?.isSuccess}, exceptionMessage = ${result?.exceptionOrNull()}")
 
         return if (result?.exceptionOrNull() == null) Result.success(doc.id) else result
     }
+
 
     // -------------------------------------------------------------
     // products collection operations
@@ -99,20 +132,94 @@ class FireRepository @Inject constructor(
         } else null
     }
 
+    fun constructFilter(
+        isOnHandOnly: Boolean,
+        volumes: List<Double>
+    ){
+        val filters = mutableListOf<Filter>()
+
+        if (isOnHandOnly)
+            filters.add(Filter.equalTo("is_on_hand", true))
+        if (volumes.isNotEmpty())
+            filters.add(Filter.inArray("volume", volumes))
+
+        _filter = if (filters.isNotEmpty())
+            Filter.and(*filters.toTypedArray())
+        else
+            null
+    }
+
     suspend fun getQueryProducts(
         query : String,
         queryType: QueryType,
+        initQuery: String,
+        initQueryType: QueryType,
+        priorities : List<Int>,
+        isAscending : Boolean,
         productsPerPage : Int,
         uploadsAmount : Int
     ) : Flow<Product> {
 
-        val resultQuery = if (queryType == QueryType.brand)
-            productsCollection
-                .orderBy(queryType.name)
+        Log.d("SLAS", "$query ${queryType.name} ${priorities.joinToString { it.toString() }} $isAscending")
+
+        var resultQuery = productsCollection as Query
+
+        if (initQueryType.name == QueryType.type.name)
+            resultQuery = resultQuery.whereEqualTo("type", initQuery)
+
+        _filter?.let { filter ->
+            resultQuery = resultQuery.where(filter)
+                //.orderBy("cash_price")
+        }
+
+        if (queryType.name != QueryType.brand.name) {
+            val direction =
+                if (isAscending) Query.Direction.ASCENDING else Query.Direction.DESCENDING
+            when (priorities.joinToString { it.toString() }) {
+                "0" -> {
+                    Log.d("SIAHISIAD", "0 - 1")
+                    resultQuery = resultQuery.orderBy("cash_price", direction)
+                    Log.d("SIAHISIAD", "0 - 2")
+                }
+
+                "1" -> {
+                    Log.d("SIAHISIAD", "1 - 1")
+                    resultQuery = resultQuery.orderBy("volume", direction)
+                    Log.d("SIAHISIAD", "1 - 2")
+                }
+
+                "01" -> {
+                    Log.d("SIAHISIAD", "01 - 1")
+                    resultQuery = resultQuery
+                        .orderBy("cash_price", direction)
+                        .orderBy("volume", direction)
+                    Log.d("SIAHISIAD", "01 - 2")
+                }
+
+                "10" -> {
+                    Log.d("SIAHISIAD", "10 - 1")
+                    resultQuery = resultQuery
+                        .orderBy("volume", direction)
+                        .orderBy("cash_price", direction)
+                    Log.d("SIAHISIAD", "10 - 2")
+                }
+
+                else -> {}
+            }
+        }
+
+        // mb order by cashprice startat minval end at max val
+
+        if (queryType.name == QueryType.brand.name) {
+            resultQuery = resultQuery
+                .orderBy("brand")
                 .startAt(query.lowercase())
                 .endAt(query.lowercase() + '\uf8ff')
-        else
-            productsCollection.whereEqualTo(queryType.name, query)
+
+            return resultQuery.queryToFlow("getQueryProducts")
+
+        }
+
 
         return resultQuery.limit(((uploadsAmount + 1) * productsPerPage).toLong()).queryToFlow<Product>("getQueryProducts").drop(uploadsAmount * productsPerPage)
     }
@@ -136,16 +243,56 @@ class FireRepository @Inject constructor(
         return result
     }
 
+    suspend fun phoneNumberIsNotUsedYet(phoneNumber: String) : Boolean {
+        return usersCollection.whereEqualTo("phone_number", phoneNumber).get().await().isEmpty
+    }
+
     // -------------------------------------------------------------
     // cart collection operations
-    suspend fun addCartObj(productWithAmount : ProductWithAmount, userId : String) : Result<String>? {
+
+    suspend fun getCartFromDatabase(userId: String) : Flow<CartObj> {
+        return withContext(Dispatchers.IO){
+            cartCollection.whereEqualTo("user_id", userId).queryToFlow("getCartFromDatabase")
+        }
+    }
+
+    suspend fun saveCartToDatabase(cart: List<ProductWithAmount>, userId: String) : Result<String> {
+        return withContext(Dispatchers.IO) {
+            cart
+                .map { async { addCartObj(it, userId) } }
+                .awaitAll()
+                .find { it?.isFailure == true  } ?: Result.success("")
+        }
+    }
+
+    suspend fun deleteCartFromDatabase(userId: String) : Result<String> {
+        return withContext(Dispatchers.IO){
+            val productIdsToDelete = cartCollection.whereEqualTo("user_id", userId).get().await().map { it.id }
+
+            val deferreds = productIdsToDelete.map { productId ->
+                async {
+                    Log.d("DSOHFCIOASSD", "cart: $productId")
+                    cartCollection.document(productId).delete()
+                        .addOnCompleteListener {
+                            Log.d("DSOHFCIOASSD", "cart: isSucc = ${it.isSuccessful}")
+                        }
+                        .await()
+                }
+            }
+            deferreds.awaitAll()
+
+            Result.success("")
+        }
+    }
+
+    private suspend fun addCartObj(productWithAmount : ProductWithAmount, userId : String) : Result<String>? {
         var result : Result<String>? = null
         cartCollection.document(userId + "|" + productWithAmount.product?.id.toString()).set(
             CartObj(
                 userId = userId,
                 productId = productWithAmount.product?.id,
-                amount = productWithAmount.amount,
-                isCashPrice = productWithAmount.isCashPrice
+                cashPriceAmount = productWithAmount.amountCash,
+                cashlessPriceAmount = productWithAmount.amountCashless
             )
         ).addOnCompleteListener { task ->
             result = if (task.isSuccessful)
@@ -158,225 +305,64 @@ class FireRepository @Inject constructor(
         return result
     }
 
-    suspend fun deleteCartObj(productId: String, userId: String) : Result<String>? {
-        var result : Result<String>? = null
-
-        cartCollection.document("$userId|$productId").delete()
-            .addOnCompleteListener { task ->
-                result = if (task.isSuccessful)
-                    Result.success("deleted")
-                else
-                    Result.failure(task.exception ?: Exception("null exception"))
-
-                Log.d(TAG, "deleteCartObj: isSuccess = ${result?.isSuccess}, exceptionMessage = ${result?.exceptionOrNull()?.message}")
-            }.await()
-
-        return result
-    }
-
-    suspend fun updateCartProductAmount(productId: String, userId: String, amount: Int) : Result<String>? {
-        var result : Result<String>? = null
-
-        cartCollection.document("$userId|$productId")
-            .update("amount", amount)
-            .addOnCompleteListener { task ->
-                result = if (task.isSuccessful)
-                    Result.success("updated")
-                else
-                    Result.failure(task.exception ?: Exception("null exception"))
-
-                Log.d(TAG, "updateCartProductAmount: isSuccess = ${result?.isSuccess}, exceptionMessage = ${result?.exceptionOrNull()?.message}")
-            }.await()
-
-        return result
-    }
-
-    suspend fun updateCartProductCashState(productId: String, userId: String, isCashPrice: Boolean) : Result<String>? {
-        var result : Result<String>? = null
-
-        cartCollection.document("$userId|$productId")
-            .update("is_cash_price", isCashPrice)
-            .addOnCompleteListener { task ->
-                result = if (task.isSuccessful)
-                    Result.success("updated")
-                else
-                    Result.failure(task.exception ?: Exception("null exception"))
-
-                Log.d(TAG, "updateCartProductCashState: isSuccess = ${result?.isSuccess}, exceptionMessage = ${result?.exceptionOrNull()?.message}")
-            }.await()
-
-        return result
-    }
-
-    suspend fun clearCart(userId : String?) : Result<String>? {
-
-        var result : Result<String>? = null
-
-        val documentsIds = cartCollection.whereEqualTo("user_id", userId)
-            .get().await().documents.map { it.id }
-
-        documentsIds.forEach { id ->
-            cartCollection.document(id).delete()
-                .addOnCompleteListener{ task ->
-                    result = if (task.isSuccessful)
-                        Result.success("cleared")
-                    else
-                        Result.failure(task.exception ?: Exception("null exception"))
-
-                    Log.d(TAG, "clearCart: isSuccess = ${result?.isSuccess}, exceptionMessage = ${result?.exceptionOrNull()?.message}")
-                }.await()
-        }
-        return result
-    }
-
-    suspend fun getUserCartProducts(userId : String) : Flow<ProductWithAmount> {
-
-        val cart = cartCollection.whereEqualTo("user_id", userId)
-            .get()
-            .addOnCompleteListener { task ->
-                Log.d(TAG, "getUserCartProducts: isSuccess = ${task.isSuccessful}, exceptionMessage = ${task.exception?.message}")
-            }
-            .await()
-            .toObjects(CartObj::class.java)
-
-        val map = buildMap<String, CartObj> {
-            cart.forEach { cartObj ->
-                put(cartObj.productId.toString(), cartObj)
-            }
-        }
-
-        val productIds = map.keys.toList()
-
-        val final =
-            if (productIds.isNotEmpty())
-                productsCollection.whereIn("id", productIds)
-                    .get()
-                    .addOnCompleteListener { task ->
-                        Log.d(TAG, "getUserCartProducts: isSuccess = ${task.isSuccessful}, exceptionMessage = ${task.exception?.message}")
-                    }
-                    .await()
-                    .toObjects(Product::class.java)
-                    .mapNotNull { product ->
-                        val id = product.id
-                        if (id != null)
-                            ProductWithAmount(
-                                product = product,
-                                amount = map[id]?.amount,
-                                isCashPrice = map[id]?.isCashPrice
-                            )
-                        else null
-                    }
-            else listOf()
-
-        return final.asFlow()
-    }
-
     // -------------------------------------------------------------
     // favourite collection operations
-    suspend fun addFavouriteObj(productWithAmount: ProductWithAmount, userId: String) : Result<String>? {
-        var result : Result<String>? = null
 
-        favouriteCollection.document("$userId|${productWithAmount.product?.id.toString()}")
-            .set(
-                FavouriteObj(
-                    userId = userId,
-                    productId = productWithAmount.product?.id,
-                    amount = productWithAmount.amount,
-                    isCashPrice = productWithAmount.isCashPrice
-                )
+    suspend fun getFavouritesFromDatabase(userId: String) : Flow<FavouriteObj> {
+        return withContext(Dispatchers.IO){
+            favouriteCollection.whereEqualTo("user_id", userId).queryToFlow("getFavouriteFromDatabase")
+        }
+    }
+
+    suspend fun saveFavouritesToDatabase(favs: List<ProductWithAmount>, userId: String) : Result<String> {
+        return withContext(Dispatchers.IO) {
+            favs
+                .map {
+                    async { addFavouriteObj(it, userId) }
+                }
+                .awaitAll()
+                .find { it?.isFailure == true  } ?: Result.success("")
+        }
+    }
+
+    private suspend fun addFavouriteObj(productWithAmount : ProductWithAmount, userId : String) : Result<String>? {
+        var result : Result<String>? = null
+        favouriteCollection.document(userId + "|" + productWithAmount.product?.id.toString()).set(
+            FavouriteObj(
+                userId = userId,
+                productId = productWithAmount.product?.id,
+                cashPriceAmount = productWithAmount.amountCash,
+                cashlessPriceAmount = productWithAmount.amountCashless
             )
-            .addOnCompleteListener { task ->
-                result = if (task.isSuccessful)
-                    Result.success("added")
-                else
-                    Result.failure(task.exception ?: Exception("null exception"))
+        ).addOnCompleteListener { task ->
+            result = if (task.isSuccessful)
+                Result.success("added")
+            else
+                Result.failure(task.exception ?: Exception("null exception"))
 
-                Log.d(TAG, "addFavouriteObj: isSuccess = ${result?.isSuccess}, exceptionMessage = ${result?.exceptionOrNull()?.message}")
-
-            }.await()
-
+            Log.d(TAG, "addFavouriteObj: isSuccess = ${task.isSuccessful}, exceptionMessage = ${task.exception?.message}")
+        }.await()
         return result
     }
 
-    suspend fun deleteFavouriteObj(productId: String, userId: String) : Result<String>? {
+    suspend fun deleteFavouritesFromDatabase(userId: String) : Result<String> {
+        return withContext(Dispatchers.IO){
+            val productIdsToDelete = favouriteCollection.whereEqualTo("user_id", userId).get().await().map { it.id }
 
-        var result : Result<String>? = null
-
-        favouriteCollection.document("$userId|$productId")
-            .delete()
-            .addOnCompleteListener { task ->
-                result = if (task.isSuccessful)
-                    Result.success("cleared")
-                else
-                    Result.failure(task.exception ?: Exception("null exception"))
-
-                Log.d(TAG, "deleteFavouriteObj: isSuccess = ${result?.isSuccess}, exceptionMessage = ${result?.exceptionOrNull()?.message}")
-            }.await()
-
-        return result
-    }
-
-    suspend fun clearFavourites(userId : String?) : Result<String>? {
-
-        var result : Result<String>? = null
-
-        val documentsIds = favouriteCollection.whereEqualTo("user_id", userId)
-            .get().await().documents.map { it.id }
-
-        documentsIds.forEach { id ->
-            favouriteCollection.document(id).delete()
-                .addOnCompleteListener{ task ->
-                    result = if (task.isSuccessful)
-                        Result.success("cleared")
-                    else
-                        Result.failure(task.exception ?: Exception("null exception"))
-
-                    Log.d(TAG, "clearCart: isSuccess = ${result?.isSuccess}, exceptionMessage = ${result?.exceptionOrNull()?.message}")
-                }.await()
-        }
-        return result
-    }
-
-    suspend fun getUserFavouriteProducts(userId : String) : Flow<ProductWithAmount> {
-
-        val favourite = favouriteCollection.whereEqualTo("user_id", userId)
-            .get()
-            .addOnCompleteListener { task ->
-                Log.d(TAG, "getUserFavouriteProducts: isSuccess = ${task.isSuccessful}, exceptionMessage = ${task.exception?.message}")
+            val deferreds = productIdsToDelete.map { productId ->
+                async {
+                    Log.d("DSOHFCIOASSD", "favs: $productId")
+                    favouriteCollection.document(productId).delete()
+                        .addOnCompleteListener {
+                            Log.d("DSOHFCIOASSD", "favs: isSucc = ${it.isSuccessful}")
+                        }
+                        .await()
+                }
             }
-            .await()
-            .toObjects(FavouriteObj::class.java)
+            deferreds.awaitAll()
 
-        val map = buildMap<String, FavouriteObj> {
-            favourite.forEach { favouriteObj ->
-                put(favouriteObj.productId.toString(), favouriteObj)
-            }
+            Result.success("")
         }
-
-        val productIds = map.keys.toList()
-
-        val final =
-            if (productIds.isNotEmpty())
-                productsCollection.whereIn("id", productIds)
-                    .get()
-                    .addOnCompleteListener { task ->
-                        Log.d(TAG, "getUserCartProducts: isSuccess = ${task.isSuccessful}, exceptionMessage = ${task.exception?.message}")
-                    }
-                    .await()
-                    .toObjects(Product::class.java)
-                    .mapNotNull { product ->
-                        val id = product.id
-                        if (id != null)
-                            ProductWithAmount(
-                                product = product,
-                                amount = map[id]?.amount,
-                                isCashPrice = map[id]?.isCashPrice
-                            )
-                        else null
-                    }
-            else listOf()
-
-        return final.asFlow()
     }
 
     // -------------------------------------------------------------
@@ -408,9 +394,4 @@ class FireRepository @Inject constructor(
         return exists
     }
 
-    // -------------------------------------------------------------
-    // reviews collection operations
-    suspend fun getProductReviews(productId : String) : Flow<Review> {
-        return reviewsCollection.whereEqualTo("product_id", productId).queryToFlow("getProductReviews")
-    }
 }

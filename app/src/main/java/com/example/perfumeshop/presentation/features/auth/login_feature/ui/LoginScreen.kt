@@ -1,4 +1,4 @@
-package com.example.perfumeshop.presentation.features.auth.login_register_feature.ui
+package com.example.perfumeshop.presentation.features.auth.login_feature.ui
 
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
@@ -10,6 +10,7 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.ui.Alignment
@@ -19,7 +20,8 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
-import com.example.perfumeshop.presentation.components.LoadingIndicator
+import com.example.perfumeshop.data.utils.UiState
+import com.example.perfumeshop.presentation.components.Loading
 import com.example.perfumeshop.presentation.components.showToast
 import kotlin.random.Random
 
@@ -36,6 +38,10 @@ fun LoginScreen(
         mutableStateOf(false)
     }
 
+    val uiState = authViewModel.uiState.collectAsState()
+
+    if (uiState.value is UiState.Loading) Loading()
+
     Column(
         modifier = Modifier.fillMaxSize(),
         verticalArrangement = Arrangement.Top,
@@ -44,14 +50,16 @@ fun LoginScreen(
 
         Spacer(modifier = Modifier.height(15.dp))
 
-        if (authViewModel.isLoading)
-            LoadingIndicator()
-
         if (showLoginForm.value)
-            UserForm(isCreateAccount = false) { fn, sn, pn, sexInd, pwd ->
-                authViewModel.signIn(pn, pwd, onSuccess = onSuccess, errorCallback = { message ->
-                    showToast(context, message)
-                })
+            UserForm(isCreateAccount = false) { _, _, pn, _, pwd ->
+                authViewModel.signIn(
+                    phoneNumber = pn,
+                    password = pwd,
+                    onSuccess = onSuccess,
+                    errorCallback = { message ->
+                        showToast(context, message)
+                    }
+                )
             }
         else
             UserForm(isCreateAccount = true) { fn, sn, pn, sexInd, pwd ->
@@ -63,7 +71,8 @@ fun LoginScreen(
                     pwd = pwd,
                     seed = Random.nextInt(),
                     isInBlackList = { showToast(context, "Вы добавлены в чёрный список") },
-                    onAdminNotified = onCodeSent
+                    onAdminNotified = onCodeSent,
+                    onError = { message -> showToast(context, message) }
                 )
             }
 

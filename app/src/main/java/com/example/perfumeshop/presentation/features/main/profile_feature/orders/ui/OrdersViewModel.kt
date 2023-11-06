@@ -1,20 +1,19 @@
 package com.example.perfumeshop.presentation.features.main.profile_feature.orders.ui
 
-import android.nfc.Tag
 import android.util.Log
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.setValue
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.perfumeshop.data.model.Order
 import com.example.perfumeshop.data.model.ProductWithAmount
 import com.example.perfumeshop.data.repository.FireRepository
+import com.example.perfumeshop.data.utils.UiState
 import com.google.firebase.auth.FirebaseAuth
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.Deferred
 import kotlinx.coroutines.async
 import kotlinx.coroutines.awaitAll
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.catch
 import kotlinx.coroutines.launch
 import javax.inject.Inject
@@ -30,9 +29,8 @@ class OrdersViewModel @Inject constructor(private val repository: FireRepository
     private val _productsWithAmountMap = mutableMapOf<String, List<ProductWithAmount>>()
     var productsWithAmountMap = _productsWithAmountMap.toMap()
 
-    var isLoading by mutableStateOf(false)
-    var isSuccess by mutableStateOf(false)
-    var isFailure by mutableStateOf(false)
+    private var _uiState = MutableStateFlow<UiState>(UiState.Success())
+    val uiState : StateFlow<UiState> = _uiState
 
     init {
         if (FirebaseAuth.getInstance().currentUser?.isAnonymous == false)
@@ -40,15 +38,12 @@ class OrdersViewModel @Inject constructor(private val repository: FireRepository
     }
 
     private fun getUserOrders() = viewModelScope.launch {
-        isSuccess = false
-        isFailure = false
-        isLoading = true
-
+        _uiState.value = UiState.Loading()
         val deferred = async {
             repository.getUserOrders()
                 .catch { e ->
                     Log.d(TAG, "getUserOrders: ${e.message}")
-                    isFailure = true
+                    _uiState.value = UiState.Failure(e)
                 }.collect { order ->
                     _ordersList.add(order)
                 }
@@ -66,8 +61,8 @@ class OrdersViewModel @Inject constructor(private val repository: FireRepository
                             repository.getOrderProducts(id).map { orderProduct ->
                                 ProductWithAmount(
                                     product = repository.getProduct(orderProduct.productId),
-                                    amount = orderProduct.amount,
-                                    isCashPrice = orderProduct.isCashPrice
+                                    amountCash = orderProduct.cashPriceAmount,
+                                    amountCashless = orderProduct.cashlessPriceAmount
                                 )
                             }
                     }
@@ -78,12 +73,13 @@ class OrdersViewModel @Inject constructor(private val repository: FireRepository
 
         deferreds.awaitAll()
 
+        _ordersList.sortByDescending { it.date }
+
         ordersList = _ordersList
         productsWithAmountMap = _productsWithAmountMap
 
-        isLoading = false
-
-        isSuccess = !isFailure
+        if (_uiState.value is UiState.Loading)
+            _uiState.value = UiState.Success()
 
     }
 }

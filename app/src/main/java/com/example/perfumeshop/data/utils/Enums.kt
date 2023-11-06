@@ -1,10 +1,17 @@
 package com.example.perfumeshop.data.utils
 
-import okhttp3.internal.immutableListOf
+
+sealed class UiState(data : Any?){
+    class Success(message : String? = null) : UiState(data = message)
+    class Failure(exception: Throwable?) : UiState(data = exception)
+    class Loading(progress : Int? = null) : UiState(data = progress)
+    class NotStarted() : UiState(data = null)
+}
 
 enum class UserPreferencesType{
     Theme, FontSize;
 }
+
 enum class OrderStatus{
     Processing, Accepted, Delivering, Succeed, Canceled;
 
@@ -21,40 +28,44 @@ enum class OrderStatus{
 }
 
 enum class ProductType{
-    volume, tester, probe, licensed, auto, original, diffuser, lux, notSpecified;
 
-    fun toRus() : String = when (this){
-            volume -> "Объемы"
-            tester -> "Тестеры"
-            probe -> "Пробники"
-            licensed -> "Лицензионные"
-            auto -> "Авто"
-            original -> "Оригиналы"
-            diffuser -> "Диффузоры"
-            lux -> "Люкс"
-            notSpecified -> "Не задано"
+    Original, Tester, Probe, Auto, Diffuser, Compact, Licensed, Lux, Selectives, EuroA, NotSpecified;
+
+    companion object {
+        private val types =
+            listOf(Original, Tester, Probe, Auto, Diffuser, Compact, Licensed, Lux, Selectives, EuroA, NotSpecified)
+
+        fun getType(ind : Int) = if (ind in types.indices) types[ind] else NotSpecified
+
+        fun getTypes() : List<ProductType> = types
+
+    }
+
+    fun toRus() : String = when (this) {
+        Original -> "Оригиналы"
+        Tester -> "Тестеры"
+        Probe -> "Пробники"
+        Auto -> "Авто"
+        Diffuser -> "Диффузоры"
+        Compact -> "Компакт"
+        Licensed -> "Лицензионные"
+        Lux -> "Люкс"
+        Selectives -> "Селективы"
+        EuroA -> "Евро А+"
+        NotSpecified -> "Не задано"
+    }
+
+    fun getVolumes(): List<Double> = when (this) {
+        Tester -> listOf(55.0, 60.0, 65.0, 110.0, 115.0, 125.0)
+        Probe -> listOf(30.0, 35.0)
+        Compact -> listOf(15.0, 45.0, 35.0, 80.0, 10.0, 60.0, 100.0)
+        else -> emptyList()
     }
 }
 
-fun getVolumes(type : ProductType) : List<String> =  when (type.name){
-        ProductType.volume.name -> listOf("10", "15", "35", "45", "3x20", "80")
-        ProductType.tester.name -> listOf("60", "65", "110", "115", "125")
-        ProductType.probe.name -> listOf("30", "35", "55")
-        else -> listOf("50")
-    }
-
-//
-//val productTypeEntities = immutableListOf(ProductType.volume, ProductType.tester, ProductType.probe,
-//                                          ProductType.licensed, ProductType.auto, ProductType.original,
-//                                          ProductType.diffuser, ProductType.lux)
 
 enum class QueryType{
-    type, brand, volume, price, sex, is_on_hand;
-}
-
-enum class ProductSex {
-    Male, Female, Unisex;
-
+    type, brand;
 }
 
 enum class UserSex{
@@ -74,15 +85,3 @@ enum class OptionType{
     //About, Theme,
     PhoneNumber, WhatsApp, Telegram, Gmail;
 }
-
-val productSexEntries = immutableListOf(ProductSex.Male, ProductSex.Female, ProductSex.Unisex)
-//
-//val queryTypeEntries = immutableListOf(QueryType.collection, QueryType.type, QueryType.brand,
-//                               QueryType.volume, QueryType.price, QueryType.sex, QueryType.is_on_hand)
-//
-//val optionTypeEntries = immutableListOf(OptionType.Nothing, OptionType.Edit,
-//                                OptionType.Favourite, OptionType.Orders,
-//                                //OptionType.About, OptionType.Theme,
-//                                //OptionType.PhoneNumber, OptionType.WhatsApp,
-//                                //OptionType.Telegram, OptionType.Gmail)
-//)

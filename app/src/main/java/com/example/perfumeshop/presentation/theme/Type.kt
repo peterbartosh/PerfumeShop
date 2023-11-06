@@ -55,7 +55,7 @@ fun getTypography(fontSize : Int) : Typography {
         ),
         labelLarge = TextStyle(
             fontFamily = FontFamily.Default,
-            fontWeight = FontWeight.Normal,
+            fontWeight = FontWeight.SemiBold,
             fontSize = when (fontSize){
                 0 -> 16.sp
                 1 -> 19.sp

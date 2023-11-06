@@ -1,5 +1,6 @@
 package com.example.perfumeshop.presentation.features.main.home_feature.search.ui
 
+import android.util.Log
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
@@ -16,6 +17,9 @@ import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.layout.wrapContentHeight
 import androidx.compose.foundation.layout.wrapContentSize
 import androidx.compose.foundation.layout.wrapContentWidth
+import androidx.compose.foundation.lazy.grid.GridCells
+import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
+import androidx.compose.foundation.lazy.grid.itemsIndexed
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.BasicTextField
@@ -23,15 +27,16 @@ import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Clear
+import androidx.compose.material.icons.outlined.Close
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Divider
-import androidx.compose.material3.DropdownMenu
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.RadioButton
 import androidx.compose.material3.RadioButtonDefaults
@@ -64,11 +69,13 @@ import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextDecoration
+import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.window.Dialog
 import com.example.perfumeshop.data.user_preferences.PreferencesManager
-import com.example.perfumeshop.data.utils.getWidthPercent
+import com.example.perfumeshop.data.utils.ProductType
+import com.example.perfumeshop.data.utils.QueryType
 import com.example.perfumeshop.data.utils.round
 import com.example.perfumeshop.presentation.components.InputField
 import com.example.perfumeshop.presentation.theme.Gold
@@ -80,7 +87,7 @@ fun SearchForm(
     modifier: Modifier = Modifier,
     initialQuery : String = "",
     loading: Boolean = false,
-    hint: String = "Поиск по брэндам",
+    hint: String = "Поиск по брендам",
     onSearch: (String) -> Unit = {}
 ) {
 
@@ -127,7 +134,11 @@ fun SearchForm(
 
 
 @Composable
-fun UploadMoreButton(searchViewModel: SearchViewModel) {
+fun UploadMoreButton(
+    searchViewModel: SearchViewModel,
+    currentQuery: String,
+    currentQueryType: QueryType
+) {
 
     Spacer(modifier = Modifier.height(15.dp))
 
@@ -142,7 +153,7 @@ fun UploadMoreButton(searchViewModel: SearchViewModel) {
         //if (!searchViewModel.uploadingMore)
             Button(
                 onClick = {
-                    searchViewModel.uploadMore()
+                    searchViewModel.uploadMore(currentQuery = currentQuery, currentQueryType = currentQueryType)
                 },
                 contentPadding = PaddingValues(3.dp),
                 shape = RoundedCornerShape(50.dp),
@@ -160,7 +171,72 @@ fun UploadMoreButton(searchViewModel: SearchViewModel) {
     }
 }
 
-//@Preview(showBackground = true)
+@Preview(showBackground = true)
+@Composable
+fun InputOption(
+    ind: Int = 1,
+    query: String = "al",
+    queryType: QueryType = QueryType.brand,
+    onCloseCLick: () -> Unit = {}
+) {
+
+    Card(
+        modifier = Modifier
+            .wrapContentHeight()
+            .wrapContentWidth()
+            .padding(5.dp)
+            .clip(RoundedCornerShape(50.dp)),
+        shape = RoundedCornerShape(50.dp),
+        colors = CardDefaults.cardColors(
+            containerColor = MaterialTheme.colorScheme.background,
+            contentColor = MaterialTheme.colorScheme.onBackground
+        ),
+        border = BorderStroke(
+            width = 1.dp,
+            color = MaterialTheme.colorScheme.onBackground
+        )
+    ) {
+        val text =
+            when (queryType.name) {
+                QueryType.type.name -> "Тип: ${ProductType.valueOf(query).toRus()}"
+                QueryType.brand.name -> "В названии: $query"
+                else -> ""
+            }
+
+        Row(
+            modifier = Modifier
+                .wrapContentHeight()
+                .wrapContentWidth(),
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            Text(
+                text = text,
+                modifier = Modifier.padding(5.dp),
+                style = MaterialTheme.typography.bodySmall
+            )
+
+            Divider(
+                modifier = Modifier
+                    .height(40.dp)
+                    .width(1.dp),
+                color = MaterialTheme.colorScheme.onBackground
+            )
+
+            if (ind == 1)
+                IconButton(
+                    modifier = Modifier.size(25.dp),
+                    onClick = onCloseCLick
+                ) {
+                    Icon(
+                        modifier = Modifier.size(15.dp),
+                        imageVector = Icons.Outlined.Close,
+                        contentDescription = "close icon"
+                    )
+                }
+        }
+    }
+}
+
 @Composable
 fun SearchOption(
     applied : Boolean,
@@ -168,10 +244,6 @@ fun SearchOption(
     iconId : Int,
     showDialogState : MutableState<Boolean>
 ) {
-
-    val context = LocalContext.current
-
-    val wp = getWidthPercent(context = context)
 
     Card(
         modifier = Modifier
@@ -184,7 +256,7 @@ fun SearchOption(
             .clickable { showDialogState.value = !showDialogState.value },
          shape = RoundedCornerShape(50.dp),
          colors = CardDefaults.cardColors(
-             containerColor = MaterialTheme.colorScheme.background,
+             containerColor = MaterialTheme.colorScheme.primaryContainer,
              contentColor = if (applied)
                  MaterialTheme.colorScheme.primary
              else
@@ -231,61 +303,60 @@ fun SearchOption(
     }
 
 }
-
-@Composable
-fun PriceDropDownMenu(
-    expanded: MutableState<Boolean>,
-    selected: MutableState<Boolean>
-) {
-    DropdownMenu(expanded = expanded.value, onDismissRequest = { expanded.value = !expanded.value }) {
-
-
-            val width = 100.dp
-            val selectedBorderStroke = BorderStroke(width = 3.dp, color = Gold)
-            val notSelectedBorderStroke = BorderStroke(width = 1.dp, color = Color.LightGray)
-            Row(
-                modifier = Modifier
-                    .width(width)
-                    .border(
-                        if (selected.value) selectedBorderStroke else notSelectedBorderStroke
-                    )
-                    .clickable {
-                        selected.value = true
-                    },
-                verticalAlignment = Alignment.CenterVertically,
-                horizontalArrangement = Arrangement.Center
-            ) {
-                Text(text = "Нал.", fontSize = 20.sp,
-                     modifier = Modifier.padding(5.dp),
-                     textAlign = TextAlign.Center)
-            }
-            Row(
-                modifier = Modifier
-                    .width(width)
-                    .border(
-                        if (!selected.value) selectedBorderStroke else notSelectedBorderStroke
-                    )
-                    .clickable {
-                        selected.value = false
-                    },
-                verticalAlignment = Alignment.CenterVertically,
-                horizontalArrangement = Arrangement.Center
-            ) {
-                Text(text = "Безнал.", fontSize = 20.sp,
-                     modifier = Modifier.padding(5.dp),
-                     textAlign = TextAlign.Center)
-            }
-        //}
-    }
-}
+//
+//@Composable
+//fun PriceDropDownMenu(
+//    expanded: MutableState<Boolean>,
+//    selected: MutableState<Boolean>
+//) {
+//    DropdownMenu(expanded = expanded.value, onDismissRequest = { expanded.value = !expanded.value }) {
+//
+//
+//            val width = 100.dp
+//            val selectedBorderStroke = BorderStroke(width = 3.dp, color = Gold)
+//            val notSelectedBorderStroke = BorderStroke(width = 1.dp, color = Color.LightGray)
+//            Row(
+//                modifier = Modifier
+//                    .width(width)
+//                    .border(
+//                        if (selected.value) selectedBorderStroke else notSelectedBorderStroke
+//                    )
+//                    .clickable {
+//                        selected.value = true
+//                    },
+//                verticalAlignment = Alignment.CenterVertically,
+//                horizontalArrangement = Arrangement.Center
+//            ) {
+//                Text(text = "Нал.", fontSize = 20.sp,
+//                     modifier = Modifier.padding(5.dp),
+//                     textAlign = TextAlign.Center)
+//            }
+//            Row(
+//                modifier = Modifier
+//                    .width(width)
+//                    .border(
+//                        if (!selected.value) selectedBorderStroke else notSelectedBorderStroke
+//                    )
+//                    .clickable {
+//                        selected.value = false
+//                    },
+//                verticalAlignment = Alignment.CenterVertically,
+//                horizontalArrangement = Arrangement.Center
+//            ) {
+//                Text(text = "Безнал.", fontSize = 20.sp,
+//                     modifier = Modifier.padding(5.dp),
+//                     textAlign = TextAlign.Center)
+//            }
+//        //}
+//    }
+//}
 
 @Composable
 fun SortDialog(
     showDialog: MutableState<Boolean>,
     sortPrioritiesInitValue: List<Int>,
     isAscendingInitValue: Boolean,
-    onApplyButtonClick: (Boolean, List<Int>) -> Unit,
-    onClearClick : () -> Unit
+    onApplyButtonClick: (Boolean, List<Int>, Boolean) -> Unit
 ) {
 
     val N = 2
@@ -397,9 +468,8 @@ fun SortDialog(
 
                         Button(
                             onClick = {
-                                onApplyButtonClick(isAscending.value, priorities)
+                                onApplyButtonClick(isAscending.value, priorities, applySort.value)
                             },
-                            enabled = applySort.value,
                             shape = RoundedCornerShape(10.dp),
                             colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.primary),
                             //border = BorderStroke(width = 1.dp, color = if (applySort.value) Gold else Color.LightGray),
@@ -416,8 +486,6 @@ fun SortDialog(
                                 sortStates.replaceAll { false }
                                 priorities.clear()
                                 isAscending.value = true
-
-                                onClearClick()
                             },
                             text = "Очистить всё",
                             textDecoration = TextDecoration.Underline,
@@ -449,7 +517,7 @@ fun CustomRadioButton(
         shape = CircleShape,
         border = BorderStroke(width = 1.dp, color = MaterialTheme.colorScheme.onBackground),
         colors = ButtonDefaults.buttonColors(
-            containerColor = if (states[ind]) MaterialTheme.colorScheme.primary else Color(0xFF212121)
+            containerColor = if (states[ind]) MaterialTheme.colorScheme.primary else Color.White
         ),
         contentPadding = PaddingValues(1.dp)
     ) {
@@ -469,10 +537,12 @@ fun FilterDialog(
     minInitValue: String,
     maxInitValue: String,
     isOnHandOnlyInitValue: Boolean,
-    isMaleOnlyInitValue : Boolean,
-    isFemaleOnlyInitValue : Boolean,
-    onApplyButtonClick: (String, String, Boolean, Boolean, Boolean) -> Unit,
-    onClearClick : () -> Unit
+    availableVolumes: List<Double>,
+    isCompactQueryType: Boolean,
+    volumesStatesInitValue: List<Double>,
+    //isMaleOnlyInitValue : Boolean,
+   // isFemaleOnlyInitValue : Boolean,
+    onApplyButtonClick: (String, String, Boolean, List<Double>, Boolean) -> Unit,
 ) {
 
 
@@ -490,23 +560,32 @@ fun FilterDialog(
         mutableStateOf(isOnHandOnlyInitValue)
     }
 
-    val isMaleOnly = remember {
-        mutableStateOf(isMaleOnlyInitValue)
+    val volumesStates = remember {
+        val states = mutableStateListOf<Double>()
+        states.addAll(volumesStatesInitValue)
+        states
     }
 
-    val isFemaleOnly = remember {
-        mutableStateOf(isFemaleOnlyInitValue)
-    }
+//    val isMaleOnly = remember {
+//        mutableStateOf(isMaleOnlyInitValue)
+//    }
+
+//    val isFemaleOnly = remember {
+//        mutableStateOf(isFemaleOnlyInitValue)
+//    }
 
     val applyFilter = remember(
         moreThanState.value, lessThanState.value,
         isOnHandOnlyState.value,
-        isMaleOnly.value, isFemaleOnly.value
+        arrayOf(volumesStates)
+        //isMaleOnly.value, isFemaleOnly.value
     ) {
         mutableStateOf(
             (moreThanState.value != "0.0" && moreThanState.value.isNotEmpty()) ||
             (lessThanState.value != maxProductPrice.toString() && lessThanState.value.isNotEmpty()) ||
-            isOnHandOnlyState.value || isFemaleOnly.value || isMaleOnly.value
+            isOnHandOnlyState.value ||
+                    volumesStates.isNotEmpty()
+                    //|| isFemaleOnly.value || isMaleOnly.value
         )
     }
 
@@ -534,9 +613,16 @@ fun FilterDialog(
 
                 Divider()
 
-                MaleFemale(isMaleOnly, isFemaleOnly)
+                //MaleFemale(isMaleOnly, isFemaleOnly)
 
-                Divider()
+                if (availableVolumes.isNotEmpty()){
+
+                    VolumeOption(states = volumesStates, volumes = availableVolumes,  isCompactQueryType = isCompactQueryType)
+
+                    Divider()
+                }
+
+                //Divider()
 
                 IsOnHandOnlyOption(text = "Только в наличии", selected = isOnHandOnlyState)
 
@@ -561,11 +647,13 @@ fun FilterDialog(
                                     moreThanState.value.ifEmpty { "0.0" },
                                     lessThanState.value.ifEmpty { maxProductPrice.toString() },
                                     isOnHandOnlyState.value,
-                                    isMaleOnly.value,
-                                    isFemaleOnly.value
+                                    volumesStates.toList(),
+                                    applyFilter.value
+                                    //isMaleOnly.value,
+                                    //isFemaleOnly.value
                                 )
                             },
-                            enabled = applyFilter.value,
+                            //enabled = applyFilter.value,
                             shape = RoundedCornerShape(10.dp),
                             colors = ButtonDefaults.buttonColors(
                                 containerColor = MaterialTheme.colorScheme.primary,
@@ -592,9 +680,9 @@ fun FilterDialog(
                                 moreThanState.value = "0.0"
                                 lessThanState.value = maxProductPrice.toString()
                                 isOnHandOnlyState.value = false
-                                isMaleOnly.value = false
-                                isFemaleOnly.value = false
-                                onClearClick()
+                                volumesStates.clear()
+//                                isMaleOnly.value = false
+//                                isFemaleOnly.value = false
                             },
                             text = "Очистить всё",
                             textDecoration = TextDecoration.Underline,
@@ -636,18 +724,39 @@ fun PriceFilterRow(vararg priceStates : MutableState<String>) {
 
     val extremeValues = listOf("0.0", maxProductPrice.toString())
 
-    val range = 0f..(maxProductPrice/10)
+    val defaultRange = 0f..(maxProductPrice)
 
     var sliderPosition by remember {
+        val range = try {
+            val minVal = priceStates[0].value.toFloat().round(1)
+            val maxVal = (priceStates[1].value.toFloat()).round(1)
+            (minVal..maxVal)
+        } catch (e : Exception){
+            Log.d(TAG, "PriceFilterRow: $e ${e.message}")
+            defaultRange
+        }
         mutableStateOf(range)
     }
 
+//    LaunchedEffect(keys = priceStates){
+//        val range = try {
+//            val minVal = priceStates[0].value.toFloat().round(1)
+//            val maxVal = (priceStates[1].value.toFloat()).round(1)
+//            (minVal..maxVal)
+//        } catch (e : Exception){
+//            Log.d(TAG, "PriceFilterRow: $e ${e.message}")
+//            defaultRange
+//        }
+//        if (range == defaultRange)
+//            sliderPosition = defaultRange
+//    }
+
     LaunchedEffect(key1 = sliderPosition){
-        if (sliderPosition != range) {
+        if (sliderPosition != defaultRange) {
             priceStates[0].value =
-                (sliderPosition.start.toDouble() * 10).round(1).toString()
+                (sliderPosition.start.toDouble()).round(1).toString()
             priceStates[1].value =
-                (sliderPosition.endInclusive.toDouble() * 10).round(1).toString()
+                (sliderPosition.endInclusive.toDouble()).round(1).toString()
         }
     }
 
@@ -727,7 +836,7 @@ fun PriceFilterRow(vararg priceStates : MutableState<String>) {
 
             RangeSlider(
                 value = sliderPosition,
-                valueRange = range,
+                valueRange = defaultRange,
                 onValueChange = { newRange ->
                     sliderPosition = newRange
                 },
@@ -736,109 +845,128 @@ fun PriceFilterRow(vararg priceStates : MutableState<String>) {
 
     }
 }
-
-@Composable
-fun MaleFemale(
-    vararg states : MutableState<Boolean>,
-//    isMaleOnly : MutableState<Boolean>,
-//    isFemaleOnly: MutableState<Boolean>
-) {
-
-    val texts = listOf("Мужское", "Женское")
-
-    Row(
-        modifier = Modifier
-            .fillMaxWidth()
-            .padding(start = 5.dp),
-        verticalAlignment = Alignment.CenterVertically
-    ) {
-
-        Text(text = "Полу:", style = MaterialTheme.typography.bodyMedium, modifier = Modifier.padding(end = 5.dp))
-
-        Row(
-            modifier = Modifier.fillMaxWidth(),
-            verticalAlignment = Alignment.CenterVertically,
-            horizontalArrangement = Arrangement.Center
-        ) {
-
-            repeat(2) { ind ->
-
-                val shape = if (ind == 0)
-                    RoundedCornerShape(topStart = 10.dp, bottomStart = 10.dp)
-                else
-                    RoundedCornerShape(topEnd = 10.dp, bottomEnd = 10.dp)
-
-                Button(
-                    modifier = Modifier,
-                    onClick = {
-                        states[ind].value = !states[ind].value
-                    },
-                    shape = shape,
-                    colors = ButtonDefaults.buttonColors(
-                        containerColor = MaterialTheme.colorScheme.primaryContainer,
-                        contentColor = if (states[ind].value)
-                            MaterialTheme.colorScheme.primary
-                        else
-                            MaterialTheme.colorScheme.onBackground
-                    ),
-                    border = BorderStroke(
-                        width = 2.dp, color =
-                        if (states[ind].value)
-                            MaterialTheme.colorScheme.primary
-                        else
-                            Color.LightGray
-                    ),
-                    contentPadding = PaddingValues(5.dp)
-                ) {
-
-                    Text(text = texts[ind], style = MaterialTheme.typography.bodyMedium)
-                }
-            }
-        }
-    }
-
-}
-
+//
 //@Composable
-//fun VolumeOption(states:  SnapshotStateList<Boolean>, volumes : List<String>) {
+//fun MaleFemale(
+//    vararg states : MutableState<Boolean>,
+////    isMaleOnly : MutableState<Boolean>,
+////    isFemaleOnly: MutableState<Boolean>
+//) {
+//
+//    val texts = listOf("Мужское", "Женское")
+//
 //    Row(
 //        modifier = Modifier
 //            .fillMaxWidth()
-//            .wrapContentHeight()
-//            .padding(start = 5.dp, top = 5.dp, bottom = 5.dp),
+//            .padding(start = 5.dp),
 //        verticalAlignment = Alignment.CenterVertically
 //    ) {
 //
-//        Text(modifier = Modifier.padding(end = 5.dp), text = "Объему:", style = MaterialTheme.typography.bodyMedium)
+//        Text(text = "Полу:", style = MaterialTheme.typography.bodyMedium, modifier = Modifier.padding(end = 5.dp))
 //
+//        Row(
+//            modifier = Modifier.fillMaxWidth(),
+//            verticalAlignment = Alignment.CenterVertically,
+//            horizontalArrangement = Arrangement.Center
+//        ) {
 //
-//        for (ind in states.indices)
-//            ValueButton(ind = ind, text = "${volumes[ind]} мл", states = states)
+//            repeat(2) { ind ->
 //
+//                val shape = if (ind == 0)
+//                    RoundedCornerShape(topStart = 10.dp, bottomStart = 10.dp)
+//                else
+//                    RoundedCornerShape(topEnd = 10.dp, bottomEnd = 10.dp)
+//
+//                Button(
+//                    modifier = Modifier,
+//                    onClick = {
+//                        states[ind].value = !states[ind].value
+//                    },
+//                    shape = shape,
+//                    colors = ButtonDefaults.buttonColors(
+//                        containerColor = MaterialTheme.colorScheme.primaryContainer,
+//                        contentColor = if (states[ind].value)
+//                            MaterialTheme.colorScheme.primary
+//                        else
+//                            MaterialTheme.colorScheme.onBackground
+//                    ),
+//                    border = BorderStroke(
+//                        width = 2.dp, color =
+//                        if (states[ind].value)
+//                            MaterialTheme.colorScheme.primary
+//                        else
+//                            Color.LightGray
+//                    ),
+//                    contentPadding = PaddingValues(5.dp)
+//                ) {
+//
+//                    Text(text = texts[ind], style = MaterialTheme.typography.bodyMedium)
+//                }
+//            }
+//        }
 //    }
+//
 //}
 
-//@Composable
-//fun ValueButton(
-//    ind : Int,
-//    text : String,
-//    states : SnapshotStateList<Boolean>
-//) {
-//
-//    Button(
-//        onClick = { states[ind] = !states[ind] },
-//        shape = RoundedCornerShape(10.dp),
-//        colors = ButtonDefaults.buttonColors(containerColor = Color.White),
-//        border = BorderStroke(width = 1.dp, color = if (states[ind]) Gold else Color.LightGray),
-//        contentPadding = ButtonDefaults.ContentPadding,
-//        modifier = Modifier
-//            .wrapContentWidth()
-//            .wrapContentHeight()
-//    ) {
-//
-//        Text(text = text, fontSize = 10.sp, color = Color.Black)
-//    }
-//}
+@Composable
+fun VolumeOption(states: SnapshotStateList<Double>, volumes : List<Double>, isCompactQueryType: Boolean) {
+    Row(
+        modifier = Modifier
+            .fillMaxWidth()
+            .wrapContentHeight()
+            .padding(start = 5.dp, top = 5.dp, bottom = 5.dp),
+        verticalAlignment = Alignment.CenterVertically
+    ) {
+
+        Text(modifier = Modifier.padding(end = 5.dp), text = "Объему:", style = MaterialTheme.typography.bodyMedium)
+
+        LazyVerticalGrid(
+            columns = GridCells.Fixed(3),
+            contentPadding = PaddingValues(5.dp)
+        ){
+            itemsIndexed(volumes){ ind, volume ->
+                VolumeButton(volume = volume, states = states, isCompactQueryType = isCompactQueryType)
+            }
+        }
+
+
+//        for (ind in states.indices)
+//            ValueButton(ind = ind, text = "${volumes[ind]} мл", states = states)
+
+    }
+}
+
+@Composable
+fun VolumeButton(
+    volume: Double,
+    states: SnapshotStateList<Double>,
+    isCompactQueryType: Boolean
+) {
+
+    Button(
+        onClick = {
+            if (states.contains(volume))
+                states.remove(volume)
+            else
+                states.add(volume)
+        },
+        shape = RoundedCornerShape(10.dp),
+        colors = ButtonDefaults.buttonColors(containerColor = Color.White),
+        border = BorderStroke(
+            width = if (states.contains(volume)) 2.dp else 1.dp,
+            color = if (states.contains(volume)) Gold else Color.LightGray
+        ),
+        contentPadding = ButtonDefaults.ContentPadding,
+        modifier = Modifier
+            .wrapContentWidth()
+            .wrapContentHeight()
+    ) {
+
+        val volumeStr = if (isCompactQueryType && volume == 60.0) "3x20" else volume.toInt().toString()
+
+        Text(text = volumeStr, fontSize = 10.sp, color = Color.Black)
+    }
+}
 
 @Composable
 fun IsOnHandOnlyOption(selected : MutableState<Boolean>, text: String) {

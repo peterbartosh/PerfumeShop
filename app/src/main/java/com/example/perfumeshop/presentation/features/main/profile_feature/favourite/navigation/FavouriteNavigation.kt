@@ -19,7 +19,7 @@ fun NavController.navigateToFavouritesRoute(navOptions: NavOptions? = null) {
 }
 
 fun NavGraphBuilder.favouriteScreen(
-    onProductClick: (String) -> Unit,
+    //onProductClick: (String) -> Unit,
     favouriteViewModel: FavouriteViewModel,
     cartViewModel: CartViewModel,
     onBackPressed: () -> Unit
@@ -29,7 +29,7 @@ fun NavGraphBuilder.favouriteScreen(
         FavouriteScreen(
             favouriteViewModel = favouriteViewModel,
             cartViewModel = cartViewModel,
-            onProductClick = onProductClick
+           // onProductClick = onProductClick
         )
     }
 }

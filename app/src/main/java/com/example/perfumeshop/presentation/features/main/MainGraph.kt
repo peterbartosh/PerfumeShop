@@ -5,13 +5,12 @@ import com.example.perfumeshop.data.utils.OptionType
 import com.example.perfumeshop.data.utils.QueryType
 import com.example.perfumeshop.data.utils.UserPreferencesType
 import com.example.perfumeshop.presentation.features.main.cart_feature.cart.navigation.cartRoute
-import com.example.perfumeshop.presentation.features.main.cart_feature.cartActiveChild
 import com.example.perfumeshop.presentation.features.main.cart_feature.cart.ui.CartViewModel
+import com.example.perfumeshop.presentation.features.main.cart_feature.cartActiveChild
 import com.example.perfumeshop.presentation.features.main.cart_feature.cartGraph
+import com.example.perfumeshop.presentation.features.main.home_feature.home.navigation.homeRoute
 import com.example.perfumeshop.presentation.features.main.home_feature.homeActiveChild
 import com.example.perfumeshop.presentation.features.main.home_feature.homeGraph
-import com.example.perfumeshop.presentation.features.main.home_feature.home.navigation.homeRoute
-import com.example.perfumeshop.presentation.features.main.product_feature.navigation.productScreen
 import com.example.perfumeshop.presentation.features.main.profile_feature.favourite.ui.FavouriteViewModel
 import com.example.perfumeshop.presentation.features.main.profile_feature.profile.navigation.profileRoute
 import com.example.perfumeshop.presentation.features.main.profile_feature.profileActiveChild
@@ -32,7 +31,7 @@ fun NavGraphBuilder.mainGraph(
     onUserPreferencesChanged: (UserPreferencesType, Int) -> Unit,
     navigateSearch: (String, QueryType) -> Unit,
     navigateOption: (OptionType) -> Unit,
-    navigateProduct: (String) -> Unit,
+    //navigateProduct: (String) -> Unit,
     navigateToOrderMaking: () -> Unit,
     navigateToCart: () -> Unit,
     //homeViewModel: HomeViewModel,
@@ -45,14 +44,14 @@ fun NavGraphBuilder.mainGraph(
             cartViewModel = cartViewModel,
             favouriteViewModel = favouriteViewModel,
             onSearchClick = navigateSearch,
-            onProductClick = navigateProduct,
+            //onProductClick = navigateProduct,
             onBackPressed = onBackPressed
         )
 
         cartGraph(
             cartViewModel = cartViewModel,
             favouriteViewModel = favouriteViewModel,
-            onProductClick = navigateProduct,
+            //onProductClick = navigateProduct,
             onOrderDone = navigateToCart,
             onOrderMakeClick = navigateToOrderMaking,
             onBackPressed = onBackPressed
@@ -62,16 +61,16 @@ fun NavGraphBuilder.mainGraph(
             cartViewModel = cartViewModel,
             favouriteViewModel = favouriteViewModel,
             onOptionClick = navigateOption,
-            onProductClick = navigateProduct,
+            //onProductClick = navigateProduct,
             onBackPressed = onBackPressed
         )
 
-        productScreen(
-            onClick = {},
-            cartViewModel = cartViewModel,
-            favouriteViewModel = favouriteViewModel,
-            onBackPressed = onBackPressed
-        )
+//        productScreen(
+//            onClick = {},
+//            cartViewModel = cartViewModel,
+//            favouriteViewModel = favouriteViewModel,
+//            onBackPressed = onBackPressed
+//        )
 
         settingsScreen(
             onUserPreferencesChanged = onUserPreferencesChanged,

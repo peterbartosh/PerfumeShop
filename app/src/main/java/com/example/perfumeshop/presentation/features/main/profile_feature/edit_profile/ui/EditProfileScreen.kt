@@ -32,7 +32,7 @@ import com.example.perfumeshop.data.utils.getSexByName
 import com.example.perfumeshop.presentation.components.InputField
 import com.example.perfumeshop.presentation.components.SubmitButton
 import com.example.perfumeshop.presentation.components.showToast
-import com.example.perfumeshop.presentation.features.auth.login_register_feature.ui.SexPicker
+import com.example.perfumeshop.presentation.features.auth.login_feature.ui.SexPicker
 
 const val TAG = "EditProfileScreen"
 

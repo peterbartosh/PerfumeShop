@@ -1,4 +1,4 @@
-package com.example.perfumeshop.presentation.features.auth.login_register_feature.ui
+package com.example.perfumeshop.presentation.features.auth.login_feature.ui
 
 
 import android.util.Log
@@ -36,23 +36,19 @@ import androidx.compose.runtime.MutableState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.ExperimentalComposeUiApi
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.focus.FocusRequester
 import androidx.compose.ui.focus.focusRequester
-import androidx.compose.ui.graphics.BlendMode
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.graphics.ColorFilter
-import androidx.compose.ui.graphics.RectangleShape
 import androidx.compose.ui.graphics.Shape
-import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalSoftwareKeyboardController
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.AnnotatedString
-import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.buildAnnotatedString
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.input.KeyboardType
@@ -61,9 +57,7 @@ import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.text.input.TransformedText
 import androidx.compose.ui.text.input.VisualTransformation
 import androidx.compose.ui.text.style.TextAlign
-import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.sp
 import com.example.perfumeshop.R
 import com.example.perfumeshop.presentation.components.InputField
 import com.example.perfumeshop.presentation.components.SubmitButton
@@ -75,12 +69,12 @@ fun UserForm(
     isCreateAccount: Boolean,
     onDone: (String, String, String, Int, String) -> Unit
 ){
-    val firstName = remember { mutableStateOf("") }
-    val secondName = remember { mutableStateOf("") }
-    val phoneNumber =  remember { mutableStateOf("") }
-    val sexSelectedInd = remember { mutableStateOf(2) }
-    val password = remember { mutableStateOf("") }
-    val passwordVisible = remember { mutableStateOf(false) }
+    val firstName = rememberSaveable { mutableStateOf("") }
+    val secondName = rememberSaveable { mutableStateOf("") }
+    val phoneNumber =  rememberSaveable { mutableStateOf("") }
+    val sexSelectedInd = rememberSaveable { mutableStateOf(2) }
+    val password = rememberSaveable { mutableStateOf("") }
+    val passwordVisible = rememberSaveable { mutableStateOf(false) }
     val passwordFocusRequest = FocusRequester.Default
 
     val keyboardController = LocalSoftwareKeyboardController.current
@@ -342,7 +336,6 @@ fun SegmentButton(
 }
 
 @OptIn(ExperimentalMaterial3Api::class)
-//@Preview
 @Composable
 fun BelarusCodeBox() {
     Box(
@@ -380,7 +373,6 @@ fun BelarusCodeBox() {
 }
 
 
-//@Preview(showBackground = true)
 @Composable
 fun PhoneInput(
     modifier: Modifier = Modifier,

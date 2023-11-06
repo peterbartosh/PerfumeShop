@@ -25,5 +25,4 @@ data class User(
 
     var email : String? = null,
     var sex: String? = null,
-    //var country : String? = null
 )

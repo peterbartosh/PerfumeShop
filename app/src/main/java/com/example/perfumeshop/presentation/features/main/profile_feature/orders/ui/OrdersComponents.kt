@@ -16,7 +16,6 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.layout.wrapContentHeight
 import androidx.compose.foundation.layout.wrapContentSize
-import androidx.compose.foundation.layout.wrapContentWidth
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
@@ -48,9 +47,11 @@ import com.example.perfumeshop.data.model.Order
 import com.example.perfumeshop.data.model.ProductWithAmount
 import com.example.perfumeshop.data.utils.OrderStatus
 import com.example.perfumeshop.data.utils.firstLetterToUpperCase
+import com.example.perfumeshop.data.utils.getWidthPercent
 import com.example.perfumeshop.presentation.components.ProductRow
 import com.example.perfumeshop.presentation.components.showToast
-import kotlinx.coroutines.Job
+import java.time.ZoneId
+import java.time.format.DateTimeFormatter
 
 
 @Composable
@@ -58,13 +59,13 @@ fun OrderRow(
     order : Order,
     productsWithAmount: List<ProductWithAmount>,
     onAddToFavouriteClick : (ProductWithAmount) -> Unit,
-    onRemoveFromFavouriteClick : (String) -> Unit,
-    isInFavouriteCheck : (String) -> Boolean,
     onAddToCartClick : (ProductWithAmount) -> Unit,
-    onRemoveFromCartClick : (String) -> Unit,
+    onRemoveFromFavouriteClick : (ProductWithAmount) -> Unit,
+    onRemoveFromCartClick : (ProductWithAmount) -> Unit,
+    isInFavouriteCheck : (String) -> Boolean,
     isInCartCheck : (String) -> Boolean,
     clearCart : () -> Unit,
-    onProductClick: (String) -> Unit
+    //onProductClick: (String) -> Unit
 ) {
 
     val context = LocalContext.current
@@ -73,7 +74,7 @@ fun OrderRow(
         mutableStateOf(false)
     }
 
-    val notFound = "Не найдено"
+    val notFound = "_"
 
     Column(
         modifier = Modifier
@@ -122,11 +123,24 @@ fun OrderRow(
                     }?.joinToString(separator = " ")
 
                     Text(
-                        modifier = Modifier.padding(start = 5.dp),
+                        modifier = Modifier.padding(top = 5.dp, start = 5.dp),
                         text = address ?: notFound,
                         style = MaterialTheme.typography.bodyMedium,
                         color = MaterialTheme.colorScheme.onBackground
                     )
+
+                    val formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd, HH:mm:ss")
+                    val local = order.date?.toDate()?.toInstant()?.atZone(ZoneId.of("UTC+03:00"))?.toLocalDateTime()
+                    //Log.d("TIMESTAMP_TEST", local.format(formatter))
+
+                    Text(
+                        modifier = Modifier.padding(start = 5.dp),
+                        text = local?.format(formatter) ?: notFound,
+                        style = MaterialTheme.typography.bodyMedium,
+                        color = MaterialTheme.colorScheme.onBackground
+                    )
+
+
 
                     Row (
                         modifier = Modifier
@@ -210,7 +224,7 @@ fun OrderRow(
                 onAddToCartClick = onAddToCartClick,
                 onRemoveFromCartClick = onRemoveFromCartClick,
                 isInCartCheck = isInCartCheck,
-                onProductClick = onProductClick
+                //onProductClick = onProductClick
             )
         }
 
@@ -233,11 +247,16 @@ fun OrderRow(
 
 @Composable
 fun QuestionBox(status: OrderStatus) {
-    Box {
 
-        var showAskBar by remember {
-            mutableStateOf(false)
-        }
+    val context = LocalContext.current
+
+    val wp = getWidthPercent(context = context)
+
+    var showAskBar by remember {
+        mutableStateOf(false)
+    }
+
+    Box {
 
         Text(
             modifier = Modifier
@@ -261,7 +280,7 @@ fun QuestionBox(status: OrderStatus) {
 
         DropdownMenu(
             modifier = Modifier
-                .width(300.dp)
+                .width(wp * 80)
                 .wrapContentHeight()
                 .border(
                     border = BorderStroke(
@@ -303,12 +322,12 @@ fun ProductsList(
     paddingValues: PaddingValues,
     productsWithAmount : List<ProductWithAmount>,
     onAddToFavouriteClick : (ProductWithAmount) -> Unit,
-    onRemoveFromFavouriteClick : (String) -> Unit,
-    isInFavouriteCheck : (String) -> Boolean,
     onAddToCartClick : (ProductWithAmount) -> Unit,
-    onRemoveFromCartClick : (String) -> Unit,
+    onRemoveFromFavouriteClick : (ProductWithAmount) -> Unit,
+    onRemoveFromCartClick : (ProductWithAmount) -> Unit,
+    isInFavouriteCheck : (String) -> Boolean,
     isInCartCheck : (String) -> Boolean,
-    onProductClick: (String) -> Unit
+    //onProductClick: (String) -> Unit
 ) {
 
     Column(
@@ -325,7 +344,7 @@ fun ProductsList(
                 paddingValues = paddingValues,
                 showEditableAmount = false,
                 productWithAmount = productWithAmount,
-                onProductClick = onProductClick,
+                //onProductClick = onProductClick,
                 onAddToFavouriteClick = onAddToFavouriteClick,
                 onAddToCartClick = onAddToCartClick,
                 onRemoveFromFavouriteClick = onRemoveFromFavouriteClick,

@@ -7,7 +7,6 @@ import androidx.navigation.NavOptions
 import androidx.navigation.compose.composable
 import com.example.perfumeshop.data.utils.QueryType
 import com.example.perfumeshop.presentation.app.navigation.BackPressHandler
-import com.example.perfumeshop.presentation.components.ChildScreenAnimation
 import com.example.perfumeshop.presentation.features.main.cart_feature.cart.ui.CartViewModel
 import com.example.perfumeshop.presentation.features.main.home_feature.homeActiveChild
 import com.example.perfumeshop.presentation.features.main.home_feature.search.ui.SearchScreen
@@ -28,7 +27,7 @@ fun NavController.navigateToSearch(query : String, queryType : QueryType, navOpt
 }
 
 fun NavGraphBuilder.searchScreen(
-    onProductClick: (String) -> Unit,
+   // onProductClick: (String) -> Unit,
     cartViewModel: CartViewModel,
     favouriteViewModel: FavouriteViewModel,
     onBackPressed: () -> Unit
@@ -43,12 +42,12 @@ fun NavGraphBuilder.searchScreen(
 
         BackPressHandler(onBackPressed = onBackPressed)
         SearchScreen(
-                query = query,
-                queryType = queryType,
-                favouriteViewModel = favouriteViewModel,
-                cartViewModel = cartViewModel,
-                searchViewModel = searchViewModel,
-                onProductClick = onProductClick
+            initQuery = query,
+            initQueryType = queryType,
+            favouriteViewModel = favouriteViewModel,
+            cartViewModel = cartViewModel,
+            searchViewModel = searchViewModel,
+                //onProductClick = onProductClick
         )
     }
 }

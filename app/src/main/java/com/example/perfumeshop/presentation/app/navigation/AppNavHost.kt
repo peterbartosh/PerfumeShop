@@ -1,7 +1,5 @@
 package com.example.perfumeshop.presentation.app.navigation
 
-import androidx.compose.foundation.background
-import androidx.compose.material3.MaterialTheme
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.navigation.NavHostController
@@ -9,18 +7,18 @@ import androidx.navigation.compose.NavHost
 import androidx.navigation.navOptions
 import com.example.perfumeshop.data.utils.OptionType
 import com.example.perfumeshop.data.utils.UserPreferencesType
+import com.example.perfumeshop.presentation.features.app_blocked.navigation.appBlockedScreen
 import com.example.perfumeshop.presentation.features.auth.authGraph
 import com.example.perfumeshop.presentation.features.auth.code_verification_feature.navigation.codeVerificationRoute
 import com.example.perfumeshop.presentation.features.auth.code_verification_feature.navigation.navigateToCodeVerification
-import com.example.perfumeshop.presentation.features.auth.login_register_feature.navigation.loginRoute
-import com.example.perfumeshop.presentation.features.auth.login_register_feature.navigation.navigateToLogin
+import com.example.perfumeshop.presentation.features.auth.login_feature.navigation.loginRoute
+import com.example.perfumeshop.presentation.features.auth.login_feature.navigation.navigateToLogin
 import com.example.perfumeshop.presentation.features.main.cart_feature.cart.navigation.navigateToCart
 import com.example.perfumeshop.presentation.features.main.cart_feature.cart.ui.CartViewModel
 import com.example.perfumeshop.presentation.features.main.cart_feature.order_making.navigation.navigateToOrderMaking
 import com.example.perfumeshop.presentation.features.main.home_feature.home.navigation.navigateToHome
 import com.example.perfumeshop.presentation.features.main.home_feature.search.navigation.navigateToSearch
 import com.example.perfumeshop.presentation.features.main.mainGraph
-import com.example.perfumeshop.presentation.features.main.product_feature.navigation.navigateToProduct
 import com.example.perfumeshop.presentation.features.main.profile_feature.edit_profile.navigation.navigateToEditProfileRoute
 import com.example.perfumeshop.presentation.features.main.profile_feature.favourite.navigation.navigateToFavouritesRoute
 import com.example.perfumeshop.presentation.features.main.profile_feature.favourite.ui.FavouriteViewModel
@@ -45,7 +43,6 @@ fun AppNavHost(
         navController = navController,
         startDestination = splashRoute,
         modifier = modifier
-            //.background(color = MaterialTheme.colorScheme.background)
     ){
 
         val startDest = this.build().startDestinationId
@@ -59,16 +56,33 @@ fun AppNavHost(
             restoreState = true
         }
 
+        appBlockedScreen(
+            navigateToAsk = {
+                navController.navigateToAsk(navOptions = navOptions)
+                navController.backQueue.removeIf{ nbse -> nbse.destination.route == splashRoute}
+            },
+            navigateToHome = {
+                cartViewModel.loadProducts()
+                favouriteViewModel.loadProducts()
+                navController.navigateToHome(navOptions = null)
+                navController.backQueue.removeIf{ nbse ->
+                    nbse.destination.route in
+                            listOf(splashRoute, askRoute, loginRoute, codeVerificationRoute)
+                }
+            }
+        )
+
         startGraph(
             navigateAsk = {
                 navController.navigateToAsk(navOptions = navOptions)
                 navController.backQueue.removeIf{ nbse -> nbse.destination.route == splashRoute}
             },
             navigateHome = {
-               cartViewModel.loadUserProducts()
-               favouriteViewModel.loadUserProducts()
+               cartViewModel.loadProducts()
+               favouriteViewModel.loadProducts()
                navController.navigateToHome(navOptions = null)
-               navController.backQueue.removeIf{ nbse -> nbse.destination.route in
+               navController.backQueue.removeIf{ nbse ->
+                   nbse.destination.route in
                        listOf(splashRoute, askRoute, loginRoute, codeVerificationRoute)
                }
             },
@@ -78,9 +92,9 @@ fun AppNavHost(
         authGraph(
             navController = navController,
             navigateCodeVerification = { navController.navigateToCodeVerification(navOptions = navOptions) },
-            navigateMain = {
-                cartViewModel.loadUserProducts()
-                favouriteViewModel.loadUserProducts()
+            navigateHome = {
+                cartViewModel.loadProductsFromRemoteDatabase()
+                favouriteViewModel.loadProductsFromRemoteDatabase()
                 navController.navigateToHome(navOptions = null)
             },
             onBackPressed = onBackPressed
@@ -101,9 +115,9 @@ fun AppNavHost(
                     OptionType.Favourite -> navController.navigateToFavouritesRoute(navOptions = navOptions)
                     else -> {}
             }},
-            navigateProduct = { productId ->
-                navController.navigateToProduct(productId = productId, navOptions = navOptions)
-            },
+//            navigateProduct = { productId ->
+//                navController.navigateToProduct(productId = productId, navOptions = navOptions)
+//            },
             onBackPressed = onBackPressed
         )
     }

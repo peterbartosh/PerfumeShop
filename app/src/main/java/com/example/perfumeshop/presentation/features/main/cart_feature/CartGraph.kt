@@ -17,7 +17,7 @@ var cartActiveChild by mutableStateOf(cartRoute)
 fun NavGraphBuilder.cartGraph(
     onOrderDone: () -> Unit,
     onOrderMakeClick: () -> Unit,
-    onProductClick: (String) -> Unit,
+    //onProductClick: (String) -> Unit,
     cartViewModel: CartViewModel,
     favouriteViewModel: FavouriteViewModel,
     onBackPressed: () -> Unit
@@ -26,7 +26,7 @@ fun NavGraphBuilder.cartGraph(
     cartScreen(
         cartViewModel = cartViewModel,
         favouriteViewModel = favouriteViewModel,
-        onProductClick = onProductClick,
+        //onProductClick = onProductClick,
         onOrderMakeClick = onOrderMakeClick,
         onBackPressed = onBackPressed
     )

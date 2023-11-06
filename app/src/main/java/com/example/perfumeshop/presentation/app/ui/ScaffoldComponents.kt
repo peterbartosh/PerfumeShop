@@ -43,8 +43,8 @@ import androidx.navigation.compose.currentBackStackEntryAsState
 import com.example.perfumeshop.R
 import com.example.perfumeshop.data.utils.getWidthPercent
 import com.example.perfumeshop.presentation.features.auth.code_verification_feature.navigation.codeVerificationRoute
-import com.example.perfumeshop.presentation.features.auth.login_register_feature.navigation.loginParentRoute
-import com.example.perfumeshop.presentation.features.auth.login_register_feature.navigation.loginRoute
+import com.example.perfumeshop.presentation.features.auth.login_feature.navigation.loginParentRoute
+import com.example.perfumeshop.presentation.features.auth.login_feature.navigation.loginRoute
 import com.example.perfumeshop.presentation.features.main.cart_feature.cart.navigation.cartRoute
 import com.example.perfumeshop.presentation.features.main.cart_feature.cartActiveChild
 import com.example.perfumeshop.presentation.features.main.cart_feature.order_making.navigation.orderMakingRoute
@@ -52,11 +52,6 @@ import com.example.perfumeshop.presentation.features.main.getActiveChild
 import com.example.perfumeshop.presentation.features.main.home_feature.home.navigation.homeRoute
 import com.example.perfumeshop.presentation.features.main.home_feature.homeActiveChild
 import com.example.perfumeshop.presentation.features.main.home_feature.search.navigation.searchRoute
-import com.example.perfumeshop.presentation.features.main.product_feature.navigation.productCartRoute
-import com.example.perfumeshop.presentation.features.main.product_feature.navigation.productHomeRoute
-import com.example.perfumeshop.presentation.features.main.product_feature.navigation.productFavouriteRoute
-import com.example.perfumeshop.presentation.features.main.product_feature.navigation.productOrdersRoute
-import com.example.perfumeshop.presentation.features.main.product_feature.navigation.productSearchRoute
 import com.example.perfumeshop.presentation.features.main.profile_feature.edit_profile.navigation.editProfileRoute
 import com.example.perfumeshop.presentation.features.main.profile_feature.favourite.navigation.favouriteRoute
 import com.example.perfumeshop.presentation.features.main.profile_feature.orders.navigation.ordersRoute
@@ -204,12 +199,12 @@ fun BottomNavigationBar(
                 },
                 onClick = {
                     val parentRoute = when(currentDestination?.route){
-                        in listOf(searchRoute, productHomeRoute) -> homeRoute
-                        productSearchRoute -> searchRoute
-                        productCartRoute -> cartRoute
+                        searchRoute -> homeRoute
+//                        productSearchRoute -> searchRoute
+//                        productCartRoute -> cartRoute
                         orderMakingRoute -> cartRoute
-                        productFavouriteRoute -> favouriteRoute
-                        productOrdersRoute -> ordersRoute
+//                        productFavouriteRoute -> favouriteRoute
+//                        productOrdersRoute -> ordersRoute
                         in listOf(editProfileRoute, favouriteRoute, ordersRoute) -> profileRoute
                         loginRoute -> loginParentRoute
                         codeVerificationRoute -> loginRoute
@@ -262,12 +257,12 @@ fun onBackArrowClick(navController: NavHostController) {
     }
 
     val route = when(curDestRoute){
-        in listOf(searchRoute, productHomeRoute) -> homeRoute.also { homeActiveChild = homeRoute }
-        productSearchRoute -> searchRoute.also { homeActiveChild = searchRoute }
-        productCartRoute -> cartRoute.also { cartActiveChild = cartRoute }
+        searchRoute -> homeRoute.also { homeActiveChild = homeRoute }
+        //productSearchRoute -> searchRoute.also { homeActiveChild = searchRoute }
+        //productCartRoute -> cartRoute.also { cartActiveChild = cartRoute }
         orderMakingRoute -> cartRoute.also { cartActiveChild = cartRoute }
-        productFavouriteRoute -> favouriteRoute.also { profileActiveChild = favouriteRoute }
-        productOrdersRoute -> ordersRoute.also { profileActiveChild = ordersRoute }
+        //productFavouriteRoute -> favouriteRoute.also { profileActiveChild = favouriteRoute }
+        //productOrdersRoute -> ordersRoute.also { profileActiveChild = ordersRoute }
         in listOf(editProfileRoute, favouriteRoute, ordersRoute) -> profileRoute.also { profileActiveChild = profileRoute }
         loginRoute -> loginParentRoute
         codeVerificationRoute -> loginRoute
