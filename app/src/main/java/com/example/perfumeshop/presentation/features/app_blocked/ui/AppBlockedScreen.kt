@@ -32,16 +32,14 @@ import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import com.example.perfumeshop.R
-import com.example.perfumeshop.data.repository.FireRepository
-import com.example.perfumeshop.data.user.UserData
 import com.example.perfumeshop.data.utils.getWidthPercent
 import com.example.perfumeshop.presentation.components.Loading
-import com.google.firebase.auth.FirebaseAuth
 
 @Composable
 fun AppBlockedScreen(
-    navigateToHome: () -> Unit,
-    navigateToAsk: () -> Unit
+    navigateHome: () -> Unit,
+    navigateAsk: () -> Unit,
+    appBlockedViewModel: AppBlockedViewModel
 ) {
 
     val context = LocalContext.current
@@ -52,20 +50,11 @@ fun AppBlockedScreen(
         mutableStateOf(false)
     }
 
-
     LaunchedEffect(key1 = refreshClicked){
-        FireRepository.isAppBlocked()?.let { isBlocked ->
-            if (!isBlocked) {
-                val currentUser = FirebaseAuth.getInstance().currentUser
-
-                if (currentUser?.isAnonymous == true || !currentUser?.email.isNullOrEmpty()) {
-                    navigateToHome()
-                    if (!currentUser?.email.isNullOrEmpty())
-                        UserData.loadUserData()
-                } else
-                    navigateToAsk()
-            } else refreshClicked = false
-        }
+        appBlockedViewModel.refresh(navigateHome, navigateAsk)
+            .invokeOnCompletion {
+                refreshClicked = false
+            }
     }
 
     if (!refreshClicked) {

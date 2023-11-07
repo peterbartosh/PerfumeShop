@@ -8,8 +8,10 @@ import com.example.perfumeshop.data.model.Order
 import com.example.perfumeshop.data.model.OrderProduct
 import com.example.perfumeshop.data.model.ProductWithAmount
 import com.example.perfumeshop.data.repository.FireRepository
+import com.example.perfumeshop.data.user.UserData
 import com.example.perfumeshop.data.utils.UiState
 import com.example.perfumeshop.data.utils.generateNumber
+import com.google.firebase.auth.FirebaseAuth
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.Deferred
 import kotlinx.coroutines.Dispatchers
@@ -27,7 +29,9 @@ const val TAG = "OrderMakingViewModel"
 @HiltViewModel
 class OrderMakingViewModel @Inject constructor(
         private val repository: FireRepository,
-        private val emailSender: EmailSender
+        private val emailSender: EmailSender,
+        val auth: FirebaseAuth,
+        val userData: UserData
 ) : ViewModel(){
 
     private var _uiState = MutableStateFlow<UiState>(UiState.NotStarted())
@@ -86,7 +90,8 @@ class OrderMakingViewModel @Inject constructor(
                 emailSender.sendOrderEmail(
                     order = order,
                     products = productWithAmounts,
-                    scope = this
+                    userData = userData,
+                    scope = this,
                 )
             }
 

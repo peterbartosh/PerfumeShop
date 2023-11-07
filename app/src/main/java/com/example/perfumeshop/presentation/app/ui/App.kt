@@ -171,7 +171,7 @@ fun App(finishAffinity : () -> Unit) {
                 navController = navController,
                 onBackPressed = {
                     if (showBackIcon)
-                        onBackArrowClick(navController = navController)
+                        onBackArrowClick(navController)
                     else
                         finishAffinity()
                 },

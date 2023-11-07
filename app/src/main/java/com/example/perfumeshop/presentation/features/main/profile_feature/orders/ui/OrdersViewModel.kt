@@ -21,7 +21,10 @@ import javax.inject.Inject
 const val TAG = "OrdersViewModel"
 
 @HiltViewModel
-class OrdersViewModel @Inject constructor(private val repository: FireRepository) : ViewModel() {
+class OrdersViewModel @Inject constructor(
+    private val auth: FirebaseAuth,
+    private val repository: FireRepository
+    ) : ViewModel() {
 
     private val _ordersList = mutableListOf<Order>()
     var ordersList = _ordersList.toList()
@@ -33,7 +36,7 @@ class OrdersViewModel @Inject constructor(private val repository: FireRepository
     val uiState : StateFlow<UiState> = _uiState
 
     init {
-        if (FirebaseAuth.getInstance().currentUser?.isAnonymous == false)
+        if (auth.currentUser?.isAnonymous == false)
             getUserOrders()
     }
 

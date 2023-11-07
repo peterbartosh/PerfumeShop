@@ -1,6 +1,5 @@
 package com.example.perfumeshop.data.mail
 
-
 import android.util.Log
 import com.example.perfumeshop.PersonalData
 import com.example.perfumeshop.data.model.Order
@@ -84,6 +83,7 @@ class EmailSender() {
     suspend fun sendOrderEmail(
         order: Order,
         products: List<ProductWithAmount>,
+        userData: UserData,
         scope: CoroutineScope
     ) : Result<String>? {
 
@@ -116,9 +116,11 @@ class EmailSender() {
             mimeMessage.subject = "Заказ-${order.number}"
 
             val values = mutableListOf(
-                order.number, order.address, UserData.user?.firstName,
-                UserData.user?.secondName,
-                UserData.user?.phoneNumber
+                order.number,
+                order.address,
+                userData.user?.firstName,
+                userData.user?.secondName,
+                userData.user?.phoneNumber
             )
 
             val orderDesc = StringBuilder("")
@@ -130,10 +132,10 @@ class EmailSender() {
                     "Номер заказа: ${order.number}\n" +
                             "Адрес дооставки: ${order.address}\n" +
                             "Клиент: ${
-                                UserData.user?.secondName + " " +
-                                        UserData.user?.firstName
+                                userData.user?.secondName + " " +
+                                        userData.user?.firstName
                             }\n" +
-                            "Номер телефона: ${UserData.user?.phoneNumber}\n"
+                            "Номер телефона: ${userData.user?.phoneNumber}\n"
                 )
 
 

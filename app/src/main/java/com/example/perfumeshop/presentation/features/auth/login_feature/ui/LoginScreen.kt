@@ -38,10 +38,6 @@ fun LoginScreen(
         mutableStateOf(false)
     }
 
-    val uiState = authViewModel.uiState.collectAsState()
-
-    if (uiState.value is UiState.Loading) Loading()
-
     Column(
         modifier = Modifier.fillMaxSize(),
         verticalArrangement = Arrangement.Top,
@@ -95,4 +91,8 @@ fun LoginScreen(
             )
         }
     }
+
+    val uiState = authViewModel.uiState.collectAsState()
+
+    if (uiState.value is UiState.Loading) Loading()
 }

@@ -5,9 +5,24 @@ import androidx.room.*
 import com.example.perfumeshop.data.room.entities.CartProductEntity
 import com.example.perfumeshop.data.room.entities.FavouriteProductEntity
 import com.example.perfumeshop.data.room.entities.RegistrationRequestEntity
+import com.example.perfumeshop.data.room.entities.UserDataEntity
 
 @Dao
 interface LocalDao {
+
+    // user data table
+
+    @Query("Select * From user_data_table")
+    suspend fun getUserData() : List<UserDataEntity>
+
+    @Update
+    suspend fun updateUserData(userDataEntity: UserDataEntity)
+
+    @Insert(onConflict = OnConflictStrategy.IGNORE)
+    suspend fun insertUserData(userDataEntity: UserDataEntity)
+
+    @Query("DELETE from user_data_table")
+    suspend fun deleteUserData()
 
     // registration request table
 

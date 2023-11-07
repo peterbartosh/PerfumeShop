@@ -34,7 +34,6 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.withStyle
 import androidx.compose.ui.unit.dp
 import com.example.perfumeshop.data.model.Order
-import com.example.perfumeshop.data.user.UserData
 import com.example.perfumeshop.data.utils.OrderStatus
 import com.example.perfumeshop.data.utils.UiState
 import com.example.perfumeshop.data.utils.firstLetterToUpperCase
@@ -45,7 +44,6 @@ import com.example.perfumeshop.presentation.components.SubmitButton
 import com.example.perfumeshop.presentation.components.showToast
 import com.example.perfumeshop.presentation.features.main.cart_feature.cart.ui.CartViewModel
 import com.google.firebase.Timestamp
-import com.google.firebase.auth.FirebaseAuth
 
 @Composable
 fun OrderMakingScreen(
@@ -57,15 +55,15 @@ fun OrderMakingScreen(
     val context = LocalContext.current
 
     val streetState = remember {
-        mutableStateOf(UserData.user?.street ?: "")
+        mutableStateOf(orderMakingViewModel.userData.user?.street ?: "")
     }
 
     val homeNumberState = remember {
-        mutableStateOf(UserData.user?.home ?: "")
+        mutableStateOf(orderMakingViewModel.userData.user?.home ?: "")
     }
 
     val flatNumberState = remember {
-        mutableStateOf(UserData.user?.flat ?: "")
+        mutableStateOf(orderMakingViewModel.userData.user?.flat ?: "")
     }
 
     val validInputsState by remember(streetState.value, homeNumberState.value, flatNumberState.value) {
@@ -89,8 +87,6 @@ fun OrderMakingScreen(
     }
 
     val uiState = orderMakingViewModel.uiState.collectAsState()
-
-    if (uiState.value is UiState.Loading) Loading()
 
     Column(
         modifier = Modifier.fillMaxSize(),
@@ -195,9 +191,9 @@ fun OrderMakingScreen(
 
             LazyColumn(contentPadding = PaddingValues(10.dp)) {
                 itemsIndexed(
-                    items = cartViewModel.userProducts,
+                    items = cartViewModel.userProducts.toList(),
                     key = { i, p -> p.product?.id ?: i }
-                ) { ind, productWithAmount ->
+                ) { _, productWithAmount ->
                     ProductBox(productWithAmount = productWithAmount)
                 }
             }
@@ -226,7 +222,7 @@ fun OrderMakingScreen(
             if (productWithAmounts.isEmpty()) return@SubmitButton
 
             val order = Order(
-                userId = FirebaseAuth.getInstance().uid,
+                userId = orderMakingViewModel.auth.uid,
                 address = "ул. " + streetState.value.firstLetterToUpperCase() +
                         ", д. " + homeNumberState.value +
                         ", к. " + flatNumberState.value,
@@ -253,4 +249,5 @@ fun OrderMakingScreen(
 
         }
     }
+    if (uiState.value is UiState.Loading) Loading()
 }

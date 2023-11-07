@@ -24,16 +24,15 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.scale
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
-import com.example.perfumeshop.data.user.UserData
 import com.example.perfumeshop.data.utils.getWidthPercent
-import com.google.firebase.auth.FirebaseAuth
 import kotlinx.coroutines.delay
 
 
 @Composable
 fun SplashScreen(
     navigateAsk: () -> Unit,
-    navigateHome: () -> Unit
+    navigateHome: () -> Unit,
+    splashViewModel: SplashViewModel
 ) {
 
     val context = LocalContext.current
@@ -41,11 +40,6 @@ fun SplashScreen(
     val scale = remember {
         Animatable(0f)
     }
-
-//    var isBlockedState by remember {
-//        val isBlocked : MutableState<Boolean?> = mutableStateOf(null)
-//        isBlocked
-//    }
 
     LaunchedEffect(key1 = true){
         scale.animateTo(
@@ -59,14 +53,7 @@ fun SplashScreen(
         )
         delay(300L)
 
-        val currentUser = FirebaseAuth.getInstance().currentUser
-
-        if (currentUser?.isAnonymous == true || !currentUser?.email.isNullOrEmpty()) {
-            navigateHome()
-            if (!currentUser?.email.isNullOrEmpty())
-                UserData.loadUserData()
-        } else
-            navigateAsk()
+        splashViewModel.start(navigateHome, navigateAsk)
 
 
     }

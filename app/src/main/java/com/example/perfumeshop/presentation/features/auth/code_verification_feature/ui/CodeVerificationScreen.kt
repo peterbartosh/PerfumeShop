@@ -1,6 +1,5 @@
 package com.example.perfumeshop.presentation.features.auth.code_verification_feature.ui
 
-import android.util.Log
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Spacer
@@ -49,10 +48,6 @@ fun CodeVerificationScreen(
         mutableStateOf(false)
     }
 
-    val uiState = authViewModel.uiState.collectAsState()
-
-    if (uiState.value is UiState.Loading) Loading()
-
     Column(
         horizontalAlignment = Alignment.CenterHorizontally,
         verticalArrangement = Arrangement.Top,
@@ -95,34 +90,36 @@ fun CodeVerificationScreen(
         )
 
 
-        OtpTextField(otpText = codeState, onOtpTextChange = { value, otpInputFilled ->
+        OtpTextField(otpText = codeState) { value, otpInputFilled ->
             codeState = value
             inputFilled = otpInputFilled
-            Log.d(TAG, "CodeVerificationScreen: $codeState $inputFilled")
-        })
+        }
 
 
 
-        Button(modifier = Modifier.padding(top = 40.dp),
-               enabled = inputFilled,
-               onClick = {
-                 try {
-                     authViewModel.verifyCode(
-                         code = codeState,
-                         onSuccess = {
-                             authViewModel.register()
-                             onSuccess()
-                         },
-                         onFailure = {
-                             showToast(context = context, "Неверный код")
-                         }
+        Button(
+            modifier = Modifier.padding(top = 40.dp),
+            enabled = inputFilled,
+            onClick = {
+                try {
+                    authViewModel.verifyCode(
+                        code = codeState,
+                        onSuccess = onSuccess,
+                        onFailure = { message ->
+                            showToast(context = context, message)
+                        }
                      )
                  } catch (e : Exception){
-                     showToast(context = context, "Некорректные данные")
+                     showToast(context, "Некорректные данные")
                  }
 
              }) {
             Text(text = "Подтвердить", style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.onBackground)
         }
     }
+
+    val uiState = authViewModel.uiState.collectAsState()
+
+    if (uiState.value is UiState.Loading)
+        Loading()
 }

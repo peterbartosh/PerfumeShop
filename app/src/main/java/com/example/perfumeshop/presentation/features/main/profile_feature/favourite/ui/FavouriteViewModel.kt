@@ -27,11 +27,10 @@ const val TAG = "FavouriteViewModel"
 
 @HiltViewModel
 class FavouriteViewModel @Inject constructor(
+    private val auth: FirebaseAuth,
     private val roomRepository: RoomRepository,
     private val fireRepository: FireRepository
 ) : ViewModel() {
-
-    private val _auth = FirebaseAuth.getInstance()
 
     val userProducts = SnapshotStateList<ProductWithAmount>()
 
@@ -69,48 +68,11 @@ class FavouriteViewModel @Inject constructor(
         roomRepository.deleteAllInFavorites()
     }
 
-    fun loadProducts() = viewModelScope.launch(Dispatchers.IO) {
-        val uid = _auth.uid
-
-        if (_auth.currentUser?.isAnonymous != true && !uid.isNullOrEmpty()) {
-
-            _uiState.value = UiState.Loading()
-            userProducts.clear()
-
-            val jobs = roomRepository.getFavouriteProducts().map { favouriteProductEntity ->
-                launch {
-                    val remoteProduct = fireRepository.getProduct(favouriteProductEntity.productId)
-                    val remoteProductWithAmount = ProductWithAmount(
-                        product = remoteProduct,
-                        amountCash = favouriteProductEntity.amountCash,
-                        amountCashless = favouriteProductEntity.amountCashless
-                    )
-                    remoteProductWithAmount.product?.id?.let { id ->
-                        roomRepository.updateFavouriteProductAmount(
-                            id = id,
-                            cashAmount = remoteProductWithAmount.amountCash ?: 1,
-                            cashlessAmount = remoteProductWithAmount.amountCashless ?: 1
-                        )
-                    }
-                    userProducts.add(remoteProductWithAmount)
-                }
-            }
-
-            joinAll(*jobs.toTypedArray())
-
-            jobs.forEach { it.join() }
-
-            if (_uiState.value is UiState.Loading)
-                _uiState.value = UiState.Success()
-
-        }
-    }
-
 
     fun loadProductsFromRemoteDatabase() = viewModelScope.launch(Dispatchers.IO) {
-        val uid = _auth.uid
+        val uid = auth.uid
 
-        if (_auth.currentUser?.isAnonymous != true && !uid.isNullOrEmpty()) {
+        if (auth.currentUser?.isAnonymous != true && !uid.isNullOrEmpty()) {
             _uiState.value = UiState.Loading()
 
             userProducts.clear()
@@ -125,8 +87,12 @@ class FavouriteViewModel @Inject constructor(
                     favs.add(cartObj)
                 }
 
+            launch {
+                roomRepository.deleteAllInFavorites()
+            }.join()
+
             favs.map { favouriteObj ->
-                async {
+                launch {
                     roomRepository.insertFavoriteProduct(
                         ProductWithAmount(
                             product = Product(id = favouriteObj.productId),
@@ -135,7 +101,7 @@ class FavouriteViewModel @Inject constructor(
                         )
                     )
                 }
-            }.awaitAll()
+            }.joinAll()
 
             val findResult = favs.map { favouriteObj ->
                 async {
@@ -161,9 +127,9 @@ class FavouriteViewModel @Inject constructor(
     }
 
     fun saveProductsToRemoteDatabase() = viewModelScope.launch(Dispatchers.IO) {
-        val uid = _auth.uid
+        val uid = auth.uid
 
-        if (_auth.currentUser?.isAnonymous != true && !uid.isNullOrEmpty()) {
+        if (auth.currentUser?.isAnonymous != true && !uid.isNullOrEmpty()) {
             _uiState.value = UiState.Loading()
 
             val deleteJob = launch {
@@ -172,6 +138,7 @@ class FavouriteViewModel @Inject constructor(
             deleteJob.join()
 
             val saveResult = fireRepository.saveFavouritesToDatabase(userProducts.toList(), uid)
+            userProducts.clear()
 
             if (_uiState.value is UiState.Loading) {
                 if (saveResult.isSuccess)

@@ -1,6 +1,6 @@
 package com.example.perfumeshop.presentation.features.main.profile_feature.profile.navigation
 
-import androidx.compose.animation.AnimatedVisibility
+import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.NavController
 import androidx.navigation.NavGraphBuilder
 import androidx.navigation.NavOptions
@@ -10,6 +10,7 @@ import com.example.perfumeshop.presentation.app.navigation.BackPressHandler
 import com.example.perfumeshop.presentation.features.main.cart_feature.cart.ui.CartViewModel
 import com.example.perfumeshop.presentation.features.main.profile_feature.favourite.ui.FavouriteViewModel
 import com.example.perfumeshop.presentation.features.main.profile_feature.profile.ui.ProfileScreen
+import com.example.perfumeshop.presentation.features.main.profile_feature.profile.ui.ProfileViewModel
 
 
 const val profileRoute = "profile"
@@ -23,11 +24,13 @@ fun NavGraphBuilder.profileScreen(
     cartViewModel: CartViewModel, favouriteViewModel: FavouriteViewModel, onBackPressed: () -> Unit
 ) {
     composable(route = profileRoute) {
+        val profileViewModel = hiltViewModel<ProfileViewModel>()
         BackPressHandler(onBackPressed = onBackPressed)
         ProfileScreen(
             onOptionClick = onOptionClick,
             cartViewModel = cartViewModel,
-            favouriteViewModel = favouriteViewModel
+            favouriteViewModel = favouriteViewModel,
+            profileViewModel = profileViewModel
         )
     }
 }

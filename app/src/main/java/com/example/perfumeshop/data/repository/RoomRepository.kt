@@ -1,15 +1,34 @@
 package com.example.perfumeshop.data.repository
 
 import com.example.perfumeshop.data.model.ProductWithAmount
+import com.example.perfumeshop.data.model.User
 import com.example.perfumeshop.data.room.LocalDao
 import com.example.perfumeshop.data.room.entities.CartProductEntity
 import com.example.perfumeshop.data.room.entities.FavouriteProductEntity
 import com.example.perfumeshop.data.room.entities.RegistrationRequestEntity
+import com.example.perfumeshop.data.room.entities.UserDataEntity
 import javax.inject.Inject
 
 class RoomRepository @Inject constructor(private val localDao: LocalDao) {
 
-    // registration request table
+    // user data
+
+    suspend fun getUserData() =
+        try {
+            localDao.getUserData().first().toUser()
+        } catch (e : Exception){
+            User()
+        }
+
+    suspend fun initializeUserData(user: User) = user.toUserDataEntity()?.let { userDataEntity ->
+        localDao.insertUserData(userDataEntity)
+    }
+    suspend fun updateUserData(user: User) = user.toUserDataEntity()?.let { userDataEntity ->
+        localDao.updateUserData(userDataEntity)
+    }
+    suspend fun clearUserData() = localDao.deleteUserData()
+
+    // registration requests
 
     suspend fun addRegistrationRequest(registrationRequestEntity: RegistrationRequestEntity) =
         localDao.insertRegistrationRequest(registrationRequestEntity)
@@ -22,8 +41,6 @@ class RoomRepository @Inject constructor(private val localDao: LocalDao) {
     // cart
 
     fun getCartProducts() = localDao.getCartProducts()
-
-    //suspend fun getCartProd(id: String) = localDao.getProd(id)
 
     suspend fun insertCartProduct(productWithAmount: ProductWithAmount) {
         productWithAmount.toCartProductEntity()?.let { cartProductEntity ->
@@ -43,7 +60,7 @@ class RoomRepository @Inject constructor(private val localDao: LocalDao) {
 
     suspend fun deleteAllInCart() = localDao.deleteAllInCart()
 
-    // favourite
+    // favourites
 
     fun getFavouriteProducts() = localDao.getFavoriteProducts()
 
@@ -84,4 +101,32 @@ class RoomRepository @Inject constructor(private val localDao: LocalDao) {
             amountCashless = this.amountCashless ?: 1
         )
     }
+
+    private fun User.toUserDataEntity() : UserDataEntity? {
+        val id = this.id ?: return null
+
+        return UserDataEntity(
+            id = id,
+            firstName = this.firstName,
+            secondName = this.secondName,
+            phoneNumber = this.phoneNumber,
+            home = this.home,
+            street = this.street,
+            flat = this.flat,
+            sex = this.sex
+        )
+    }
+
+    private fun UserDataEntity.toUser() =
+        User(
+            id = this.id,
+            firstName = this.firstName,
+            secondName = this.secondName,
+            phoneNumber = this.phoneNumber,
+            home = this.home,
+            street = this.street,
+            flat = this.flat,
+            sex = this.sex
+        )
+
 }

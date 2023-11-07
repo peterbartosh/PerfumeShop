@@ -6,6 +6,7 @@ import com.example.perfumeshop.data.mail.EmailSender
 import com.example.perfumeshop.data.repository.FireRepository
 import com.example.perfumeshop.data.room.LocalDao
 import com.example.perfumeshop.data.room.LocalDatabase
+import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.firestore.FirebaseFirestore
 import dagger.Module
 import dagger.Provides
@@ -49,6 +50,11 @@ object AppModule {
             blackListCollection = repository.collection("black_list"),
         )
     }
+
+    @Singleton
+    @Provides
+    fun provideFirebaseAuth() = FirebaseAuth.getInstance()
+
 
     @Singleton
     @Provides

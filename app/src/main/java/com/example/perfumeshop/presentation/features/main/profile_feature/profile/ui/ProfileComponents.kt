@@ -53,19 +53,18 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.core.content.ContextCompat
 import com.example.perfumeshop.R
-import com.example.perfumeshop.data.user.UserData
 import com.example.perfumeshop.data.utils.OptionType
 import com.example.perfumeshop.data.utils.firstLetterToUpperCase
 import com.example.perfumeshop.presentation.components.showToast
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Job
+import kotlinx.coroutines.launch
 import java.util.StringJoiner
 
 const val TAG = "ProfileComponents"
 
 fun composeIntent(context: Context, optionType : OptionType, optionData : String) {
-    //    val mailAddress = "goldappsender@gmail.com"
-//    val telegramUserId = "270838226"
-//    val whatsappNumber = "+74951506463"
-//    val phoneNumber = "+375445754325"
+
     try {
         when (optionType){
 
@@ -239,20 +238,24 @@ fun OptionsSection(
 }
 
 @Composable
-fun ProfileSection(onEditProfileClick: () -> Unit = {}, onSignOutClick: () -> Unit) {
+fun ProfileSection(
+    profileViewModel: ProfileViewModel,
+    onEditProfileClick: () -> Unit = {},
+    onSignOutClick: suspend () -> Unit
+) {
 
     var showDialog by remember { mutableStateOf(false) }
 
     val notSpecified = "Не указано"
     val shortNotSpecified = "_"
 
-    val firstName = UserData.user?.firstName ?: notSpecified
-    val secondName = UserData.user?.secondName ?: notSpecified
-    val phoneNumber = UserData.user?.phoneNumber ?: notSpecified
+    val firstName = profileViewModel.userData.user?.firstName ?: notSpecified
+    val secondName = profileViewModel.userData.user?.secondName ?: notSpecified
+    val phoneNumber = profileViewModel.userData.user?.phoneNumber ?: notSpecified
     val address = StringJoiner(", ")
-        .add(UserData.user?.street?.firstLetterToUpperCase() ?: notSpecified)
-        .add((UserData.user?.home ?: shortNotSpecified))
-        .add((UserData.user?.flat ?: shortNotSpecified))
+        .add(profileViewModel.userData.user?.street?.firstLetterToUpperCase() ?: notSpecified)
+        .add((profileViewModel.userData.user?.home ?: shortNotSpecified))
+        .add((profileViewModel.userData.user?.flat ?: shortNotSpecified))
         .toString()
 
 
@@ -401,10 +404,12 @@ fun ProfileSection(onEditProfileClick: () -> Unit = {}, onSignOutClick: () -> Un
                     if (!clicked)
                         Button(
                             onClick = {
-                                clicked = true
-                                onSignOutClick()
-                                showDialog = false
-                                clicked = false
+                                CoroutineScope(Job()).launch {
+                                    clicked = true
+                                    onSignOutClick()
+                                    showDialog = false
+                                    clicked = false
+                                }
                             },
                             colors = ButtonDefaults.buttonColors(
                                 contentColor = MaterialTheme.colorScheme.background,

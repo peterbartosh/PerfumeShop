@@ -19,18 +19,16 @@ import kotlinx.coroutines.awaitAll
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.catch
-import kotlinx.coroutines.joinAll
 import kotlinx.coroutines.launch
 import javax.inject.Inject
 
 
 @HiltViewModel
 class CartViewModel @Inject constructor(
+    val auth: FirebaseAuth,
     private val roomRepository: RoomRepository,
-    private val fireRepository: FireRepository,
-) : ViewModel() {
-
-    private val _auth = FirebaseAuth.getInstance()
+    private val fireRepository: FireRepository
+    ) : ViewModel() {
 
     val userProducts = SnapshotStateList<ProductWithAmount>()
 
@@ -67,50 +65,10 @@ class CartViewModel @Inject constructor(
         roomRepository.deleteAllInCart()
     }
 
-    fun loadProducts() = viewModelScope.launch(Dispatchers.IO) {
-
-        val uid = _auth.uid
-
-        if (_auth.currentUser?.isAnonymous != true && !uid.isNullOrEmpty()) {
-
-            _uiState.value = UiState.Loading()
-
-            userProducts.clear()
-
-            val jobs = roomRepository.getCartProducts().map { cartProductEntity ->
-                launch {
-                    val remoteProduct = fireRepository.getProduct(cartProductEntity.productId)
-                    val remoteProductWithAmount = ProductWithAmount(
-                        product = remoteProduct,
-                        amountCash = cartProductEntity.amountCash,
-                        amountCashless = cartProductEntity.amountCashless
-                    )
-
-                    remoteProductWithAmount.product?.id?.let { id ->
-                        roomRepository.updateCartProductAmount(
-                            id = id,
-                            cashAmount = remoteProductWithAmount.amountCash ?: 1,
-                            cashlessAmount = remoteProductWithAmount.amountCashless ?: 1,
-                        )
-                    }
-                    userProducts.add(remoteProductWithAmount)
-                }
-            }
-
-            joinAll(*jobs.toTypedArray())
-
-            jobs.forEach { it.join() }
-
-            if (_uiState.value is UiState.Loading)
-                _uiState.value = UiState.Success()
-
-        }
-    }
-
     fun loadProductsFromRemoteDatabase() = viewModelScope.launch(Dispatchers.IO) {
-        val uid = _auth.uid
+        val uid = auth.uid
 
-        if (_auth.currentUser?.isAnonymous != true && !uid.isNullOrEmpty()) {
+        if (auth.currentUser?.isAnonymous != true && !uid.isNullOrEmpty()) {
 
             _uiState.value = UiState.Loading()
 
@@ -161,9 +119,9 @@ class CartViewModel @Inject constructor(
     }
 
     fun saveProductsToRemoteDatabase() = viewModelScope.launch(Dispatchers.IO) {
-        val uid = _auth.uid
+        val uid = auth.uid
 
-        if (_auth.currentUser?.isAnonymous != true && !uid.isNullOrEmpty()) {
+        if (auth.currentUser?.isAnonymous != true && !uid.isNullOrEmpty()) {
             _uiState.value = UiState.Loading()
 
             val deleteJob = launch {
@@ -171,6 +129,7 @@ class CartViewModel @Inject constructor(
             }
             deleteJob.join()
             val saveResult = fireRepository.saveCartToDatabase(userProducts.toList(), uid)
+            userProducts.clear()
 
             if (_uiState.value is UiState.Loading) {
                 if (saveResult.isSuccess)

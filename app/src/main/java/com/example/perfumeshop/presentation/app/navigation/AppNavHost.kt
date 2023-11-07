@@ -57,19 +57,20 @@ fun AppNavHost(
         }
 
         appBlockedScreen(
-            navigateToAsk = {
+            navigateAsk = {
                 navController.navigateToAsk(navOptions = navOptions)
                 navController.backQueue.removeIf{ nbse -> nbse.destination.route == splashRoute}
             },
-            navigateToHome = {
-                cartViewModel.loadProducts()
-                favouriteViewModel.loadProducts()
+            navigateHome = {
+                cartViewModel.loadProductsFromRemoteDatabase()
+                favouriteViewModel.loadProductsFromRemoteDatabase()
                 navController.navigateToHome(navOptions = null)
                 navController.backQueue.removeIf{ nbse ->
                     nbse.destination.route in
                             listOf(splashRoute, askRoute, loginRoute, codeVerificationRoute)
                 }
-            }
+            },
+            onBackPressed = onBackPressed
         )
 
         startGraph(
@@ -78,8 +79,8 @@ fun AppNavHost(
                 navController.backQueue.removeIf{ nbse -> nbse.destination.route == splashRoute}
             },
             navigateHome = {
-               cartViewModel.loadProducts()
-               favouriteViewModel.loadProducts()
+               cartViewModel.loadProductsFromRemoteDatabase()
+               favouriteViewModel.loadProductsFromRemoteDatabase()
                navController.navigateToHome(navOptions = null)
                navController.backQueue.removeIf{ nbse ->
                    nbse.destination.route in

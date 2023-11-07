@@ -23,6 +23,5 @@ data class User(
     var home : String? = null,
     var flat : String? = null,
 
-    var email : String? = null,
     var sex: String? = null,
 )

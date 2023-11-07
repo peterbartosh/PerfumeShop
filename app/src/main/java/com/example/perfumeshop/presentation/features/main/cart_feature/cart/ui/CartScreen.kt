@@ -31,7 +31,6 @@ import com.example.perfumeshop.presentation.components.NothingFound
 import com.example.perfumeshop.presentation.components.SubmitButton
 import com.example.perfumeshop.presentation.components.showToast
 import com.example.perfumeshop.presentation.features.main.profile_feature.favourite.ui.FavouriteViewModel
-import com.google.firebase.auth.FirebaseAuth
 
 @Composable
 fun CartScreen(
@@ -128,7 +127,7 @@ fun CartScreen(
             validInputsState = validState,
             text = "Перейти к оформлению заказа",
         ) {
-            if (FirebaseAuth.getInstance().currentUser?.isAnonymous == false) {
+            if (cartViewModel.auth.currentUser?.isAnonymous == false) {
                 if (
                     cartViewModel.userProducts.all { productWA ->
                         productWA.product?.isOnHand == true &&

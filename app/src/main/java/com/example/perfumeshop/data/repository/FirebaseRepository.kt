@@ -243,6 +243,15 @@ class FireRepository @Inject constructor(
         return result
     }
 
+    suspend fun getUserData(userId: String) =
+        usersCollection.document(userId).get().await().toObject(User::class.java)
+
+
+    suspend fun updateUserData(user: User) = user.id?.let { userId ->
+        usersCollection.document(userId).set(user).await()
+    }
+
+
     suspend fun phoneNumberIsNotUsedYet(phoneNumber: String) : Boolean {
         return usersCollection.whereEqualTo("phone_number", phoneNumber).get().await().isEmpty
     }

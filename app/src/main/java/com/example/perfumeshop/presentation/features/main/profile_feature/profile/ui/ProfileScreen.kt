@@ -19,22 +19,19 @@ import com.example.perfumeshop.R
 import com.example.perfumeshop.data.utils.OptionType
 import com.example.perfumeshop.presentation.features.main.cart_feature.cart.ui.CartViewModel
 import com.example.perfumeshop.presentation.features.main.profile_feature.favourite.ui.FavouriteViewModel
-import com.google.firebase.auth.FirebaseAuth
-import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.Job
 import kotlinx.coroutines.joinAll
-import kotlinx.coroutines.launch
 
 
 @Composable
 fun ProfileScreen(
     onOptionClick: (OptionType) -> Unit,
     cartViewModel: CartViewModel,
-    favouriteViewModel: FavouriteViewModel
+    favouriteViewModel: FavouriteViewModel,
+    profileViewModel: ProfileViewModel
 ) {
 
     val isAnonymous = remember {
-        mutableStateOf(FirebaseAuth.getInstance().currentUser?.isAnonymous == true)
+        mutableStateOf(profileViewModel.auth.currentUser?.isAnonymous == true)
     }
 
     Column(horizontalAlignment = Alignment.CenterHorizontally) {
@@ -42,19 +39,27 @@ fun ProfileScreen(
             NotRegisteredSection(onOptionClick = onOptionClick)
         else
             RegisteredSection(
+                profileViewModel = profileViewModel,
                 onOptionClick = onOptionClick,
                 onSignOutClick = {
-                    CoroutineScope(Job()).launch {
-                        val cartSaveJob = cartViewModel.saveProductsToRemoteDatabase()
-                        val favouriteSaveJob = favouriteViewModel.saveProductsToRemoteDatabase()
-                        val cartClearJob = cartViewModel.clearData()
-                        val favouriteClearJob = favouriteViewModel.clearData()
 
-                        joinAll(cartSaveJob, favouriteSaveJob, cartClearJob, favouriteClearJob)
-                        //delay(1500)
-                        FirebaseAuth.getInstance().signOut()
-                        FirebaseAuth.getInstance().signInAnonymously()
-                    }
+                    val clearUserDataJob = profileViewModel.userData.clearUserData()
+
+                    clearUserDataJob.join()
+
+                    val cartSaveJob = cartViewModel.saveProductsToRemoteDatabase()
+                    val favouriteSaveJob = favouriteViewModel.saveProductsToRemoteDatabase()
+
+                    joinAll(cartSaveJob, favouriteSaveJob)
+
+                    val cartClearJob = cartViewModel.clearData()
+                    val favouriteClearJob = favouriteViewModel.clearData()
+
+                    joinAll(cartClearJob, favouriteClearJob)
+
+                    profileViewModel.auth.signOut()
+                    profileViewModel.auth.signInAnonymously()
+
                     isAnonymous.value = true
                 }
             )
@@ -62,9 +67,14 @@ fun ProfileScreen(
 }
 
 @Composable
-fun RegisteredSection(onOptionClick: (OptionType) -> Unit, onSignOutClick: () -> Unit ) {
+fun RegisteredSection(
+    profileViewModel: ProfileViewModel,
+    onOptionClick: (OptionType) -> Unit,
+    onSignOutClick: suspend () -> Unit
+) {
 
     ProfileSection(
+        profileViewModel = profileViewModel,
         onEditProfileClick = { onOptionClick(OptionType.Edit) },
         onSignOutClick = onSignOutClick
     )

@@ -24,31 +24,27 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.tasks.await
+import kotlinx.coroutines.withContext
 import javax.inject.Inject
 import kotlin.random.Random
 
 @HiltViewModel
 class AuthViewModel @Inject constructor(
     private val roomRepository: RoomRepository,
-    private val fireRepository: FireRepository
-    ) : ViewModel() {
+    private val fireRepository: FireRepository,
+    private val userData: UserData,
+    private val auth: FirebaseAuth
+) : ViewModel() {
 
     private val _uiState = MutableStateFlow<UiState>(UiState.NotStarted())
 
     val uiState : StateFlow<UiState> = _uiState
-
-    private val _auth = FirebaseAuth.getInstance()
 
     private var firstNameState by mutableStateOf("")
     private var secondNameState by mutableStateOf("")
     private var sexState by mutableStateOf(2)
     var phoneNumberState by mutableStateOf("")
     private var passwordState by mutableStateOf("")
-
-    override fun onCleared() {
-        Log.d("CLEARED_SOAJD", "onCleared: done")
-        super.onCleared()
-    }
 
     fun notifyAdmin(
         firstName : String, secondName : String,
@@ -116,54 +112,6 @@ class AuthViewModel @Inject constructor(
         }
     }
 
-    fun verifyCode(
-        code : String,
-        onSuccess: () -> Unit,
-        onFailure: () -> Unit
-    ) = viewModelScope.launch {
-        _uiState.value = UiState.Loading()
-
-        val getDeferred = async(Dispatchers.IO) {
-            roomRepository.getRegistrationRequest(phoneNumberState)
-        }
-        val existingRequest = getDeferred.await()
-        if (existingRequest?.code?.toString() == code){
-            _uiState.value = UiState.Success()
-            onSuccess()
-        }
-        else {
-            _uiState.value = UiState.Failure(Exception("codes arent equal"))
-            onFailure()
-        }
-
-    }
-
-
-    fun register() = viewModelScope.launch {
-
-        _uiState.value = UiState.Loading()
-
-        _auth.createUserWithEmailAndPassword(
-            "$phoneNumberState@gmail.com", passwordState
-        ).addOnSuccessListener {
-            UserData.initializeUserData(
-                firstName = firstNameState,
-                secondName = secondNameState,
-                phoneNumber = phoneNumberState,
-                sexInd = sexState
-            )
-            createUserInDatabase()
-        }.await()
-
-        val clearJob = launch(Dispatchers.IO) {
-            roomRepository.clearAllRegistrationRequests()
-        }
-
-        clearJob.join()
-
-        _uiState.value = UiState.Success()
-    }
-
     fun signIn(
         phoneNumber: String,
         password : String,
@@ -172,19 +120,16 @@ class AuthViewModel @Inject constructor(
     ) = viewModelScope.launch {
         _uiState.value = UiState.Loading()
         try {
-            _auth.signInWithEmailAndPassword("$phoneNumber@gmail.com", password)
-                .addOnCompleteListener {
-                    if (it.isSuccessful) {
-                        UserData.loadUserData()
-                        _uiState.value = UiState.Success()
-                        onSuccess()
-                    } else {
-                        Log.d(ERROR_TAG, "signIn: ${it.exception} ${it.exception?.message}")
-                        _uiState.value = UiState.Failure(it.exception)
-                        //errorCallback(it.exception?.message.toString() + "1")
-                    }
+            launch {
+                val firebaseJob = launch(Dispatchers.IO) {
+                    auth.signInWithEmailAndPassword("$phoneNumber@gmail.com", password).await()
+                }
+                firebaseJob.join()
+                userData.loadUserDataFromDatabase().join()
 
-                }.await()
+                _uiState.value = UiState.Success()
+                onSuccess()
+            }
         } catch (e : FirebaseException){
             Log.d(ERROR_TAG, "signIn: invalid credentials")
             _uiState.value = UiState.Failure(e)
@@ -197,10 +142,75 @@ class AuthViewModel @Inject constructor(
         _uiState.value = UiState.Failure(Exception("not done"))
     }
 
-    private fun createUserInDatabase() {
-        viewModelScope.launch {
+    fun verifyCode(
+        code : String,
+        onSuccess: () -> Unit,
+        onFailure: (String) -> Unit
+    ) = viewModelScope.launch {
+        _uiState.value = UiState.Loading()
+
+        val getDeferred = async(Dispatchers.IO) {
+            roomRepository.getRegistrationRequest(phoneNumberState)
+        }
+        val existingRequest = getDeferred.await()
+        if (existingRequest?.code?.toString() == code){
+            register(onSuccess = onSuccess, onError = onFailure)
+        }
+        else {
+            _uiState.value = UiState.Failure(Exception("Неверный код"))
+            onFailure("Неверный код")
+        }
+
+    }
+
+
+    private fun register(
+        onSuccess: () -> Unit,
+        onError: (String) -> Unit
+    ) = viewModelScope.launch {
+
+        val registrationDeferred = async {
+
+            auth.createUserWithEmailAndPassword(
+                "$phoneNumberState@gmail.com", passwordState
+            ).await()
+
+            userData.initializeUserData(
+                firstName = firstNameState,
+                secondName = secondNameState,
+                phoneNumber = phoneNumberState,
+                sexInd = sexState
+            )
+
+            createUserInDatabase()
+
+        }
+
+        val registrationResult = registrationDeferred.await()
+
+        val clearJob = launch(Dispatchers.IO) {
+            roomRepository.clearAllRegistrationRequests()
+        }
+        clearJob.join()
+
+        if (registrationResult == null || registrationResult.isFailure){
+            val message = try {
+                (_uiState.value.data as Exception).message
+            } catch (e : Exception){ "" }
+            _uiState.value = UiState.Failure(registrationResult?.exceptionOrNull())
+            onError("Ошибка.\n$message")
+        }
+        else {
+            _uiState.value = UiState.Success(registrationResult.getOrDefault(""))
+            onSuccess()
+        }
+
+    }
+
+    private suspend fun createUserInDatabase() =
+        withContext(Dispatchers.IO) {
             val deferred = async {
-                val uid = _auth.uid
+                val uid = auth.uid
                 if (uid != null) {
                     val user = User(
                         id = uid,
@@ -210,18 +220,10 @@ class AuthViewModel @Inject constructor(
                         sex = UserSex.entries[sexState].name
                     )
                     fireRepository.createUser(user)
-                }
-                else null
+                } else null
             }
 
-            val result = deferred.await()
-
-            if (result == null)
-                _uiState.value = UiState.Failure(null)
-            else if (result.isFailure)
-                _uiState.value = UiState.Failure(result.exceptionOrNull())
-            else
-                _uiState.value = UiState.Success(result.getOrDefault(""))
+            deferred.await()
         }
-    }
+
 }

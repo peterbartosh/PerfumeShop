@@ -26,7 +26,6 @@ import androidx.compose.ui.platform.LocalSoftwareKeyboardController
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
-import com.example.perfumeshop.data.user.UserData
 import com.example.perfumeshop.data.utils.firstLetterToUpperCase
 import com.example.perfumeshop.data.utils.getSexByName
 import com.example.perfumeshop.presentation.components.InputField
@@ -38,39 +37,35 @@ const val TAG = "EditProfileScreen"
 
 @OptIn(ExperimentalComposeUiApi::class)
 @Composable
-fun EditProfileScreen(
-//    viewModel: EditProfileViewModel,
-//                      onClick : () -> Unit
-) {
+fun EditProfileScreen(editProfileViewModel: EditProfileViewModel) {
 
     val keyboardController = LocalSoftwareKeyboardController.current
 
     val context = LocalContext.current
 
     val firstNameState = rememberSaveable {
-        mutableStateOf(UserData.user?.firstName?.firstLetterToUpperCase() ?: "")
+        mutableStateOf(editProfileViewModel.userData.user?.firstName?.firstLetterToUpperCase() ?: "")
     }
 
     val secondNameState = rememberSaveable {
-        mutableStateOf(UserData.user?.secondName?.firstLetterToUpperCase() ?: "")
+        mutableStateOf(editProfileViewModel.userData.user?.secondName?.firstLetterToUpperCase() ?: "")
     }
 
     val sexState = rememberSaveable {
-        mutableStateOf(getSexByName(UserData.user?.sex).ordinal)
+        mutableStateOf(getSexByName(editProfileViewModel.userData.user?.sex).ordinal)
     }
 
     val streetState = rememberSaveable {
-        mutableStateOf(UserData.user?.street?.firstLetterToUpperCase() ?: "")
+        mutableStateOf(editProfileViewModel.userData.user?.street?.firstLetterToUpperCase() ?: "")
     }
 
     val homeNumberState = rememberSaveable {
-        mutableStateOf(UserData.user?.home ?: "")
+        mutableStateOf(editProfileViewModel.userData.user?.home ?: "")
     }
 
     val flatNumberState = rememberSaveable {
-        mutableStateOf(UserData.user?.flat ?: "")
+        mutableStateOf(editProfileViewModel.userData.user?.flat ?: "")
     }
-
 
     val validInputsState by remember(
         firstNameState.value,
@@ -199,7 +194,7 @@ fun EditProfileScreen(
 
         SubmitButton(text = "Подтвердить изменения", validInputsState = validInputsState) {
 
-            UserData.updateUserData(
+            editProfileViewModel.userData.updateUserData(
                 firstName = firstNameState.value.ifEmpty { null },
                 secondName = secondNameState.value.ifEmpty { null },
                 sexInd = sexState.value,

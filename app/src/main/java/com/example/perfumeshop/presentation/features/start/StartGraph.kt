@@ -15,7 +15,7 @@ fun NavGraphBuilder.startGraph(
     navigateHome: () -> Unit,
     navigateAuth: () -> Unit
 ){
-    splashScreen(navigateAsk = navigateAsk, navigateMain = navigateHome)
+    splashScreen(navigateAsk = navigateAsk, navigateHome = navigateHome)
 
     askScreen(navigateAuth = navigateAuth, onSkipClick = navigateHome)
 }

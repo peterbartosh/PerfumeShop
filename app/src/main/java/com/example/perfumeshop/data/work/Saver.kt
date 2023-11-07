@@ -32,6 +32,8 @@ class Saver(private val roomRepository: RoomRepository, private val fireReposito
                 }
 
                 val deleteJob = launch {
+                    roomRepository.deleteAllInCart()
+                    roomRepository.deleteAllInFavorites()
                     fireRepository.deleteCartFromDatabase(uid)
                     fireRepository.deleteFavouritesFromDatabase(uid)
                 }
