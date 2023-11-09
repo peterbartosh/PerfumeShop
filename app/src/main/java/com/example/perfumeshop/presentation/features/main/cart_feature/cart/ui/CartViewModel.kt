@@ -22,14 +22,19 @@ import kotlinx.coroutines.flow.catch
 import kotlinx.coroutines.launch
 import javax.inject.Inject
 
+/*
+Implements cart functionality, which needed throughout the application.
+That's why it is scoped to an App() composable.
+ */
 
 @HiltViewModel
 class CartViewModel @Inject constructor(
     val auth: FirebaseAuth,
     private val roomRepository: RoomRepository,
     private val fireRepository: FireRepository
-    ) : ViewModel() {
+) : ViewModel() {
 
+    // if content changes, triggers recomposition.
     val userProducts = SnapshotStateList<ProductWithAmount>()
 
     private var _uiState = MutableStateFlow<UiState>(UiState.Success())
@@ -40,7 +45,7 @@ class CartViewModel @Inject constructor(
             productWithAmount.product?.id == productId
         } != null
 
-    fun addProduct(productWithAmount: ProductWithAmount) = viewModelScope.launch(Dispatchers.IO)  {
+    fun addProduct(productWithAmount: ProductWithAmount) = viewModelScope.launch(Dispatchers.IO) {
         userProducts.add(productWithAmount)
         roomRepository.insertCartProduct(productWithAmount)
     }

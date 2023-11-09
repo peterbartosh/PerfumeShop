@@ -1,7 +1,5 @@
 package com.example.perfumeshop.presentation.features.main.cart_feature.order_making.ui
 
-import android.content.Context
-import android.net.ConnectivityManager
 import android.util.Log
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
@@ -37,6 +35,7 @@ import com.example.perfumeshop.data.model.Order
 import com.example.perfumeshop.data.utils.OrderStatus
 import com.example.perfumeshop.data.utils.UiState
 import com.example.perfumeshop.data.utils.firstLetterToUpperCase
+import com.example.perfumeshop.data.utils.isUserConnected
 import com.example.perfumeshop.data.utils.round
 import com.example.perfumeshop.presentation.components.InputField
 import com.example.perfumeshop.presentation.components.Loading
@@ -208,11 +207,7 @@ fun OrderMakingScreen(
             validInputsState = validInputsState && uiState.value !is UiState.Loading
         ) {
 
-            val manager = context.getSystemService(Context.CONNECTIVITY_SERVICE) as ConnectivityManager
-
-            val connected = manager.activeNetwork
-
-            if (connected == null){
+            if (!isUserConnected(context)){
                 showToast(context, "Ошибка.\nВы не подключены к сети.")
                 return@SubmitButton
             }

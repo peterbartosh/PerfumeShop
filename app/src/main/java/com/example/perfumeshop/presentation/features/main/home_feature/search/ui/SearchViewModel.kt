@@ -27,6 +27,7 @@ const val maxProductPrice = 1000.0f
 @HiltViewModel
 class SearchViewModel @Inject constructor(private val repository: FireRepository) : ViewModel() {
 
+    // if content changes, triggers recomposition.
     var searchProducts = SnapshotStateList<ProductWithAmount>()
 
     private var _uiState = MutableStateFlow<UiState>(UiState.NotStarted())

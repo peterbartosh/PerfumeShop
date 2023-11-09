@@ -48,14 +48,14 @@ fun LoginScreen(
 
         if (showLoginForm.value)
             UserForm(isCreateAccount = false) { _, _, pn, _, pwd ->
-                authViewModel.signIn(
-                    phoneNumber = pn,
-                    password = pwd,
-                    onSuccess = onSuccess,
-                    errorCallback = { message ->
-                        showToast(context, message)
-                    }
-                )
+                    authViewModel.signIn(
+                        phoneNumber = pn,
+                        password = pwd,
+                        onSuccess = onSuccess,
+                        errorCallback = { message ->
+                            showToast(context, message)
+                        }
+                    )
             }
         else
             UserForm(isCreateAccount = true) { fn, sn, pn, sexInd, pwd ->

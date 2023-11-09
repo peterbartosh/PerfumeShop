@@ -46,6 +46,8 @@ fun SearchScreen(
 
     val context = LocalContext.current
 
+    val uiState = searchViewModel.uiState.collectAsState()
+
     //-------------------------------------------
 
     // inputs states
@@ -73,6 +75,7 @@ fun SearchScreen(
     }
 
     if (updateQuery) {
+
         searchViewModel.initQuery = initQuery
         searchViewModel.initQueryType = initQueryType
 
@@ -82,6 +85,7 @@ fun SearchScreen(
             curQuery = initQuery,
             curQueryType = initQueryType
         )
+
         updateQuery = false
     }
 
@@ -190,8 +194,6 @@ fun SearchScreen(
         }
 
         if (showProductList.value) {
-
-            val uiState = searchViewModel.uiState.collectAsState()
 
             when (uiState.value){
 

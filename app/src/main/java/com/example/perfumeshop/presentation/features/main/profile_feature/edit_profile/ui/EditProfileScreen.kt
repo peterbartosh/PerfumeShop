@@ -111,10 +111,10 @@ fun EditProfileScreen(editProfileViewModel: EditProfileViewModel) {
                 style = MaterialTheme.typography.titleMedium
             )
 
-            Divider(modifier = Modifier.padding(top = 15.dp, bottom = 5.dp))
+            Divider(modifier = Modifier.padding(top = 10.dp, bottom = 5.dp))
 
             Text(
-                modifier = Modifier.padding(top = 5.dp, bottom = 10.dp),
+                modifier = Modifier.padding(bottom = 10.dp),
                 text = "Персональные данные",
                 style = MaterialTheme.typography.labelLarge
             )
@@ -143,7 +143,7 @@ fun EditProfileScreen(editProfileViewModel: EditProfileViewModel) {
             Divider(modifier = Modifier.padding(top = 15.dp, bottom = 5.dp))
 
             Text(
-                modifier = Modifier.padding(top = 5.dp, bottom = 10.dp),
+                modifier = Modifier.padding(top = 5.dp, bottom = 5.dp),
                 text = "Постоянный адрес доставки",
                 style = MaterialTheme.typography.labelLarge
             )

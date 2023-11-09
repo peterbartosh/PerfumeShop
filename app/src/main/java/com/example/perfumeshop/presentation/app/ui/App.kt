@@ -75,9 +75,11 @@ fun App(finishAffinity : () -> Unit) {
         var showBackIcon by remember {
             mutableStateOf(false)
         }
+
         var showSettingsIcon by remember {
             mutableStateOf(false)
         }
+
         var showBottomBar by remember {
             mutableStateOf(false)
         }

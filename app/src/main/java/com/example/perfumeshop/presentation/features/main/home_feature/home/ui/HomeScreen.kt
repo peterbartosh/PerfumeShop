@@ -11,13 +11,16 @@ import androidx.compose.foundation.lazy.staggeredgrid.items
 import androidx.compose.foundation.lazy.staggeredgrid.rememberLazyStaggeredGridState
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
 import com.example.perfumeshop.R
 import com.example.perfumeshop.data.utils.ProductType
 import com.example.perfumeshop.data.utils.QueryType
+import com.example.perfumeshop.data.utils.isUserConnected
+import com.example.perfumeshop.presentation.components.showToast
 import com.example.perfumeshop.presentation.features.main.home_feature.search.ui.SearchForm
 import com.example.perfumeshop.presentation.theme.Gold
-import com.example.perfumeshop.presentation.theme.Pink
 
 @OptIn(ExperimentalFoundationApi::class)
 @Composable
@@ -25,33 +28,15 @@ fun HomeScreen(
     onSearchClick: (String, QueryType) -> Unit
 ) {
 
+    val context = LocalContext.current
+
     val scrollState = rememberLazyStaggeredGridState()
 
     val collections = listOf(
-//        CollectionItem(
-//            title = "Мужское",
-//            id = "1",
-//            titleColor = Gold,
-//            imageId = R.drawable.male_perfume,
-//            query = "Male",
-//            queryType = QueryType.sex
-//        ),
-//
-//        CollectionItem(
-//            title = "Женское",
-//            id = "2",
-//            titleColor = Pink,
-//            imageId = R.drawable.female_perfume,
-//            query = "Female",
-//            queryType = QueryType.sex
-//        ),
-
-       // Original, Tester, Probe, Auto, Diffuser, Compact, Licensed, Lux, NotSpecified;
-
         CollectionItem(
             title = "Оригиналы",
             id = "1",
-            titleColor = Pink,
+            titleColor = Gold,
             imageId = R.drawable.originals,
             query = ProductType.Original.name,
             queryType = QueryType.type
@@ -67,9 +52,9 @@ fun HomeScreen(
         ),
 
         CollectionItem(
-            title = "Пробники", //
+            title = "Пробники",
             id = "3",
-            titleColor = Gold,
+            titleColor = Color.Black,
             imageId = R.drawable.probe,
             query = ProductType.Probe.name,
             queryType = QueryType.type
@@ -78,7 +63,7 @@ fun HomeScreen(
         CollectionItem(
             title = "Авто",
             id = "4",
-            titleColor = Pink,
+            titleColor = Color.Black,
             imageId = R.drawable.auto,
             query = ProductType.Auto.name,
             queryType = QueryType.type
@@ -105,7 +90,7 @@ fun HomeScreen(
         CollectionItem(
             title = "Лицензионное",
             id = "7",
-            titleColor = Pink,
+            titleColor = Color.Black,
             imageId = R.drawable.licensed,
             query = ProductType.Licensed.name,
             queryType = QueryType.type
@@ -114,7 +99,7 @@ fun HomeScreen(
         CollectionItem(
             title = "Люкс",
             id = "8",
-            titleColor = Gold,
+            titleColor = Color.Black,
             imageId = R.drawable.lux,
             query = ProductType.Lux.name,
             queryType = QueryType.type
@@ -123,7 +108,7 @@ fun HomeScreen(
         CollectionItem(
             title = "Селективы",
             id = "9",
-            titleColor = Pink,
+            titleColor = Gold,
             imageId = R.drawable.male_perfume,
             query = ProductType.Selectives.name,
             queryType = QueryType.type
@@ -132,7 +117,7 @@ fun HomeScreen(
         CollectionItem(
             title = "Евро А+",
             id = "10",
-            titleColor = Pink,
+            titleColor = Gold,
             imageId = R.drawable.female_perfume,
             query = ProductType.EuroA.name,
             queryType = QueryType.type
@@ -152,7 +137,11 @@ fun HomeScreen(
     Column(modifier = Modifier.fillMaxSize()) {
 
         SearchForm { query ->
-            onSearchClick(query, QueryType.brand)
+            if (!isUserConnected(context)){
+                showToast(context, "Ошибка.\nВы не подключены к сети.")
+            } else {
+                onSearchClick(query, QueryType.brand)
+            }
         }
 
         LazyVerticalStaggeredGrid(
@@ -167,7 +156,13 @@ fun HomeScreen(
                 key = { coll -> coll.id }
             ) { collection ->
 
-                CollectionCard(item = collection, onCollectionCardClick = onSearchClick)
+                CollectionCard(item = collection, onCollectionCardClick = { q, qt ->
+                    if (!isUserConnected(context)){
+                        showToast(context, "Ошибка.\nВы не подключены к сети.")
+                    } else {
+                        onSearchClick(q, qt)
+                    }
+                })
 
             }
         }

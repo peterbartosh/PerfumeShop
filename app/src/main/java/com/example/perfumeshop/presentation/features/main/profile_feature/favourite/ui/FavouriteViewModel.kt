@@ -23,6 +23,11 @@ import kotlinx.coroutines.joinAll
 import kotlinx.coroutines.launch
 import javax.inject.Inject
 
+/*
+Implements favourites functionality, which needed throughout the application.
+That's why it is scoped to an App() composable.
+ */
+
 const val TAG = "FavouriteViewModel"
 
 @HiltViewModel
@@ -32,6 +37,7 @@ class FavouriteViewModel @Inject constructor(
     private val fireRepository: FireRepository
 ) : ViewModel() {
 
+    // if content changes, triggers recomposition.
     val userProducts = SnapshotStateList<ProductWithAmount>()
 
     private var _uiState = MutableStateFlow<UiState>(UiState.Success())

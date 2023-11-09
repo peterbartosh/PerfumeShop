@@ -45,6 +45,7 @@ import androidx.compose.ui.focus.FocusRequester
 import androidx.compose.ui.focus.focusRequester
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.Shape
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalSoftwareKeyboardController
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
@@ -59,8 +60,10 @@ import androidx.compose.ui.text.input.VisualTransformation
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import com.example.perfumeshop.R
+import com.example.perfumeshop.data.utils.isUserConnected
 import com.example.perfumeshop.presentation.components.InputField
 import com.example.perfumeshop.presentation.components.SubmitButton
+import com.example.perfumeshop.presentation.components.showToast
 
 
 @OptIn(ExperimentalComposeUiApi::class)
@@ -69,6 +72,9 @@ fun UserForm(
     isCreateAccount: Boolean,
     onDone: (String, String, String, Int, String) -> Unit
 ){
+
+    val context = LocalContext.current
+
     val firstName = rememberSaveable { mutableStateOf("") }
     val secondName = rememberSaveable { mutableStateOf("") }
     val phoneNumber =  rememberSaveable { mutableStateOf("") }
@@ -178,18 +184,23 @@ fun UserForm(
             validInputsState = validInputsState && !processing
         ){
             processing = true
-
             keyboardController?.hide()
 
-            onDone.invoke(
-                firstName.value.trim(),
-                secondName.value.trim(),
-                "+375${phoneNumber.value.trim()}",
-                sexSelectedInd.value,
-                password.value
-            )
+            if (!isUserConnected(context)){
+                showToast(context, "Ошибка.\nВы не подключены к сети.")
+                processing = false
+                return@SubmitButton
+            } else {
+                onDone.invoke(
+                    firstName.value.trim(),
+                    secondName.value.trim(),
+                    "+375${phoneNumber.value.trim()}",
+                    sexSelectedInd.value,
+                    password.value
+                )
 
-            processing = false
+                processing = false
+            }
         }
     }
 

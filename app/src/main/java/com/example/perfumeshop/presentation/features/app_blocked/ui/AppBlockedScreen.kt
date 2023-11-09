@@ -33,8 +33,14 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import com.example.perfumeshop.R
 import com.example.perfumeshop.data.utils.getWidthPercent
+import com.example.perfumeshop.data.utils.isUserConnected
 import com.example.perfumeshop.presentation.components.Loading
+import com.example.perfumeshop.presentation.components.showToast
 
+/*
+If admin enables work mode with admin app, this screen is showing.
+Further interactions available only when work mode is turned-off.
+ */
 @Composable
 fun AppBlockedScreen(
     navigateHome: () -> Unit,
@@ -51,10 +57,13 @@ fun AppBlockedScreen(
     }
 
     LaunchedEffect(key1 = refreshClicked){
-        appBlockedViewModel.refresh(navigateHome, navigateAsk)
-            .invokeOnCompletion {
-                refreshClicked = false
-            }
+        if (isUserConnected(context)) {
+            appBlockedViewModel.refresh(navigateHome, navigateAsk)
+                .invokeOnCompletion {
+                    refreshClicked = false
+                }
+        } else
+            showToast(context, "Ошибка.\nВы не подключены к сети.")
     }
 
     if (!refreshClicked) {

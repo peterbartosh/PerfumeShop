@@ -55,6 +55,7 @@ import androidx.core.content.ContextCompat
 import com.example.perfumeshop.R
 import com.example.perfumeshop.data.utils.OptionType
 import com.example.perfumeshop.data.utils.firstLetterToUpperCase
+import com.example.perfumeshop.data.utils.isUserConnected
 import com.example.perfumeshop.presentation.components.showToast
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Job
@@ -244,6 +245,8 @@ fun ProfileSection(
     onSignOutClick: suspend () -> Unit
 ) {
 
+    val context = LocalContext.current
+
     var showDialog by remember { mutableStateOf(false) }
 
     val notSpecified = "Не указано"
@@ -404,11 +407,16 @@ fun ProfileSection(
                     if (!clicked)
                         Button(
                             onClick = {
-                                CoroutineScope(Job()).launch {
-                                    clicked = true
-                                    onSignOutClick()
-                                    showDialog = false
-                                    clicked = false
+                                if (!isUserConnected(context)){
+                                    showToast(context, "Ошибка.\nВы не подключены к сети.")
+                                    return@Button
+                                } else {
+                                    CoroutineScope(Job()).launch {
+                                        clicked = true
+                                        onSignOutClick()
+                                        showDialog = false
+                                        clicked = false
+                                    }
                                 }
                             },
                             colors = ButtonDefaults.buttonColors(

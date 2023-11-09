@@ -28,6 +28,13 @@ import kotlinx.coroutines.withContext
 import javax.inject.Inject
 import kotlin.random.Random
 
+/*
+Due to the fact that the customer's authentication requirements are quite unusual,
+it has become impossible to use the built-in authentication from Firebase.
+Therefore, the login method is mail and password,
+and the mail is set in the following form: "phone_number@gmail.com".
+*/
+
 @HiltViewModel
 class AuthViewModel @Inject constructor(
     private val roomRepository: RoomRepository,
@@ -37,15 +44,16 @@ class AuthViewModel @Inject constructor(
 ) : ViewModel() {
 
     private val _uiState = MutableStateFlow<UiState>(UiState.NotStarted())
-
     val uiState : StateFlow<UiState> = _uiState
 
+    // user data
     private var firstNameState by mutableStateOf("")
     private var secondNameState by mutableStateOf("")
     private var sexState by mutableStateOf(2)
     var phoneNumberState by mutableStateOf("")
     private var passwordState by mutableStateOf("")
 
+    // sending application for registration, if successful - navigates to code verification
     fun notifyAdmin(
         firstName : String, secondName : String,
         phoneNumber : String, sexInd : Int,
@@ -118,8 +126,8 @@ class AuthViewModel @Inject constructor(
         onSuccess : () -> Unit,
         errorCallback : (String) -> Unit
     ) = viewModelScope.launch {
-        _uiState.value = UiState.Loading()
         try {
+            _uiState.value = UiState.Loading()
             launch {
                 val firebaseJob = launch(Dispatchers.IO) {
                     auth.signInWithEmailAndPassword("$phoneNumber@gmail.com", password).await()

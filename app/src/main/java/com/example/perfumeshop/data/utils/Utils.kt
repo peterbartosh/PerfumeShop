@@ -1,6 +1,7 @@
 package com.example.perfumeshop.data.utils
 
 import android.content.Context
+import android.net.ConnectivityManager
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.saveable.listSaver
 import androidx.compose.runtime.saveable.rememberSaveable
@@ -9,6 +10,15 @@ import androidx.compose.runtime.toMutableStateList
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import kotlin.math.round
+
+fun isUserConnected(context: Context) : Boolean {
+    val manager =
+        context.getSystemService(Context.CONNECTIVITY_SERVICE) as ConnectivityManager
+    val connected = manager.activeNetwork
+//    if (connected == null)
+//        showToast(context, "Ошибка.\nВы не подключены к сети.")
+    return connected != null
+}
 
 @Composable
 fun getWidthPercent(context: Context): Dp {

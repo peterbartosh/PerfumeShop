@@ -14,9 +14,12 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
 import com.example.perfumeshop.R
 import com.example.perfumeshop.data.utils.OptionType
+import com.example.perfumeshop.data.utils.isUserConnected
+import com.example.perfumeshop.presentation.components.showToast
 import com.example.perfumeshop.presentation.features.main.cart_feature.cart.ui.CartViewModel
 import com.example.perfumeshop.presentation.features.main.profile_feature.favourite.ui.FavouriteViewModel
 import kotlinx.coroutines.joinAll
@@ -29,6 +32,7 @@ fun ProfileScreen(
     favouriteViewModel: FavouriteViewModel,
     profileViewModel: ProfileViewModel
 ) {
+    val context = LocalContext.current
 
     val isAnonymous = remember {
         mutableStateOf(profileViewModel.auth.currentUser?.isAnonymous == true)
@@ -40,27 +44,33 @@ fun ProfileScreen(
         else
             RegisteredSection(
                 profileViewModel = profileViewModel,
-                onOptionClick = onOptionClick,
+                onOptionClick = {optionType ->
+                    if (!isUserConnected(context)){
+                        showToast(context, "Ошибка.\nВы не подключены к сети.")
+                        return@RegisteredSection
+                    }
+                    onOptionClick(optionType)
+                },
                 onSignOutClick = {
 
-                    val clearUserDataJob = profileViewModel.userData.clearUserData()
+                        val clearUserDataJob = profileViewModel.userData.clearUserData()
 
-                    clearUserDataJob.join()
+                        clearUserDataJob.join()
 
-                    val cartSaveJob = cartViewModel.saveProductsToRemoteDatabase()
-                    val favouriteSaveJob = favouriteViewModel.saveProductsToRemoteDatabase()
+                        val cartSaveJob = cartViewModel.saveProductsToRemoteDatabase()
+                        val favouriteSaveJob = favouriteViewModel.saveProductsToRemoteDatabase()
 
-                    joinAll(cartSaveJob, favouriteSaveJob)
+                        joinAll(cartSaveJob, favouriteSaveJob)
 
-                    val cartClearJob = cartViewModel.clearData()
-                    val favouriteClearJob = favouriteViewModel.clearData()
+                        val cartClearJob = cartViewModel.clearData()
+                        val favouriteClearJob = favouriteViewModel.clearData()
 
-                    joinAll(cartClearJob, favouriteClearJob)
+                        joinAll(cartClearJob, favouriteClearJob)
 
-                    profileViewModel.auth.signOut()
-                    profileViewModel.auth.signInAnonymously()
+                        profileViewModel.auth.signOut()
+                        profileViewModel.auth.signInAnonymously()
 
-                    isAnonymous.value = true
+                        isAnonymous.value = true
                 }
             )
     }
