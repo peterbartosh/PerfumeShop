@@ -11,7 +11,8 @@ The perfume shop app, designed to simplify the communication of client and buisn
 - Authentication: Firebase Authentication.
 - Background tasks: WorkManager.
 - Api: Java Mail Api.
-- DI: Dagger-Hilt. - Multithreading: Coroutines.
+- DI: Dagger-Hilt.
+- Multithreading: Coroutines.
 - Animations: Lottie.
 
 # Auth screens:
