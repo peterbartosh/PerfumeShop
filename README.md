@@ -1,5 +1,5 @@
 # PerfumeShop
-The perfume shop app, designed to simplify the communication of client and buisness, automate order making and collecting processes and attract new customers. 
+The perfume shop system is designed to attract new customers, simplify the communication between end users and suppliers and to automate order management processes.
 
 # Architecture: MVVM.
 
@@ -15,7 +15,7 @@ The perfume shop app, designed to simplify the communication of client and buisn
 - Multithreading: Coroutines.
 - Animations: Lottie.
 
-# Auth screens:
+# Authentication screens:
 
 ![auth_screens](https://github.com/petya3000/PerfumeShop/assets/99812822/416a87ef-2030-4f3a-87e7-ee30e235a833)
 
@@ -27,4 +27,4 @@ The perfume shop app, designed to simplify the communication of client and buisn
 
 ![search_screens](https://github.com/petya3000/PerfumeShop/assets/99812822/4b044e5d-e499-40ce-bb20-0878a2a9fe63)
 
-More images you can find in screenshots directory. 
+You can find more images in screenshots directory. 
