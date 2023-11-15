@@ -1,5 +1,5 @@
 # PerfumeShop
-The perfume shop system is designed to attract new customers, simplify the communication between end users and suppliers and to automate order management processes.
+The perfume shop system is designed to attract new customers, simplify the communication between users and suppliers and to automate order management processes.
 
 # Architecture: MVVM.
 
