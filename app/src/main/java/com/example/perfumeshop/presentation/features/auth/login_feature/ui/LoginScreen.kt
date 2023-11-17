@@ -20,6 +20,7 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
+import com.example.perfumeshop.R
 import com.example.perfumeshop.data.utils.UiState
 import com.example.perfumeshop.presentation.components.Loading
 import com.example.perfumeshop.presentation.components.showToast
@@ -53,7 +54,7 @@ fun LoginScreen(
                         password = pwd,
                         onSuccess = onSuccess,
                         errorCallback = { message ->
-                            showToast(context, message)
+                            context.showToast(message)
                         }
                     )
             }
@@ -66,9 +67,9 @@ fun LoginScreen(
                     sexInd = sexInd,
                     pwd = pwd,
                     seed = Random.nextInt(),
-                    isInBlackList = { showToast(context, "Вы добавлены в чёрный список") },
+                    isInBlackList = { context.showToast(R.string.you_are_in_black_list_error) },
                     onAdminNotified = onCodeSent,
-                    onError = { message -> showToast(context, message) }
+                    onError = { message -> context.showToast(message) }
                 )
             }
 

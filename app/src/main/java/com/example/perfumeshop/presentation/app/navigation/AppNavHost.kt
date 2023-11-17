@@ -14,14 +14,12 @@ import com.example.perfumeshop.presentation.features.auth.code_verification_feat
 import com.example.perfumeshop.presentation.features.auth.login_feature.navigation.loginRoute
 import com.example.perfumeshop.presentation.features.auth.login_feature.navigation.navigateToLogin
 import com.example.perfumeshop.presentation.features.main.cart_feature.cart.navigation.navigateToCart
-import com.example.perfumeshop.presentation.features.main.cart_feature.cart.ui.CartViewModel
 import com.example.perfumeshop.presentation.features.main.cart_feature.order_making.navigation.navigateToOrderMaking
 import com.example.perfumeshop.presentation.features.main.home_feature.home.navigation.navigateToHome
 import com.example.perfumeshop.presentation.features.main.home_feature.search.navigation.navigateToSearch
 import com.example.perfumeshop.presentation.features.main.mainGraph
 import com.example.perfumeshop.presentation.features.main.profile_feature.edit_profile.navigation.navigateToEditProfileRoute
 import com.example.perfumeshop.presentation.features.main.profile_feature.favourite.navigation.navigateToFavouritesRoute
-import com.example.perfumeshop.presentation.features.main.profile_feature.favourite.ui.FavouriteViewModel
 import com.example.perfumeshop.presentation.features.main.profile_feature.orders.navigation.navigateToOrders
 import com.example.perfumeshop.presentation.features.start.ask_feature.navigation.askRoute
 import com.example.perfumeshop.presentation.features.start.ask_feature.navigation.navigateToAsk
@@ -33,8 +31,7 @@ import com.example.perfumeshop.presentation.features.start.startGraph
 fun AppNavHost(
     modifier: Modifier = Modifier,
     navController: NavHostController,
-    cartViewModel: CartViewModel,
-    favouriteViewModel: FavouriteViewModel,
+    loadData: () -> Unit,
     onUserPreferencesChanged: (UserPreferencesType, Int) -> Unit,
     onBackPressed : () -> Unit
 ) {
@@ -62,8 +59,7 @@ fun AppNavHost(
                 navController.backQueue.removeIf{ nbse -> nbse.destination.route == splashRoute}
             },
             navigateHome = {
-                cartViewModel.loadProductsFromRemoteDatabase()
-                favouriteViewModel.loadProductsFromRemoteDatabase()
+                loadData()
                 navController.navigateToHome(navOptions = null)
                 navController.backQueue.removeIf{ nbse ->
                     nbse.destination.route in
@@ -79,8 +75,7 @@ fun AppNavHost(
                 navController.backQueue.removeIf{ nbse -> nbse.destination.route == splashRoute}
             },
             navigateHome = {
-               cartViewModel.loadProductsFromRemoteDatabase()
-               favouriteViewModel.loadProductsFromRemoteDatabase()
+               loadData()
                navController.navigateToHome(navOptions = null)
                navController.backQueue.removeIf{ nbse ->
                    nbse.destination.route in
@@ -94,16 +89,13 @@ fun AppNavHost(
             navController = navController,
             navigateCodeVerification = { navController.navigateToCodeVerification(navOptions = navOptions) },
             navigateHome = {
-                cartViewModel.loadProductsFromRemoteDatabase()
-                favouriteViewModel.loadProductsFromRemoteDatabase()
+                loadData()
                 navController.navigateToHome(navOptions = null)
             },
             onBackPressed = onBackPressed
         )
 
         mainGraph(
-            cartViewModel = cartViewModel,
-            favouriteViewModel = favouriteViewModel,
             onUserPreferencesChanged = onUserPreferencesChanged,
             navigateToCart = { navController.navigateToCart(navOptions = navOptions) },
             navigateToOrderMaking = { navController.navigateToOrderMaking(navOptions = navOptions) },

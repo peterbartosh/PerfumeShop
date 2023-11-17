@@ -138,7 +138,7 @@ fun HomeScreen(
 
         SearchForm { query ->
             if (!isUserConnected(context)){
-                showToast(context, "Ошибка.\nВы не подключены к сети.")
+                context.showToast(R.string.connection_lost_error)
             } else {
                 onSearchClick(query, QueryType.brand)
             }
@@ -158,7 +158,7 @@ fun HomeScreen(
 
                 CollectionCard(item = collection, onCollectionCardClick = { q, qt ->
                     if (!isUserConnected(context)){
-                        showToast(context, "Ошибка.\nВы не подключены к сети.")
+                        context.showToast(R.string.connection_lost_error)
                     } else {
                         onSearchClick(q, qt)
                     }

@@ -14,27 +14,29 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.style.TextDecoration
 import androidx.compose.ui.unit.dp
+import com.example.perfumeshop.R
 import com.example.perfumeshop.data.utils.UiState
 import com.example.perfumeshop.presentation.components.ErrorOccurred
 import com.example.perfumeshop.presentation.components.LazyProductList
 import com.example.perfumeshop.presentation.components.Loading
 import com.example.perfumeshop.presentation.components.NothingFound
 import com.example.perfumeshop.presentation.components.showToast
-import com.example.perfumeshop.presentation.features.main.cart_feature.cart.ui.CartViewModel
 
 @Composable
 fun FavouriteScreen(
-    cartViewModel: CartViewModel,
     favouriteViewModel: FavouriteViewModel,
     //onProductClick: (String) -> Unit
 ) {
 
     val context = LocalContext.current
+    val uiState = favouriteViewModel.uiState.collectAsState()
+    val userProducts by favouriteViewModel.userProducts.collectAsState()
 
     Column(
         modifier = Modifier.fillMaxHeight(),
@@ -60,8 +62,8 @@ fun FavouriteScreen(
                     .wrapContentSize()
                     .padding(end = 10.dp)
                     .clickable {
-                        favouriteViewModel.clearData().onJoin
-                        showToast(context = context, "Очищено.")
+                        favouriteViewModel.favouriteFunctionality.clearData().onJoin
+                        context.showToast(R.string.content_cleared)
                     },
                 textDecoration = TextDecoration.Underline,
                 style = MaterialTheme.typography.bodySmall,
@@ -70,21 +72,18 @@ fun FavouriteScreen(
             )
         }
 
-        val uiState = favouriteViewModel.uiState.collectAsState()
-
         when (uiState.value){
-            is UiState.Success -> if (favouriteViewModel.userProducts.isNotEmpty())
+            is UiState.Success -> if (userProducts.isNotEmpty())
                 LazyProductList(
-                    listOfProductsWithAmounts = favouriteViewModel.userProducts,
+                    listOfProductsWithAmounts = userProducts,
                     //onProductClick = onProductClick,
-                    onAddToFavouriteClick = favouriteViewModel::addProduct,
-                    onAddToCartClick = cartViewModel::addProduct,
-                    onRemoveFromFavouriteClick = favouriteViewModel::removeProduct,
-                    onRemoveFromCartClick = cartViewModel::removeProduct,
-                    isInFavouriteCheck = favouriteViewModel::isInFavourites,
-                    isInCartCheck = cartViewModel::isInCart,
-
-                    onAmountChanged = favouriteViewModel::updateProductAmount
+                    onAddToFavouriteClick = favouriteViewModel.favouriteFunctionality::addProduct,
+                    onAddToCartClick = favouriteViewModel.cartFunctionality::addProduct,
+                    onRemoveFromFavouriteClick = favouriteViewModel.favouriteFunctionality::removeProduct,
+                    onRemoveFromCartClick = favouriteViewModel.cartFunctionality::removeProduct,
+                    isInFavouriteCheck = favouriteViewModel.favouriteFunctionality::isInFavourites,
+                    isInCartCheck = favouriteViewModel.cartFunctionality::isInCart,
+                    onAmountChanged = favouriteViewModel.favouriteFunctionality::updateProductAmount
                 )
             else
                 NothingFound()

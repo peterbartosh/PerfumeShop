@@ -26,6 +26,7 @@ import androidx.compose.ui.platform.LocalSoftwareKeyboardController
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
+import com.example.perfumeshop.R
 import com.example.perfumeshop.data.utils.firstLetterToUpperCase
 import com.example.perfumeshop.data.utils.getSexByName
 import com.example.perfumeshop.presentation.components.InputField
@@ -204,8 +205,7 @@ fun EditProfileScreen(editProfileViewModel: EditProfileViewModel) {
             )
 
             keyboardController?.hide()
-
-            showToast(context, "Обновлено")
+            context.showToast(R.string.content_updated)
         }
 
 

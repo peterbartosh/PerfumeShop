@@ -7,11 +7,9 @@ import androidx.navigation.NavOptions
 import androidx.navigation.compose.composable
 import com.example.perfumeshop.data.utils.QueryType
 import com.example.perfumeshop.presentation.app.navigation.BackPressHandler
-import com.example.perfumeshop.presentation.features.main.cart_feature.cart.ui.CartViewModel
 import com.example.perfumeshop.presentation.features.main.home_feature.homeActiveChild
 import com.example.perfumeshop.presentation.features.main.home_feature.search.ui.SearchScreen
 import com.example.perfumeshop.presentation.features.main.home_feature.search.ui.SearchViewModel
-import com.example.perfumeshop.presentation.features.main.profile_feature.favourite.ui.FavouriteViewModel
 
 
 const val searchRoute = "search"
@@ -28,8 +26,6 @@ fun NavController.navigateToSearch(query : String, queryType : QueryType, navOpt
 
 fun NavGraphBuilder.searchScreen(
    // onProductClick: (String) -> Unit,
-    cartViewModel: CartViewModel,
-    favouriteViewModel: FavouriteViewModel,
     onBackPressed: () -> Unit
 ) {
     composable(route = searchRoute) { backStackEntry ->
@@ -44,8 +40,6 @@ fun NavGraphBuilder.searchScreen(
         SearchScreen(
             initQuery = query,
             initQueryType = queryType,
-            favouriteViewModel = favouriteViewModel,
-            cartViewModel = cartViewModel,
             searchViewModel = searchViewModel,
                 //onProductClick = onProductClick
         )

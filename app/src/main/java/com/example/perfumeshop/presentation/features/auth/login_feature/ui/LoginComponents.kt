@@ -187,7 +187,7 @@ fun UserForm(
             keyboardController?.hide()
 
             if (!isUserConnected(context)){
-                showToast(context, "Ошибка.\nВы не подключены к сети.")
+                context.showToast(R.string.connection_lost_error)
                 processing = false
                 return@SubmitButton
             } else {

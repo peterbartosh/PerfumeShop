@@ -187,8 +187,7 @@ fun OrderRow(
                                 productsWithAmount.forEach { productWithAmount ->
                                     onAddToCartClick(productWithAmount)
                                 }
-
-                                showToast(context = context, "Корзина обновлена.")
+                                context.showToast(R.string.cart_updated)
                             },
                         textDecoration = TextDecoration.Underline,
                         style = MaterialTheme.typography.bodySmall,

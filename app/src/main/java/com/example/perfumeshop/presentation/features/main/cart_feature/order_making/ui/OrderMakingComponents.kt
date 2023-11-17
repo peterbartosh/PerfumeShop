@@ -63,14 +63,14 @@ fun ProductBox(productWithAmount: ProductWithAmount) {
                 ) {
 
                     Text(
-                        text = "Кол-во (нал): ${productWithAmount.amountCash ?: 1}",
+                        text = "Кол-во (нал): ${productWithAmount.cashPriceAmount ?: 1}",
                         style = MaterialTheme.typography.bodyMedium
                     )
 
                     Spacer(modifier = Modifier.height(3.dp))
 
                     Text(
-                        text = "Кол-во (без): ${productWithAmount.amountCashless ?: 1}",
+                        text = "Кол-во (без): ${productWithAmount.cashlessPriceAmount ?: 1}",
                         style = MaterialTheme.typography.bodyMedium
                     )
                 }
@@ -82,8 +82,8 @@ fun ProductBox(productWithAmount: ProductWithAmount) {
                     withStyle(style = MaterialTheme.typography.bodyLarge.toSpanStyle()) {
                         productWithAmount.product?.cashPrice?.let { cashP ->
                             productWithAmount.product?.cashlessPrice?.let { cashlessP ->
-                                val cashSum = (cashP * (productWithAmount.amountCash ?: 1))
-                                val cashlessSum = (cashlessP * (productWithAmount.amountCashless ?: 1))
+                                val cashSum = (cashP * (productWithAmount.cashPriceAmount ?: 1))
+                                val cashlessSum = (cashlessP * (productWithAmount.cashlessPriceAmount ?: 1))
                                 append("${(cashSum + cashlessSum).round(2)}")
                             }
                         }

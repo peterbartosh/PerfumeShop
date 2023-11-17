@@ -7,8 +7,6 @@ import androidx.navigation.NavOptions
 import androidx.navigation.compose.composable
 import com.example.perfumeshop.data.utils.OptionType
 import com.example.perfumeshop.presentation.app.navigation.BackPressHandler
-import com.example.perfumeshop.presentation.features.main.cart_feature.cart.ui.CartViewModel
-import com.example.perfumeshop.presentation.features.main.profile_feature.favourite.ui.FavouriteViewModel
 import com.example.perfumeshop.presentation.features.main.profile_feature.profile.ui.ProfileScreen
 import com.example.perfumeshop.presentation.features.main.profile_feature.profile.ui.ProfileViewModel
 
@@ -21,15 +19,13 @@ fun NavController.navigateToProfile(navOptions: NavOptions? = null) {
 
 fun NavGraphBuilder.profileScreen(
     onOptionClick: (OptionType) -> Unit,
-    cartViewModel: CartViewModel, favouriteViewModel: FavouriteViewModel, onBackPressed: () -> Unit
+    onBackPressed: () -> Unit
 ) {
     composable(route = profileRoute) {
         val profileViewModel = hiltViewModel<ProfileViewModel>()
         BackPressHandler(onBackPressed = onBackPressed)
         ProfileScreen(
             onOptionClick = onOptionClick,
-            cartViewModel = cartViewModel,
-            favouriteViewModel = favouriteViewModel,
             profileViewModel = profileViewModel
         )
     }

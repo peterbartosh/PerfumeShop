@@ -148,8 +148,8 @@ class EmailSender() {
                 orderDesc.append(
                     "  ${ind + 1}) Идентификатор товара: ${productWithAmount.product?.id}\n" +
                             "      Брэнд: ${productWithAmount.product?.brand}\n" +
-                            "      Количество (Нал): ${productWithAmount.amountCash}\n" +
-                            "      Количество (Безнал): ${productWithAmount.amountCashless}\n"
+                            "      Количество (Нал): ${productWithAmount.cashPriceAmount}\n" +
+                            "      Количество (Безнал): ${productWithAmount.cashlessPriceAmount}\n"
                 )
             }
 

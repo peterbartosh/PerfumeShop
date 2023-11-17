@@ -14,7 +14,7 @@ import com.example.perfumeshop.data.room.entities.UserDataEntity
         RegistrationRequestEntity::class,
         UserDataEntity::class
                ],
-    version = 8
+    version = 9
 )
 abstract class LocalDatabase: RoomDatabase() {
     abstract fun localDao(): LocalDao

@@ -10,6 +10,8 @@ import androidx.lifecycle.viewModelScope
 import com.example.perfumeshop.data.model.Product
 import com.example.perfumeshop.data.model.ProductWithAmount
 import com.example.perfumeshop.data.repository.FireRepository
+import com.example.perfumeshop.data.skeleton.CartFunctionality
+import com.example.perfumeshop.data.skeleton.FavouriteFunctionality
 import com.example.perfumeshop.data.utils.QueryType
 import com.example.perfumeshop.data.utils.UiState
 import dagger.hilt.android.lifecycle.HiltViewModel
@@ -25,7 +27,11 @@ const val productsAmountPerPage = 100
 const val maxProductPrice = 1000.0f
 
 @HiltViewModel
-class SearchViewModel @Inject constructor(private val repository: FireRepository) : ViewModel() {
+class SearchViewModel @Inject constructor(
+    val cartFunctionality: CartFunctionality,
+    val favouriteFunctionality: FavouriteFunctionality,
+    private val fireRepository: FireRepository
+) : ViewModel() {
 
     // if content changes, triggers recomposition.
     var searchProducts = SnapshotStateList<ProductWithAmount>()
@@ -54,20 +60,12 @@ class SearchViewModel @Inject constructor(private val repository: FireRepository
     var priorities = emptyList<Int>()
     var isAscending = true
 
-//    fun updateProductAmount(productInd : Int, amount : Int){
-//        searchProducts[productInd].amount = amount
-//    }
-//
-//    fun updateProductCashState(productInd : Int, isCashPrice : Boolean){
-//        searchProducts[productInd].isCashPrice = isCashPrice
-//    }
-
     fun uploadMore(currentQuery: String, currentQueryType: QueryType) {
         uploadingMore = true
         uploadsAmount++
         viewModelScope.launch {
 
-            repository.getQueryProducts(
+            fireRepository.getQueryProducts(
                 initQuery = initQuery,
                 initQueryType = initQueryType,
                 query = currentQuery,
@@ -135,14 +133,14 @@ class SearchViewModel @Inject constructor(private val repository: FireRepository
 
             searchProducts.clear()
 
-            repository.constructFilter(
+            fireRepository.constructFilter(
 //                minValue = minValue,
 //                maxValue = maxValue,
                 isOnHandOnly = isOnHandOnly,
                 volumes = volumes
             )
 
-            repository.getQueryProducts(
+            fireRepository.getQueryProducts(
                 initQuery = initQuery,
                 initQueryType = initQueryType,
                 query = curQuery,

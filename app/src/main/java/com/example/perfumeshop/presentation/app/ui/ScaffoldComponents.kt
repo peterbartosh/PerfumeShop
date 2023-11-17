@@ -71,6 +71,8 @@ fun MyTopAppBar(
     navigateToHome : () -> Unit = {}
 ){
 
+    val context = LocalContext.current
+
     CenterAlignedTopAppBar(
         modifier = Modifier
             .height(50.dp),
@@ -79,7 +81,7 @@ fun MyTopAppBar(
                 modifier = Modifier.fillMaxHeight(),
                 verticalArrangement = Arrangement.Center
             ){
-                Text(text = "GOLD PARFUM", style = MaterialTheme.typography.titleLarge)
+                Text(text = context.getString(R.string.app_label), style = MaterialTheme.typography.titleLarge)
             }
         },
         navigationIcon = {

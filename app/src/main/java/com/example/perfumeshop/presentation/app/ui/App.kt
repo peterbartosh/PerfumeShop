@@ -14,7 +14,6 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
-import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.compose.rememberNavController
 import com.example.perfumeshop.data.repository.FireRepository
 import com.example.perfumeshop.data.user_preferences.PreferencesManager
@@ -25,14 +24,12 @@ import com.example.perfumeshop.presentation.features.app_blocked.navigation.navi
 import com.example.perfumeshop.presentation.features.auth.code_verification_feature.navigation.codeVerificationRoute
 import com.example.perfumeshop.presentation.features.auth.login_feature.navigation.loginRoute
 import com.example.perfumeshop.presentation.features.main.cart_feature.cart.navigation.cartRoute
-import com.example.perfumeshop.presentation.features.main.cart_feature.cart.ui.CartViewModel
 import com.example.perfumeshop.presentation.features.main.cart_feature.order_making.navigation.orderMakingRoute
 import com.example.perfumeshop.presentation.features.main.home_feature.home.navigation.homeRoute
 import com.example.perfumeshop.presentation.features.main.home_feature.home.navigation.navigateToHome
 import com.example.perfumeshop.presentation.features.main.home_feature.search.navigation.searchRoute
 import com.example.perfumeshop.presentation.features.main.profile_feature.edit_profile.navigation.editProfileRoute
 import com.example.perfumeshop.presentation.features.main.profile_feature.favourite.navigation.favouriteRoute
-import com.example.perfumeshop.presentation.features.main.profile_feature.favourite.ui.FavouriteViewModel
 import com.example.perfumeshop.presentation.features.main.profile_feature.orders.navigation.ordersRoute
 import com.example.perfumeshop.presentation.features.main.profile_feature.profile.navigation.profileRoute
 import com.example.perfumeshop.presentation.features.main.settings_feature.navigation.navigateToSettings
@@ -52,7 +49,10 @@ const val ERROR_TAG = "ERROR_OCCURRED"
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun App(finishAffinity : () -> Unit) {
+fun App(
+    finishAffinity : () -> Unit,
+    loadData: () -> Unit
+) {
 
     val context = LocalContext.current
 
@@ -140,9 +140,6 @@ fun App(finishAffinity : () -> Unit) {
                 }
         }
 
-        val cartViewModel = hiltViewModel<CartViewModel>()
-        val favouriteViewModel = hiltViewModel<FavouriteViewModel>()
-
         Scaffold(
             topBar = {
                 MyTopAppBar(
@@ -168,9 +165,8 @@ fun App(finishAffinity : () -> Unit) {
                 modifier = Modifier
                     .fillMaxSize()
                     .padding(paddingValues),
-                cartViewModel = cartViewModel,
-                favouriteViewModel = favouriteViewModel,
                 navController = navController,
+                loadData = loadData,
                 onBackPressed = {
                     if (showBackIcon)
                         onBackArrowClick(navController)

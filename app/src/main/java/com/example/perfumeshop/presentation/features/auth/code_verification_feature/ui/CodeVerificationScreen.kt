@@ -106,11 +106,11 @@ fun CodeVerificationScreen(
                         code = codeState,
                         onSuccess = onSuccess,
                         onFailure = { message ->
-                            showToast(context = context, message)
+                            context.showToast(message)
                         }
                      )
                  } catch (e : Exception){
-                     showToast(context, "Некорректные данные")
+                     context.showToast(R.string.incorrect_input_error)
                  }
 
              }) {

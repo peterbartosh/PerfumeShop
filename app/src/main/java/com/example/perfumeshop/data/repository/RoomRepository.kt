@@ -7,80 +7,159 @@ import com.example.perfumeshop.data.room.entities.CartProductEntity
 import com.example.perfumeshop.data.room.entities.FavouriteProductEntity
 import com.example.perfumeshop.data.room.entities.RegistrationRequestEntity
 import com.example.perfumeshop.data.room.entities.UserDataEntity
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.flow.flowOn
+import kotlinx.coroutines.withContext
 import javax.inject.Inject
 
 class RoomRepository @Inject constructor(private val localDao: LocalDao) {
 
     // user data
 
-    suspend fun getUserData() =
-        try {
-            localDao.getUserData().first().toUser()
-        } catch (e : Exception){
-            User()
-        }
+    suspend fun getUserData() = localDao.getUserData()
 
-    suspend fun initializeUserData(user: User) = user.toUserDataEntity()?.let { userDataEntity ->
-        localDao.insertUserData(userDataEntity)
+    suspend fun initializeUserData(user: User) = withContext(Dispatchers.IO){
+        user.toUserDataEntity()?.let { userDataEntity ->
+            localDao.insertUserData(userDataEntity)
+        }
     }
-    suspend fun updateUserData(user: User) = user.toUserDataEntity()?.let { userDataEntity ->
-        localDao.updateUserData(userDataEntity)
+    suspend fun updateUserData(user: User) = withContext(Dispatchers.IO) {
+        user.toUserDataEntity()?.let { userDataEntity ->
+            localDao.updateUserData(userDataEntity)
+        }
     }
-    suspend fun clearUserData() = localDao.deleteUserData()
+    suspend fun clearUserData() = withContext(Dispatchers.IO){
+        localDao.deleteUserData()
+    }
 
     // registration requests
 
-    suspend fun addRegistrationRequest(registrationRequestEntity: RegistrationRequestEntity) =
+    suspend fun addRegistrationRequest(
+        registrationRequestEntity: RegistrationRequestEntity
+    ) = withContext(Dispatchers.IO) {
         localDao.insertRegistrationRequest(registrationRequestEntity)
-
-    suspend fun getRegistrationRequest(phoneNumber: String) =
+    }
+    suspend fun getRegistrationRequest(phoneNumber: String) = withContext(Dispatchers.IO) {
         localDao.getRegistrationRequest(phoneNumber)
+    }
 
-    suspend fun clearAllRegistrationRequests() = localDao.deleteAllRegistrationRequests()
+    suspend fun clearAllRegistrationRequests() = withContext(Dispatchers.IO){
+        localDao.deleteAllRegistrationRequests()
+    }
 
     // cart
 
-    fun getCartProducts() = localDao.getCartProducts()
+    fun getCartProducts() = localDao.getCartProducts().flowOn(Dispatchers.IO)
 
-    suspend fun insertCartProduct(productWithAmount: ProductWithAmount) {
+    suspend fun getCartProductsAsList() = withContext(Dispatchers.IO){
+        localDao.getCartProductsAsList()
+    }
+
+    suspend fun isInCart(productId: String) = withContext(Dispatchers.IO){
+        localDao.isInCart(productId) == 1
+    }
+
+    suspend fun addCartProduct(productWithAmount: ProductWithAmount) = withContext(Dispatchers.IO){
         productWithAmount.toCartProductEntity()?.let { cartProductEntity ->
             localDao.insertCartProduct(cartProductEntity)
         }
     }
 
-    suspend fun updateCartProductAmount(id: String, cashAmount: Int, cashlessAmount: Int) =
+    suspend fun addAllInCart(productWithAmounts: List<ProductWithAmount>) = withContext(Dispatchers.IO){
+        localDao.insertAllInCart(
+            productWithAmounts.mapNotNull { it.toCartProductEntity() }
+        )
+    }
+
+    suspend fun updateCartProductAmount(
+        id: String,
+        cashAmount: Int,
+        cashlessAmount: Int
+    ) = withContext(Dispatchers.IO) {
         localDao.updateCartProductAmount(id, cashAmount, cashlessAmount)
+    }
+
+    suspend fun updateCartProductIsOnHand(
+        productId: String,
+        isOnHand: Boolean
+    ) = withContext(Dispatchers.IO){
+        localDao.updateCartProductIsOnHand(productId, isOnHand)
+    }
+
+    suspend fun updateCartProductPrices(
+        productId: String,
+        cashPrice: Double,
+        cashlessPrice: Double
+    ) = withContext(Dispatchers.IO){
+        localDao.updateCartProductPrices(productId, cashPrice, cashlessPrice)
+    }
 
 
-    suspend fun deleteCartProduct(productWithAmount: ProductWithAmount) {
+    suspend fun deleteCartProduct(productWithAmount: ProductWithAmount) = withContext(Dispatchers.IO){
         productWithAmount.product?.id?.let { id ->
                 localDao.deleteCartProduct(productId = id)
         }
     }
 
-    suspend fun deleteAllInCart() = localDao.deleteAllInCart()
-
+    suspend fun deleteAllInCart() = withContext(Dispatchers.IO) {
+        localDao.deleteAllInCart()
+    }
     // favourites
 
-    fun getFavouriteProducts() = localDao.getFavoriteProducts()
+    fun getFavouriteProducts() = localDao.getFavoriteProducts().flowOn(Dispatchers.IO)
 
-    suspend fun insertFavoriteProduct(productWithAmount: ProductWithAmount) {
+    suspend fun getFavouriteProductsAsList() = withContext(Dispatchers.IO){
+        localDao.getFavouriteProductsAsList()
+    }
+
+    suspend fun isInFavourites(productId: String) = withContext(Dispatchers.IO){
+        localDao.isInFavourites(productId) == 1
+    }
+
+    suspend fun addFavoriteProduct(productWithAmount: ProductWithAmount) = withContext(Dispatchers.IO){
         productWithAmount.toFavouriteProductEntity()?.let { favouriteProductEntity ->
             localDao.insertFavoriteProduct(favouriteProductEntity)
         }
     }
 
-    suspend fun updateFavouriteProductAmount(id: String, cashAmount: Int, cashlessAmount: Int) =
+    suspend fun addAllInFavourites(productWithAmounts: List<ProductWithAmount>) = withContext(Dispatchers.IO){
+        localDao.insertAllInFavorites(
+            productWithAmounts.mapNotNull { it.toFavouriteProductEntity() }
+        )
+    }
+
+    suspend fun updateFavouriteProductAmount(
+        id: String,
+        cashAmount: Int,
+        cashlessAmount: Int
+    ) = withContext(Dispatchers.IO) {
         localDao.updateFavouriteProductAmount(id, cashAmount, cashlessAmount)
+    }
 
+    suspend fun updateFavouriteProductIsOnHand(
+        productId: String,
+        isOnHand: Boolean
+    ) = withContext(Dispatchers.IO){
+        localDao.updateFavouriteProductIsOnHand(productId, isOnHand)
+    }
 
-    suspend fun deleteFavoriteProduct(productWithAmount: ProductWithAmount){
+    suspend fun updateFavouriteProductPrices(
+        productId: String,
+        cashPrice: Double,
+        cashlessPrice: Double
+    ) = withContext(Dispatchers.IO){
+        localDao.updateFavouriteProductPrices(productId, cashPrice, cashlessPrice)
+    }
+
+    suspend fun deleteFavoriteProduct(productWithAmount: ProductWithAmount) = withContext(Dispatchers.IO){
         productWithAmount.product?.id?.let { id ->
             localDao.deleteFavoriteProduct(id)
         }
     }
 
-    suspend fun deleteAllInFavorites() = localDao.deleteAllInFavorites()
+    suspend fun deleteAllInFavorites() = withContext(Dispatchers.IO) {
+        localDao.deleteAllInFavorites()
+    }
 
     // cast
 
@@ -88,8 +167,14 @@ class RoomRepository @Inject constructor(private val localDao: LocalDao) {
         val id = this.product?.id ?: return null
         return CartProductEntity(
             productId = id,
-            amountCash = this.amountCash ?: 1,
-            amountCashless = this.amountCashless ?: 1
+            type = product?.type,
+            brand = product?.brand,
+            volume = product?.volume,
+            cashPrice = product?.cashPrice,
+            cashlessPrice = product?.cashlessPrice,
+            isOnHand = product?.isOnHand,
+            cashPriceAmount = cashPriceAmount ?: 1,
+            cashlessPriceAmount = cashlessPriceAmount ?: 1
         )
     }
 
@@ -97,14 +182,19 @@ class RoomRepository @Inject constructor(private val localDao: LocalDao) {
         val id = this.product?.id ?: return null
         return FavouriteProductEntity(
             productId = id,
-            amountCash = this.amountCash ?: 1,
-            amountCashless = this.amountCashless ?: 1
+            type = product?.type,
+            brand = product?.brand,
+            volume = product?.volume,
+            cashPrice = product?.cashPrice,
+            cashlessPrice = product?.cashlessPrice,
+            isOnHand = product?.isOnHand,
+            cashPriceAmount = cashPriceAmount ?: 1,
+            cashlessPriceAmount = cashlessPriceAmount ?: 1
         )
     }
 
     private fun User.toUserDataEntity() : UserDataEntity? {
         val id = this.id ?: return null
-
         return UserDataEntity(
             id = id,
             firstName = this.firstName,
@@ -116,17 +206,4 @@ class RoomRepository @Inject constructor(private val localDao: LocalDao) {
             sex = this.sex
         )
     }
-
-    private fun UserDataEntity.toUser() =
-        User(
-            id = this.id,
-            firstName = this.firstName,
-            secondName = this.secondName,
-            phoneNumber = this.phoneNumber,
-            home = this.home,
-            street = this.street,
-            flat = this.flat,
-            sex = this.sex
-        )
-
 }

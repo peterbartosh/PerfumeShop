@@ -6,8 +6,6 @@ import androidx.navigation.NavGraphBuilder
 import androidx.navigation.NavOptions
 import androidx.navigation.compose.composable
 import com.example.perfumeshop.presentation.app.navigation.BackPressHandler
-import com.example.perfumeshop.presentation.features.main.cart_feature.cart.ui.CartViewModel
-import com.example.perfumeshop.presentation.features.main.profile_feature.favourite.ui.FavouriteViewModel
 import com.example.perfumeshop.presentation.features.main.profile_feature.orders.ui.OrdersScreen
 import com.example.perfumeshop.presentation.features.main.profile_feature.orders.ui.OrdersViewModel
 import com.example.perfumeshop.presentation.features.main.profile_feature.profileActiveChild
@@ -21,8 +19,6 @@ fun NavController.navigateToOrders(navOptions: NavOptions? = null) {
 }
 
 fun NavGraphBuilder.ordersScreen(
-    favouriteViewModel: FavouriteViewModel,
-    cartViewModel: CartViewModel,
     //onProductClick: (String) -> Unit,
     onBackPressed: () -> Unit
 ) {
@@ -32,8 +28,6 @@ fun NavGraphBuilder.ordersScreen(
         BackPressHandler(onBackPressed = onBackPressed)
         OrdersScreen(
             ordersViewModel = ordersViewModel,
-            favouriteViewModel = favouriteViewModel,
-            cartViewModel = cartViewModel,
             //onProductClick = onProductClick
         )
     }

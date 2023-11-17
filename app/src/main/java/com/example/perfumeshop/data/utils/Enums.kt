@@ -83,5 +83,5 @@ fun getSexByName(name : String?) : UserSex {
 enum class OptionType{
     Nothing, Edit, Auth, Favourite, Orders,
     //About, Theme,
-    PhoneNumber, WhatsApp, Telegram, Gmail;
+    PhoneNumber, Gmail, Telegram, WhatsApp, WebSite;
 }

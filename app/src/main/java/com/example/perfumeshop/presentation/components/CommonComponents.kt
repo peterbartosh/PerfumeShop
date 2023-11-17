@@ -33,7 +33,7 @@ import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.layout.wrapContentHeight
 import androidx.compose.foundation.layout.wrapContentWidth
 import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.foundation.lazy.itemsIndexed
+import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -383,8 +383,13 @@ fun Loading() {
     }
 }
 
-fun showToast(context : Context, text : String){
-    val toast = Toast.makeText(context, text, Toast.LENGTH_SHORT)
+fun Context.showToast(stringId : Int, duration: Int = Toast.LENGTH_SHORT){
+    val toast = Toast.makeText(this, this.getString(stringId), duration)
+    toast.show()
+}
+
+fun Context.showToast(message: String, duration: Int = Toast.LENGTH_SHORT){
+    val toast = Toast.makeText(this, message, duration)
     toast.show()
 }
 
@@ -444,8 +449,7 @@ fun SubmitButton(
             if (validInputsState != false)
                 onClick()
             else
-                showToast(context, "Введены некорректные данные!")
-
+                context.showToast(R.string.incorrect_input_error)
         },
         modifier = Modifier
             .padding(3.dp)
@@ -473,7 +477,7 @@ fun LazyProductList(
     isInFavouriteCheck : (String) -> Boolean,
     isInCartCheck : (String) -> Boolean,
 
-    onAmountChanged: (Int, Int, Int) -> Unit = { _, _, _ ->},
+    onAmountChanged: (String, Int, Int) -> Unit = { _, _, _ ->},
 
     userScrollEnabled : Boolean = true,
     showNotValidProducts: MutableState<Boolean>? = null,
@@ -491,12 +495,12 @@ fun LazyProductList(
         state = rememberLazyListState(),
         userScrollEnabled = userScrollEnabled,
     ) {
-        itemsIndexed(
+        items(
             items = listOfProductsWithAmounts,
-            key = { ind, productWithAmount ->
-                productWithAmount.product?.id ?: ind.toString()
+            key = { productWithAmount ->
+                productWithAmount.product?.id ?: productWithAmount.hashCode()
             }
-        ) { ind, productWithAmount ->
+        ) { productWithAmount ->
 
             ProductRow(
                 productWithAmount = productWithAmount,
@@ -507,7 +511,11 @@ fun LazyProductList(
                 onRemoveFromCartClick = onRemoveFromCartClick,
                 isInFavouriteCheck = isInFavouriteCheck,
                 isInCartCheck = isInCartCheck,
-                onAmountChange = { cashAmount, cashlessAmount -> onAmountChanged(ind, cashAmount, cashlessAmount) },
+                onAmountChange = { cashAmount, cashlessAmount ->
+                    productWithAmount.product?.id?.let { id ->
+                        onAmountChanged(id, cashAmount, cashlessAmount)
+                    }
+                },
                 showNotValidProducts = showNotValidProducts
             )
         }
@@ -547,11 +555,11 @@ fun ProductRow(
     }
 
     val amountCashPrice = rememberSaveable {
-        mutableStateOf(productWithAmount.amountCash ?: 1)
+        mutableStateOf(productWithAmount.cashPriceAmount ?: 1)
     }
 
     val amountCashlessPrice = rememberSaveable {
-        mutableStateOf(productWithAmount.amountCashless ?: 1)
+        mutableStateOf(productWithAmount.cashlessPriceAmount ?: 1)
     }
 
     val scale = remember {
@@ -682,12 +690,10 @@ fun ProductRow(
                         modifier = Modifier.size(30.dp),
                         onClick = {
                             if (FirebaseAuth.getInstance().currentUser?.isAnonymous == true)
-                                showToast(context, "Вы не авторизованы")
+                                context.showToast(R.string.you_are_not_authorized_error)
                             else {
                                 if (isInFavourite.value)
-                                //productWithAmount.product?.id?.let { id ->
                                     onRemoveFromFavouriteClick(productWithAmount)
-                                //}
                                 else
                                     onAddToFavouriteClick(productWithAmount)
 
@@ -716,7 +722,7 @@ fun ProductRow(
                         onClick = {
 
                             if (FirebaseAuth.getInstance().currentUser?.isAnonymous == true)
-                                showToast(context, "Вы не авторизованы")
+                                context.showToast(R.string.you_are_not_authorized_error)
                             else if (productWithAmount.product?.isOnHand == true) {
                                 if (isInCart.value) {
                                     onRemoveFromCartClick(productWithAmount)
@@ -724,8 +730,8 @@ fun ProductRow(
                                     onAddToCartClick(
                                         ProductWithAmount(
                                             product = productWithAmount.product,
-                                            amountCash = amountCashPrice.value,
-                                            amountCashless = amountCashlessPrice.value
+                                            cashPriceAmount = amountCashPrice.value,
+                                            cashlessPriceAmount = amountCashlessPrice.value
                                         )
                                     )
 
@@ -734,7 +740,7 @@ fun ProductRow(
                                 onRemoveFromCartClick(productWithAmount)
                                 isInCart.value = !isInCart.value
                             } else {
-                                showToast(context, "Данного продукта нет в наличии.")
+                                context.showToast(R.string.is_not_on_hand)
                             }
 
                         }
@@ -765,8 +771,8 @@ fun ProductRow(
                     val priceAnnotatedStrings =
                         buildPriceAnnotationStrings(productWithAmount = productWithAmount)
                     val prices = listOf(
-                        (productWithAmount.amountCash ?: 1),
-                        (productWithAmount.amountCashless ?: 1)
+                        (productWithAmount.cashPriceAmount ?: 1),
+                        (productWithAmount.cashlessPriceAmount ?: 1)
                     )
 
                     Row(
@@ -830,35 +836,15 @@ fun ProductRow(
 fun buildPriceAnnotationStrings(productWithAmount: ProductWithAmount) : List<AnnotatedString> {
     val cashPrice = buildAnnotatedString {
         withStyle(style = MaterialTheme.typography.labelLarge.toSpanStyle()) {
-            val first = productWithAmount.product?.cashPrice?.round(2).toString().split(".").first()
+            val first = "$ " + productWithAmount.product?.cashPrice?.round(2).toString()
             append(first)
-        }
-        withStyle(style = MaterialTheme.typography.bodySmall.toSpanStyle()) {
-            append("р.")
-        }
-        withStyle(style = MaterialTheme.typography.labelLarge.toSpanStyle()) {
-            val second = productWithAmount.product?.cashPrice?.round(2).toString().split(".").last()
-            append(second)
-        }
-        withStyle(style = MaterialTheme.typography.bodySmall.toSpanStyle()) {
-            append("к. (нал.)")
         }
     }
 
     val cashlessPrice = buildAnnotatedString {
         withStyle(style = MaterialTheme.typography.labelLarge.toSpanStyle()) {
-            val first = productWithAmount.product?.cashlessPrice?.round(2).toString().split(".").first()
+            val first = "$ " + productWithAmount.product?.cashlessPrice?.round(2).toString()
             append(first)
-        }
-        withStyle(style = MaterialTheme.typography.bodySmall.toSpanStyle()) {
-            append("р.")
-        }
-        withStyle(style = MaterialTheme.typography.labelLarge.toSpanStyle()) {
-            val second = productWithAmount.product?.cashlessPrice?.round(2).toString().split(".").last()
-            append(second)
-        }
-        withStyle(style = MaterialTheme.typography.bodySmall.toSpanStyle()) {
-            append("к. (безнал.)")
         }
     }
 

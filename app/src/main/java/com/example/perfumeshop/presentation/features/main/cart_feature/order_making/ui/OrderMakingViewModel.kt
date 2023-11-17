@@ -8,6 +8,9 @@ import com.example.perfumeshop.data.model.Order
 import com.example.perfumeshop.data.model.OrderProduct
 import com.example.perfumeshop.data.model.ProductWithAmount
 import com.example.perfumeshop.data.repository.FireRepository
+import com.example.perfumeshop.data.repository.RoomRepository
+import com.example.perfumeshop.data.room.entities.toProductWithAmount
+import com.example.perfumeshop.data.skeleton.CartFunctionality
 import com.example.perfumeshop.data.user.UserData
 import com.example.perfumeshop.data.utils.UiState
 import com.example.perfumeshop.data.utils.generateNumber
@@ -28,14 +31,29 @@ const val TAG = "OrderMakingViewModel"
 
 @HiltViewModel
 class OrderMakingViewModel @Inject constructor(
-        private val repository: FireRepository,
-        private val emailSender: EmailSender,
-        val auth: FirebaseAuth,
-        val userData: UserData
+    private val fireRepository: FireRepository,
+    private val roomRepository: RoomRepository,
+    private val emailSender: EmailSender,
+    val cartFunctionality: CartFunctionality,
+    val auth: FirebaseAuth,
+    val userData: UserData
 ) : ViewModel(){
+
+    var userProducts = emptyList<ProductWithAmount>()
 
     private var _uiState = MutableStateFlow<UiState>(UiState.NotStarted())
     val uiState : StateFlow<UiState> = _uiState
+
+    init {
+        viewModelScope.launch {
+            _uiState.value = UiState.Loading()
+            launch {
+                userProducts =
+                    roomRepository.getCartProductsAsList().map { it.toProductWithAmount() }
+            }.join()
+            _uiState.value = UiState.Success()
+        }
+    }
 
     fun confirmOrder(
         order: Order,
@@ -46,7 +64,7 @@ class OrderMakingViewModel @Inject constructor(
 
             _uiState.value = UiState.Loading()
 
-            val saveOrderResult = repository.saveToDatabase(item = order, collectionName = "orders")
+            val saveOrderResult = fireRepository.saveToDatabase(item = order, collectionName = "orders")
 
             val generatedOrderId = saveOrderResult?.getOrNull()
 
@@ -56,7 +74,7 @@ class OrderMakingViewModel @Inject constructor(
 
             order.number = orderNumber
 
-            val updateNumberResult = repository.updateInDatabase(
+            val updateNumberResult = fireRepository.updateInDatabase(
                 docId = generatedOrderId,
                 collectionName = "orders",
                 fieldToUpdate = "number",
@@ -71,12 +89,12 @@ class OrderMakingViewModel @Inject constructor(
                 OrderProduct(
                     orderId = generatedOrderId,
                     productId = productWithAmount.product?.id,
-                    cashPriceAmount = productWithAmount.amountCash,
-                    cashlessPriceAmount = productWithAmount.amountCashless
+                    cashPriceAmount = productWithAmount.cashPriceAmount,
+                    cashlessPriceAmount = productWithAmount.cashlessPriceAmount
                 )
             }.forEach { orderProduct ->
                 val defResult = async {
-                    repository.saveToDatabase(
+                    fireRepository.saveToDatabase(
                         item = orderProduct,
                         collectionName = "orders_products",
                         updateId = false

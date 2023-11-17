@@ -6,6 +6,8 @@ import androidx.lifecycle.viewModelScope
 import com.example.perfumeshop.data.model.Order
 import com.example.perfumeshop.data.model.ProductWithAmount
 import com.example.perfumeshop.data.repository.FireRepository
+import com.example.perfumeshop.data.skeleton.CartFunctionality
+import com.example.perfumeshop.data.skeleton.FavouriteFunctionality
 import com.example.perfumeshop.data.utils.UiState
 import com.google.firebase.auth.FirebaseAuth
 import dagger.hilt.android.lifecycle.HiltViewModel
@@ -22,9 +24,11 @@ const val TAG = "OrdersViewModel"
 
 @HiltViewModel
 class OrdersViewModel @Inject constructor(
-    private val auth: FirebaseAuth,
-    private val repository: FireRepository
-    ) : ViewModel() {
+    auth: FirebaseAuth,
+    val cartFunctionality: CartFunctionality,
+    val favouriteFunctionality: FavouriteFunctionality,
+    private val fireRepository: FireRepository
+) : ViewModel() {
 
     private val _ordersList = mutableListOf<Order>()
     var ordersList = _ordersList.toList()
@@ -43,7 +47,7 @@ class OrdersViewModel @Inject constructor(
     private fun getUserOrders() = viewModelScope.launch {
         _uiState.value = UiState.Loading()
         val deferred = async {
-            repository.getUserOrders()
+            fireRepository.getUserOrders()
                 .catch { e ->
                     Log.d(TAG, "getUserOrders: ${e.message}")
                     _uiState.value = UiState.Failure(e)
@@ -61,11 +65,11 @@ class OrdersViewModel @Inject constructor(
                 async {
                     order.id?.let { id ->
                         _productsWithAmountMap[id] =
-                            repository.getOrderProducts(id).map { orderProduct ->
+                            fireRepository.getOrderProducts(id).map { orderProduct ->
                                 ProductWithAmount(
-                                    product = repository.getProduct(orderProduct.productId),
-                                    amountCash = orderProduct.cashPriceAmount,
-                                    amountCashless = orderProduct.cashlessPriceAmount
+                                    product = fireRepository.getProduct(orderProduct.productId),
+                                    cashPriceAmount = orderProduct.cashPriceAmount,
+                                    cashlessPriceAmount = orderProduct.cashlessPriceAmount
                                 )
                             }
                     }

@@ -23,6 +23,7 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextDecoration
 import androidx.compose.ui.unit.dp
+import com.example.perfumeshop.R
 import com.example.perfumeshop.data.utils.UiState
 import com.example.perfumeshop.presentation.components.ErrorOccurred
 import com.example.perfumeshop.presentation.components.LazyProductList
@@ -30,20 +31,21 @@ import com.example.perfumeshop.presentation.components.Loading
 import com.example.perfumeshop.presentation.components.NothingFound
 import com.example.perfumeshop.presentation.components.SubmitButton
 import com.example.perfumeshop.presentation.components.showToast
-import com.example.perfumeshop.presentation.features.main.profile_feature.favourite.ui.FavouriteViewModel
 
 @Composable
 fun CartScreen(
-    favouriteViewModel: FavouriteViewModel,
     cartViewModel: CartViewModel,
     //onProductClick: (String) -> Unit,
     onOrderMakeClick: () -> Unit
 ) {
     val context = LocalContext.current
 
-    val validState by remember(cartViewModel.userProducts.size) {
+    val uiState = cartViewModel.uiState.collectAsState()
+    val userProducts by cartViewModel.userProducts.collectAsState()
+
+    val validState by remember(userProducts.size) {
         mutableStateOf(
-            cartViewModel.userProducts.isNotEmpty()
+            userProducts.isNotEmpty()
         )
     }
 
@@ -85,8 +87,8 @@ fun CartScreen(
                         .wrapContentSize()
                         .padding(end = 10.dp)
                         .clickable {
-                            cartViewModel.clearData().onJoin
-                            showToast(context = context, "Очищено.")
+                            cartViewModel.cartFunctionality.clearData().onJoin
+                            context.showToast(R.string.content_cleared)
                         },
                     textDecoration = TextDecoration.Underline,
                     style = MaterialTheme.typography.bodySmall,
@@ -95,23 +97,19 @@ fun CartScreen(
                 )
             }
 
-
-            val uiState = cartViewModel.uiState.collectAsState()
-
             when (uiState.value){
                 is UiState.Success ->
-                    if (cartViewModel.userProducts.isNotEmpty())
+                    if (userProducts.isNotEmpty())
                         LazyProductList(
-
                             //onProductClick = onProductClick,
-                            listOfProductsWithAmounts = cartViewModel.userProducts,
-                            onAddToFavouriteClick = favouriteViewModel::addProduct,
-                            onAddToCartClick = cartViewModel::addProduct,
-                            onRemoveFromFavouriteClick = favouriteViewModel::removeProduct,
-                            onRemoveFromCartClick = cartViewModel::removeProduct,
-                            isInCartCheck = cartViewModel::isInCart,
-                            isInFavouriteCheck = favouriteViewModel::isInFavourites,
-                            onAmountChanged = cartViewModel::updateProductAmount,
+                            listOfProductsWithAmounts = userProducts,
+                            onAddToFavouriteClick = cartViewModel.favouriteFunctionality::addProduct,
+                            onAddToCartClick = cartViewModel.cartFunctionality::addProduct,
+                            onRemoveFromFavouriteClick = cartViewModel.favouriteFunctionality::removeProduct,
+                            onRemoveFromCartClick = cartViewModel.cartFunctionality::removeProduct,
+                            isInCartCheck = cartViewModel.cartFunctionality::isInCart,
+                            isInFavouriteCheck = cartViewModel.favouriteFunctionality::isInFavourites,
+                            onAmountChanged = cartViewModel.cartFunctionality::updateProductAmount,
                             showNotValidProducts = showNotValidProducts
                         )
                     else
@@ -125,23 +123,33 @@ fun CartScreen(
 
         SubmitButton(
             validInputsState = validState,
-            text = "Перейти к оформлению заказа",
+            text = context.getString(R.string.cart_screen_submit_button_text),
         ) {
             if (cartViewModel.auth.currentUser?.isAnonymous == false) {
-                if (
-                    cartViewModel.userProducts.all { productWA ->
-                        productWA.product?.isOnHand == true &&
-                                (productWA.amountCash != 0 || productWA.amountCashless != 0)
+                if (userProducts.any { productWA ->
+                        productWA.product?.isOnHand == false
                     }
-                )
-                    onOrderMakeClick()
-                else {
+                ){
                     showNotValidProducts.value = true
-                    showToast(context, "Ошибка.\nНельзя заказать 0 единиц продукта.")
+                    context.showToast(R.string.cart_screen_is_not_on_hand_error)
+                    return@SubmitButton
                 }
+
+                if (userProducts.any { productWA ->
+                        productWA.cashPriceAmount == 0 ||
+                                productWA.cashlessPriceAmount == 0
+                    }
+                ){
+                    showNotValidProducts.value = true
+                    context.showToast(R.string.cart_screen_zero_amount_error)
+                    return@SubmitButton
+                }
+
+                onOrderMakeClick()
+
             }
             else
-                showToast(context, "Вы не авторизованы")
+                context.showToast(R.string.you_are_not_authorized_error)
         }
     }
 }

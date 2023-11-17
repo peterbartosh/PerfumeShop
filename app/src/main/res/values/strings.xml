@@ -1,28 +1,42 @@
 <resources>
     <string name="app_name">PerfumeShop</string>
+    <string name="app_label">GOLD PARFUM</string>
+    <string name="app_label_not_caps">Gold Parfum</string>
+    <string name="parfum_and_cosmetics">Парфюмерия и косметика оптом</string>
     <string name="registration_label"> Зарегистрируйтесь!</string>
     <string name="registration_body"> \n Регистрация позволяет узнавать узнать цену товара, оформить заказ и многое другое! </string>
-<string name="reg_img_url">data:image/png;base64,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</string>
-    <string name="product_photo_1"> https://parfum-aroma.com.ua/storage/news/2/12/12.jpg?v0.4 </string>
-    <string name="product_photo_2"> https://i.pinimg.com/1200x/31/91/fc/3191fcb57161a19f796c42f317fa275e.jpg </string>
-    <string name="product_photo_3"> https://ee.tallink.com/documents/10192/31064102/kuidas-kanda-parfuumi-nagu-prantslannad.jpg/2499f4b3-133c-4ee3-a216-b2a7d1e0421b?t=1513763251406 </string>
-    <string name="receiver_email_address"> pt.bartosh54321@gmail.com </string>
-    <string name="sender_email_address"> goldappsender@gmail.com </string>
+    <string name="receiver_email_address">zakaz@goldparfum.by</string>
+    <string name="sender_email_address">goldappsender@gmail.com</string>
     <string name="error_occured"> Произошла ошибка </string>
     <string name="nothing_found"> Ничего не найдено </string>
+
+    <!--  alert messages  -->
+
     <string name="password_requirements"> Пароль должен состоять как минимум из 6-ти символов. </string>
+
     <string name="code_verification_alert_bef">
         Ожидайте.\n
         В течение нескольких минут на номер
     </string>
+
     <string name="code_verification_alert_aft">
          поступит звонок от нашего оператора, который сообщит вам код подтверждения.\n
         Не уходите с этой страницы.
     </string>
+
+    <!--  question alert messages  -->
+
+    <string name="are_you_sure_you_want_sign_out">
+         Вы уверены, что хотите выйти из учётной записи?
+    </string>
+
+    <!--  status explanation messages  -->
+
     <string name="processing_status">
         Ваш заказ в обработке.\n
         В течение нескольких минут вам поступит звонок от нашего оператора для подтверждения вашего заказа.
     </string>
+
     <string name="accepted_status">
         Ваш заказ принят.\n
         Примерный день прибытия вашего заказа на склад - ближайший вторник.
@@ -39,6 +53,7 @@
         Ваш заказ доставлен.\n
         Мы будем рады вашим новым заказам!
     </string>
+
     <string name="canceled_status">
         Ваш заказ отменён.\n
         Если не вы отменили данный заказ, вы можете связаться с нашими операторами.
@@ -46,12 +61,92 @@
     </string>
 
     <string name="app_blocked_upper">
-        Приложение на обслуживании
+        Приложение на обслуживании.
     </string>
 
     <string name="app_blocked_bottom">
         Мы приносим свои извинения за неудобства.\n
         Попробуйте зайти в другое время.
+    </string>
+
+    <string name="cart_screen_submit_button_text">
+        Перейти к оформлению заказа
+    </string>
+
+    <!--  owner contacts  -->
+
+    <string name="phone_number">+375 (29) 267-99-01</string>
+    <string name="email">zakaz@goldparfum.by</string>
+    <string name="telegram">goldparfumrb</string>
+    <string name="whatsapp">+375292679901</string>
+    <string name="website">goldparfum.by</string>
+
+    <!--  intent prefixes  -->
+
+    <string name="phone_number_prefix">tel:</string>
+    <string name="email_prefix">mailto:</string>
+    <string name="telegram_prefix">https://t.me/</string>
+    <string name="whatsapp_prefix">https://api.whatsapp.com/send?phone=</string>
+    <string name="website_prefix">https://</string>
+
+    <!--  ordinary messages  -->
+
+    <string name="is_not_on_hand">
+        Данного продукта нет в наличии.
+    </string>
+
+    <string name="content_cleared">
+        Очищено.
+    </string>
+
+    <string name="content_updated">
+        Обновлено.
+    </string>
+
+    <string name="cart_updated">
+        Корзина обновлена.
+    </string>
+
+    <string name="copied_to_clipboard">
+        Скопировано в буфер.
+    </string>
+
+    <!--  error messages  -->
+
+    <string name="incorrect_input_error">
+        Ошибка.\nВведены некорректные данные.
+    </string>
+
+    <string name="you_are_not_authorized_error">
+        Ошибка.\nВы не авторизованы.
+    </string>
+
+    <string name="cart_screen_is_not_on_hand_error">
+        Ошибка.\nВ корзине находятся продукты, которых нет в наличии.
+    </string>
+
+    <string name="cart_screen_zero_amount_error">
+        Ошибка.\nНельзя заказать 0 единиц продукта.
+    </string>
+
+    <string name="app_not_installed_error">
+        Ошибка.\nПриложение не установлено.
+    </string>
+
+    <string name="connection_lost_error">
+        Ошибка.\nВы не подключены к сети.
+    </string>
+
+    <string name="order_accepted">
+        Заказ принят.\nПожалуйста, дождитесь звонка оператора.
+    </string>
+
+    <string name="try_later_error">
+        Ошибка.\nПовторите попытку позже.
+    </string>
+
+    <string name="you_are_in_black_list_error">
+        Ошибка.\nВы добавлены в чёрный список.
     </string>
 
 </resources>

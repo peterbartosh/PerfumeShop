@@ -320,8 +320,8 @@ class FireRepository @Inject constructor(
                 CartObj(
                     userId = userId,
                     productId = productWithAmount.product?.id,
-                    cashPriceAmount = productWithAmount.amountCash,
-                    cashlessPriceAmount = productWithAmount.amountCashless
+                    cashPriceAmount = productWithAmount.cashPriceAmount,
+                    cashlessPriceAmount = productWithAmount.cashlessPriceAmount
                 )
             ).addOnCompleteListener { task ->
                 result = if (task.isSuccessful)
@@ -372,8 +372,8 @@ class FireRepository @Inject constructor(
                     FavouriteObj(
                         userId = userId,
                         productId = productWithAmount.product?.id,
-                        cashPriceAmount = productWithAmount.amountCash,
-                        cashlessPriceAmount = productWithAmount.amountCashless
+                        cashPriceAmount = productWithAmount.cashPriceAmount,
+                        cashlessPriceAmount = productWithAmount.cashlessPriceAmount
                     )
                 ).addOnCompleteListener { task ->
                 result = if (task.isSuccessful)

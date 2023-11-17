@@ -24,6 +24,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.scale
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
+import com.example.perfumeshop.R
 import com.example.perfumeshop.data.utils.getWidthPercent
 import kotlinx.coroutines.delay
 
@@ -87,14 +88,14 @@ fun SplashScreen(
                 verticalArrangement = Arrangement.Center
             ) {
                 Text(
-                    text = "Gold Parfum",
+                    text = context.getString(R.string.app_label_not_caps),
                     modifier = Modifier.padding(bottom = 16.dp),
                     style = MaterialTheme.typography.titleMedium,
                     color = MaterialTheme.colorScheme.primary
                 )
                 Spacer(modifier = Modifier.height(15.dp))
                 Text(
-                    text = "Парфюмерия и косметика оптом",
+                    text = context.getString(R.string.parfum_and_cosmetics),
                     style = MaterialTheme.typography.bodyMedium,
                     color = MaterialTheme.colorScheme.onBackground
                 )

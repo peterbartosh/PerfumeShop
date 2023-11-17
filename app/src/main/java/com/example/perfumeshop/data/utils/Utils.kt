@@ -15,8 +15,6 @@ fun isUserConnected(context: Context) : Boolean {
     val manager =
         context.getSystemService(Context.CONNECTIVITY_SERVICE) as ConnectivityManager
     val connected = manager.activeNetwork
-//    if (connected == null)
-//        showToast(context, "Ошибка.\nВы не подключены к сети.")
     return connected != null
 }
 

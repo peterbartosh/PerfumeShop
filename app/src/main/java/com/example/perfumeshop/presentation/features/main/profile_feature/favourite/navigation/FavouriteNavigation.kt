@@ -1,11 +1,11 @@
 package com.example.perfumeshop.presentation.features.main.profile_feature.favourite.navigation
 
+import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.NavController
 import androidx.navigation.NavGraphBuilder
 import androidx.navigation.NavOptions
 import androidx.navigation.compose.composable
 import com.example.perfumeshop.presentation.app.navigation.BackPressHandler
-import com.example.perfumeshop.presentation.features.main.cart_feature.cart.ui.CartViewModel
 import com.example.perfumeshop.presentation.features.main.profile_feature.favourite.ui.FavouriteScreen
 import com.example.perfumeshop.presentation.features.main.profile_feature.favourite.ui.FavouriteViewModel
 import com.example.perfumeshop.presentation.features.main.profile_feature.profileActiveChild
@@ -20,15 +20,13 @@ fun NavController.navigateToFavouritesRoute(navOptions: NavOptions? = null) {
 
 fun NavGraphBuilder.favouriteScreen(
     //onProductClick: (String) -> Unit,
-    favouriteViewModel: FavouriteViewModel,
-    cartViewModel: CartViewModel,
     onBackPressed: () -> Unit
 ) {
     composable(route = favouriteRoute) {
+        val favouriteViewModel = hiltViewModel<FavouriteViewModel>()
         BackPressHandler(onBackPressed = onBackPressed)
         FavouriteScreen(
-            favouriteViewModel = favouriteViewModel,
-            cartViewModel = cartViewModel,
+            favouriteViewModel,
            // onProductClick = onProductClick
         )
     }

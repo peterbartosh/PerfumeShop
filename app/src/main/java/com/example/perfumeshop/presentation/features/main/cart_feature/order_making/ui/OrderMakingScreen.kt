@@ -31,6 +31,7 @@ import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.withStyle
 import androidx.compose.ui.unit.dp
+import com.example.perfumeshop.R
 import com.example.perfumeshop.data.model.Order
 import com.example.perfumeshop.data.utils.OrderStatus
 import com.example.perfumeshop.data.utils.UiState
@@ -41,12 +42,10 @@ import com.example.perfumeshop.presentation.components.InputField
 import com.example.perfumeshop.presentation.components.Loading
 import com.example.perfumeshop.presentation.components.SubmitButton
 import com.example.perfumeshop.presentation.components.showToast
-import com.example.perfumeshop.presentation.features.main.cart_feature.cart.ui.CartViewModel
 import com.google.firebase.Timestamp
 
 @Composable
 fun OrderMakingScreen(
-    cartViewModel: CartViewModel,
     orderMakingViewModel: OrderMakingViewModel,
     onOrderDone : () -> Unit
 ) {
@@ -169,10 +168,10 @@ fun OrderMakingScreen(
                     }
 
                     withStyle(style = MaterialTheme.typography.titleSmall.toSpanStyle()){
-                        val total = cartViewModel.userProducts.sumOf { productWithAmount ->
+                        val total = orderMakingViewModel.userProducts.sumOf { productWithAmount ->
 
-                        val cashSum = ((productWithAmount.product?.cashPrice ?: 0.0) * (productWithAmount.amountCash ?: 1))
-                        val cashlessSum = ((productWithAmount.product?.cashlessPrice ?: 0.0) * (productWithAmount.amountCashless ?: 1))
+                        val cashSum = ((productWithAmount.product?.cashPrice ?: 0.0) * (productWithAmount.cashPriceAmount ?: 1))
+                        val cashlessSum = ((productWithAmount.product?.cashlessPrice ?: 0.0) * (productWithAmount.cashlessPriceAmount ?: 1))
                             cashSum + cashlessSum
                         }.round(2)
 
@@ -190,7 +189,7 @@ fun OrderMakingScreen(
 
             LazyColumn(contentPadding = PaddingValues(10.dp)) {
                 itemsIndexed(
-                    items = cartViewModel.userProducts.toList(),
+                    items = orderMakingViewModel.userProducts.toList(),
                     key = { i, p -> p.product?.id ?: i }
                 ) { _, productWithAmount ->
                     ProductBox(productWithAmount = productWithAmount)
@@ -208,11 +207,11 @@ fun OrderMakingScreen(
         ) {
 
             if (!isUserConnected(context)){
-                showToast(context, "Ошибка.\nВы не подключены к сети.")
+                context.showToast(R.string.connection_lost_error)
                 return@SubmitButton
             }
 
-            val productWithAmounts = cartViewModel.userProducts
+            val productWithAmounts = orderMakingViewModel.userProducts
 
             if (productWithAmounts.isEmpty()) return@SubmitButton
 
@@ -231,12 +230,12 @@ fun OrderMakingScreen(
             ).invokeOnCompletion {
                 when (uiState.value){
                     is UiState.Success ->{
-                        showToast(context, "Заказ принят.\nПожалуйста, дождитесь звонка оператора.")
-                        cartViewModel.clearData()
+                        context.showToast(R.string.order_accepted)
+                        orderMakingViewModel.cartFunctionality.clearData()
                         onOrderDone()
                     }
                     is UiState.Failure -> {
-                        showToast(context, "Ошибка. Повторите попытку позже")
+                        context.showToast(R.string.try_later_error)
                     }
                     else -> {}
                 }

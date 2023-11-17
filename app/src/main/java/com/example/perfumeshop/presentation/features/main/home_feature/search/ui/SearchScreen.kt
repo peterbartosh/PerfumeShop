@@ -29,15 +29,11 @@ import com.example.perfumeshop.presentation.components.LazyProductList
 import com.example.perfumeshop.presentation.components.Loading
 import com.example.perfumeshop.presentation.components.NothingFound
 import com.example.perfumeshop.presentation.components.showToast
-import com.example.perfumeshop.presentation.features.main.cart_feature.cart.ui.CartViewModel
-import com.example.perfumeshop.presentation.features.main.profile_feature.favourite.ui.FavouriteViewModel
 
 typealias SearchRequest = Pair<String, QueryType>
 
 @Composable
 fun SearchScreen(
-    favouriteViewModel: FavouriteViewModel,
-    cartViewModel: CartViewModel,
     searchViewModel: SearchViewModel,
     //onProductClick: (String) -> Unit,
     initQuery: String,
@@ -203,14 +199,14 @@ fun SearchScreen(
                             //onProductClick = onProductClick,
                             listOfProductsWithAmounts = searchViewModel.searchProducts,
 
-                            onAddToFavouriteClick = favouriteViewModel::addProduct,
-                            onAddToCartClick = cartViewModel::addProduct,
+                            onAddToFavouriteClick = searchViewModel.favouriteFunctionality::addProduct,
+                            onAddToCartClick = searchViewModel.cartFunctionality::addProduct,
 
-                            onRemoveFromFavouriteClick = favouriteViewModel::removeProduct,
-                            onRemoveFromCartClick = cartViewModel::removeProduct,
+                            onRemoveFromFavouriteClick = searchViewModel.favouriteFunctionality::removeProduct,
+                            onRemoveFromCartClick = searchViewModel.cartFunctionality::removeProduct,
 
-                            isInFavouriteCheck = favouriteViewModel::isInFavourites,
-                            isInCartCheck = cartViewModel::isInCart,
+                            isInFavouriteCheck = searchViewModel.favouriteFunctionality::isInFavourites,
+                            isInCartCheck = searchViewModel.cartFunctionality::isInCart,
 
 //                            onAmountChanged = searchViewModel::updateProductAmount,
 //                            onCashStateChanged = searchViewModel::updateProductCashState,
@@ -273,7 +269,7 @@ fun SearchScreen(
 //                            isFemaleOnly = isFemaleOnly
                         )
                     } catch (e: Exception) {
-                        showToast(context = context, "Ошибка\nНекорректные данные")
+                        context.showToast(R.string.incorrect_input_error)
                     }
 
                     filterApplied.value = filterAppliedParam

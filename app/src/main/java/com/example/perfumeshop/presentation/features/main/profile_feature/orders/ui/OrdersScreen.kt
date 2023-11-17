@@ -20,16 +20,14 @@ import com.example.perfumeshop.data.utils.UiState
 import com.example.perfumeshop.presentation.components.ErrorOccurred
 import com.example.perfumeshop.presentation.components.Loading
 import com.example.perfumeshop.presentation.components.NothingFound
-import com.example.perfumeshop.presentation.features.main.cart_feature.cart.ui.CartViewModel
-import com.example.perfumeshop.presentation.features.main.profile_feature.favourite.ui.FavouriteViewModel
 
 @Composable
 fun OrdersScreen(
     ordersViewModel: OrdersViewModel,
-    cartViewModel: CartViewModel,
-    favouriteViewModel: FavouriteViewModel,
     //onProductClick : (String) -> Unit
 ) {
+
+    val uiState = ordersViewModel.uiState.collectAsState()
 
     Column(modifier = Modifier.fillMaxSize()) {
         Text(
@@ -43,8 +41,6 @@ fun OrdersScreen(
         )
         Column(modifier = Modifier.fillMaxHeight()) {
 
-            val uiState = ordersViewModel.uiState.collectAsState()
-
             when (uiState.value){
                 is UiState.Success -> if (ordersViewModel.ordersList.isNotEmpty()){
                     LazyColumn {
@@ -52,13 +48,13 @@ fun OrdersScreen(
                             OrderRow(
                                 order = order,
                                 productsWithAmount = ordersViewModel.productsWithAmountMap[order.id] ?: emptyList(),
-                                onAddToFavouriteClick = favouriteViewModel::addProduct,
-                                onAddToCartClick = cartViewModel::addProduct,
-                                onRemoveFromFavouriteClick = favouriteViewModel::removeProduct,
-                                onRemoveFromCartClick = cartViewModel::removeProduct,
-                                isInFavouriteCheck = favouriteViewModel::isInFavourites,
-                                isInCartCheck = cartViewModel::isInCart,
-                                clearCart = cartViewModel::clearData,
+                                onAddToFavouriteClick = ordersViewModel.favouriteFunctionality::addProduct,
+                                onAddToCartClick = ordersViewModel.cartFunctionality::addProduct,
+                                onRemoveFromFavouriteClick = ordersViewModel.favouriteFunctionality::removeProduct,
+                                onRemoveFromCartClick = ordersViewModel.cartFunctionality::removeProduct,
+                                isInFavouriteCheck = ordersViewModel.favouriteFunctionality::isInFavourites,
+                                isInCartCheck = ordersViewModel.cartFunctionality::isInCart,
+                                clearCart = ordersViewModel.cartFunctionality::clearData,
                                 //onProductClick = onProductClick
                             )
                         }

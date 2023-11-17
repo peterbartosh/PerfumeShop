@@ -64,39 +64,46 @@ import java.util.StringJoiner
 
 const val TAG = "ProfileComponents"
 
-fun composeIntent(context: Context, optionType : OptionType, optionData : String) {
+fun composeIntent(context: Context, optionType : OptionType) {
 
     try {
         when (optionType){
 
+            OptionType.PhoneNumber -> {
+                ContextCompat.startActivity(context, Intent.createChooser(Intent(Intent.ACTION_DIAL).apply {
+                    data = Uri.parse(context.getString(R.string.phone_number_prefix) + context.getString(R.string.phone_number))
+                }, ""), null)
+            }
+
             OptionType.Gmail -> {
                 ContextCompat.startActivity(context, Intent(Intent.ACTION_SENDTO).apply {
-                    data = Uri.parse("mailto:$optionData")
+                    data = Uri.parse(context.getString(R.string.email_prefix) + context.getString(R.string.email))
                 }, null)
 
             }
             OptionType.Telegram -> {
                 ContextCompat.startActivity(context, Intent(Intent.ACTION_VIEW).apply {
-                    data = Uri.parse("tg://openmessage?user_id=270838226")
+                    data = Uri.parse(context.getString(R.string.telegram_prefix) + context.getString(R.string.telegram))
                 }, null)
             }
 
             OptionType.WhatsApp -> {
                 ContextCompat.startActivity(context, Intent(Intent.ACTION_VIEW).apply {
-                    data = Uri.parse("https://api.whatsapp.com/send?phone=$$optionData")
+                    data = Uri.parse(context.getString(R.string.whatsapp_prefix) + context.getString(R.string.whatsapp))
                 }, null)
             }
 
-            OptionType.PhoneNumber -> {
-                ContextCompat.startActivity(context, Intent.createChooser(Intent(Intent.ACTION_DIAL).apply {
-                    data = Uri.parse("tel:$optionData")
-                }, ""), null)
+            OptionType.WebSite -> {
+                ContextCompat.startActivity(context, Intent(Intent.ACTION_VIEW).apply {
+                    data = Uri.parse(context.getString(R.string.website_prefix) + context.getString(R.string.website))
+                }, null)
             }
 
             else -> {}
         }
     } catch (e : Exception){
-        showToast(context, "Приложение не установлено")
+
+        context.showToast(R.string.app_not_installed_error)
         Log.d(TAG, "composeIntent: ${e.message}")
     }
 }
@@ -118,7 +125,7 @@ fun OptionRow(option : Option, onOptionClick: (OptionType) -> Unit) {
         //.border(width = 1.dp, color = Color.Black)
         .clickable {
             onOptionClick(option.type)
-            composeIntent(context, option.type, option.content.toString())
+            composeIntent(context, option.type)
         },
         //.shadow(elevation = 3.dp, shape = RoundedCornerShape(5.dp))
          colors = CardDefaults.cardColors(
@@ -186,7 +193,7 @@ fun OptionRow(option : Option, onOptionClick: (OptionType) -> Unit) {
                             .padding(end = 5.dp)
                             .clickable {
                                 clipboardManager.setText(AnnotatedString(option.content))
-                                showToast(context, "Скопировано в буфер")
+                                context.showToast(R.string.copied_to_clipboard)
                             }
                     )
                 }
@@ -255,7 +262,7 @@ fun ProfileSection(
     val firstName = profileViewModel.userData.user?.firstName ?: notSpecified
     val secondName = profileViewModel.userData.user?.secondName ?: notSpecified
     val phoneNumber = profileViewModel.userData.user?.phoneNumber ?: notSpecified
-    val address = StringJoiner(", ")
+    val address = StringJoiner(" , ")
         .add(profileViewModel.userData.user?.street?.firstLetterToUpperCase() ?: notSpecified)
         .add((profileViewModel.userData.user?.home ?: shortNotSpecified))
         .add((profileViewModel.userData.user?.flat ?: shortNotSpecified))
@@ -292,8 +299,6 @@ fun ProfileSection(
                     .padding(start = 20.dp, top = 10.dp, bottom = 20.dp),
                 horizontalAlignment = Alignment.Start
             ) {
-
-                val modifier = Modifier.padding(start = 10.dp)
 
                 Text(
                     text = "${secondName.firstLetterToUpperCase()} ${firstName.firstLetterToUpperCase()}",
@@ -379,7 +384,7 @@ fun ProfileSection(
                         horizontalArrangement = Arrangement.Center,
                     ) {
                         Text(
-                            text = "Вы уверены, что хотите выйти из учётной записи?",
+                            text = context.getString(R.string.are_you_sure_you_want_sign_out),
                             textAlign = TextAlign.Center,
                             style = MaterialTheme.typography.bodyMedium
                         )
@@ -408,7 +413,7 @@ fun ProfileSection(
                         Button(
                             onClick = {
                                 if (!isUserConnected(context)){
-                                    showToast(context, "Ошибка.\nВы не подключены к сети.")
+                                    context.showToast(R.string.connection_lost_error)
                                     return@Button
                                 } else {
                                     CoroutineScope(Job()).launch {

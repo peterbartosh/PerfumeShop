@@ -3,6 +3,7 @@ package com.example.perfumeshop.presentation.features.main.profile_feature.profi
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.AccountBox
 import androidx.compose.material.icons.filled.Email
@@ -10,8 +11,10 @@ import androidx.compose.material.icons.filled.Favorite
 import androidx.compose.material.icons.filled.Phone
 import androidx.compose.material.icons.outlined.ArrowForward
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
@@ -20,57 +23,40 @@ import com.example.perfumeshop.R
 import com.example.perfumeshop.data.utils.OptionType
 import com.example.perfumeshop.data.utils.isUserConnected
 import com.example.perfumeshop.presentation.components.showToast
-import com.example.perfumeshop.presentation.features.main.cart_feature.cart.ui.CartViewModel
-import com.example.perfumeshop.presentation.features.main.profile_feature.favourite.ui.FavouriteViewModel
-import kotlinx.coroutines.joinAll
 
 
 @Composable
 fun ProfileScreen(
     onOptionClick: (OptionType) -> Unit,
-    cartViewModel: CartViewModel,
-    favouriteViewModel: FavouriteViewModel,
     profileViewModel: ProfileViewModel
 ) {
     val context = LocalContext.current
 
-    val isAnonymous = remember {
+    var isAnonymous by remember {
         mutableStateOf(profileViewModel.auth.currentUser?.isAnonymous == true)
     }
 
     Column(horizontalAlignment = Alignment.CenterHorizontally) {
-        if (isAnonymous.value)
+        if (isAnonymous)
             NotRegisteredSection(onOptionClick = onOptionClick)
         else
             RegisteredSection(
                 profileViewModel = profileViewModel,
                 onOptionClick = {optionType ->
                     if (!isUserConnected(context)){
-                        showToast(context, "Ошибка.\nВы не подключены к сети.")
+                        context.showToast(R.string.connection_lost_error)
                         return@RegisteredSection
                     }
                     onOptionClick(optionType)
                 },
                 onSignOutClick = {
 
-                        val clearUserDataJob = profileViewModel.userData.clearUserData()
+                    profileViewModel.userData.clearUserData().join()
+                    profileViewModel.dataManager.saveProductsToRemote()
+                    profileViewModel.auth.signOut()
+                    profileViewModel.auth.signInAnonymously()
 
-                        clearUserDataJob.join()
-
-                        val cartSaveJob = cartViewModel.saveProductsToRemoteDatabase()
-                        val favouriteSaveJob = favouriteViewModel.saveProductsToRemoteDatabase()
-
-                        joinAll(cartSaveJob, favouriteSaveJob)
-
-                        val cartClearJob = cartViewModel.clearData()
-                        val favouriteClearJob = favouriteViewModel.clearData()
-
-                        joinAll(cartClearJob, favouriteClearJob)
-
-                        profileViewModel.auth.signOut()
-                        profileViewModel.auth.signInAnonymously()
-
-                        isAnonymous.value = true
+                    isAnonymous = true
                 }
             )
     }
@@ -83,6 +69,8 @@ fun RegisteredSection(
     onSignOutClick: suspend () -> Unit
 ) {
 
+    val context = LocalContext.current
+
     ProfileSection(
         profileViewModel = profileViewModel,
         onEditProfileClick = { onOptionClick(OptionType.Edit) },
@@ -91,22 +79,64 @@ fun RegisteredSection(
 
     Spacer(modifier = Modifier.height(10.dp))
 
-    OptionsSection(
-        sectionTitle = "Личные данные", listOf(
-            Option("Избранное", OptionType.Favourite, Icons.Default.Favorite, Icons.Outlined.ArrowForward),
-            Option("Заказы", OptionType.Orders, R.drawable.order_icon, Icons.Outlined.ArrowForward)
-        ), onOptionClick = onOptionClick
-    )
+    LazyColumn{
+        item(key = 0) {
+            OptionsSection(
+                sectionTitle = "Личные данные", listOf(
+                    Option(
+                        "Избранное",
+                        OptionType.Favourite,
+                        Icons.Default.Favorite,
+                        Icons.Outlined.ArrowForward
+                    ),
+                    Option(
+                        "Заказы",
+                        OptionType.Orders,
+                        R.drawable.order_icon,
+                        Icons.Outlined.ArrowForward
+                    )
+                ), onOptionClick = onOptionClick
+            )
+        }
 
-    OptionsSection(
-        sectionTitle = "Контакты", listOf(
-            Option("Телефон", OptionType.PhoneNumber, Icons.Default.Phone, "+375 (44) 575-43-25"),
-            Option("E-mail", OptionType.Gmail, Icons.Default.Email, "goldappsender@gmail.com"),
-            Option("Telegram", OptionType.Telegram, R.drawable.telegram_icon, "@n_garkavaia"),
-            Option("WhatsApp", OptionType.WhatsApp, R.drawable.whatsapp_icon, "+74951506463")
-        ),
-        onOptionClick = onOptionClick
-    )
+        item(key = 1) {
+            OptionsSection(
+                sectionTitle = "Контакты", listOf(
+                    Option(
+                        "Телефон",
+                        OptionType.PhoneNumber,
+                        Icons.Default.Phone,
+                        context.getString(R.string.phone_number)
+                    ),
+                    Option(
+                        "E-mail",
+                        OptionType.Gmail,
+                        Icons.Default.Email,
+                        context.getString(R.string.email)
+                    ),
+                    Option(
+                        "Telegram",
+                        OptionType.Telegram,
+                        R.drawable.telegram_icon,
+                        context.getString(R.string.telegram)
+                    ),
+                    Option(
+                        "WhatsApp",
+                        OptionType.WhatsApp,
+                        R.drawable.whatsapp_icon,
+                        context.getString(R.string.whatsapp)
+                    ),
+                    Option(
+                        "Веб-сайт",
+                        OptionType.WebSite,
+                        R.drawable.website_icon,
+                        context.getString(R.string.website)
+                    )
+
+                ), onOptionClick = onOptionClick
+            )
+        }
+    }
 }
 
 

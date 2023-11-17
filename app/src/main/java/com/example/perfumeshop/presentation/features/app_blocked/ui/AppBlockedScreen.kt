@@ -62,8 +62,7 @@ fun AppBlockedScreen(
                 .invokeOnCompletion {
                     refreshClicked = false
                 }
-        } else
-            showToast(context, "Ошибка.\nВы не подключены к сети.")
+        } else context.showToast(R.string.connection_lost_error)
     }
 
     if (!refreshClicked) {
@@ -95,7 +94,7 @@ fun AppBlockedScreen(
                         .wrapContentHeight()
                         .padding(bottom = 10.dp),
                     painter = painterResource(id = R.drawable.app_blocked_icon),
-                    contentDescription = "app blocked icon",
+                    contentDescription = null,
                     colorFilter = ColorFilter.tint(color = MaterialTheme.colorScheme.onBackground)
                 )
 

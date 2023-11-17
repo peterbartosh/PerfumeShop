@@ -14,5 +14,4 @@ data class RegistrationRequestEntity(
 
     @ColumnInfo(name = "code")
     var code : Int,
-
 )

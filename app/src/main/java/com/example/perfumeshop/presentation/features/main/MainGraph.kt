@@ -5,13 +5,11 @@ import com.example.perfumeshop.data.utils.OptionType
 import com.example.perfumeshop.data.utils.QueryType
 import com.example.perfumeshop.data.utils.UserPreferencesType
 import com.example.perfumeshop.presentation.features.main.cart_feature.cart.navigation.cartRoute
-import com.example.perfumeshop.presentation.features.main.cart_feature.cart.ui.CartViewModel
 import com.example.perfumeshop.presentation.features.main.cart_feature.cartActiveChild
 import com.example.perfumeshop.presentation.features.main.cart_feature.cartGraph
 import com.example.perfumeshop.presentation.features.main.home_feature.home.navigation.homeRoute
 import com.example.perfumeshop.presentation.features.main.home_feature.homeActiveChild
 import com.example.perfumeshop.presentation.features.main.home_feature.homeGraph
-import com.example.perfumeshop.presentation.features.main.profile_feature.favourite.ui.FavouriteViewModel
 import com.example.perfumeshop.presentation.features.main.profile_feature.profile.navigation.profileRoute
 import com.example.perfumeshop.presentation.features.main.profile_feature.profileActiveChild
 import com.example.perfumeshop.presentation.features.main.profile_feature.profileGraph
@@ -35,22 +33,16 @@ fun NavGraphBuilder.mainGraph(
     navigateToOrderMaking: () -> Unit,
     navigateToCart: () -> Unit,
     //homeViewModel: HomeViewModel,
-    cartViewModel: CartViewModel,
-    favouriteViewModel: FavouriteViewModel,
     onBackPressed: () -> Unit
 ){
 
         homeGraph(
-            cartViewModel = cartViewModel,
-            favouriteViewModel = favouriteViewModel,
             onSearchClick = navigateSearch,
             //onProductClick = navigateProduct,
             onBackPressed = onBackPressed
         )
 
         cartGraph(
-            cartViewModel = cartViewModel,
-            favouriteViewModel = favouriteViewModel,
             //onProductClick = navigateProduct,
             onOrderDone = navigateToCart,
             onOrderMakeClick = navigateToOrderMaking,
@@ -58,8 +50,6 @@ fun NavGraphBuilder.mainGraph(
         )
 
         profileGraph(
-            cartViewModel = cartViewModel,
-            favouriteViewModel = favouriteViewModel,
             onOptionClick = navigateOption,
             //onProductClick = navigateProduct,
             onBackPressed = onBackPressed
