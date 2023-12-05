@@ -19,6 +19,7 @@ data class User(
     @set:PropertyName("phone_number")
     var phoneNumber : String? = null,
 
+    var city: String? = null,
     var street : String? = null,
     var home : String? = null,
     var flat : String? = null,

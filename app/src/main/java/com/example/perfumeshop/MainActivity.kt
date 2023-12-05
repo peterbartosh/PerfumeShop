@@ -8,7 +8,7 @@ import androidx.work.OneTimeWorkRequestBuilder
 import androidx.work.WorkManager
 import com.example.perfumeshop.data.work.LoadWorker
 import com.example.perfumeshop.data.work.SaveWorker
-import com.example.perfumeshop.presentation.app.ui.App
+import com.example.perfumeshop.presentation.app.App
 import dagger.hilt.android.AndroidEntryPoint
 
 @AndroidEntryPoint
@@ -59,11 +59,6 @@ class MainActivity : ComponentActivity() {
 
 
 
-//    override fun onStart() {
-//        workManager.enqueue(saveWorker.build())
-//
-//        super.onStart()
-//    }
 
 }
 

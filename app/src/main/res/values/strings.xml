@@ -1,10 +1,10 @@
 <resources>
-    <string name="app_name">PerfumeShop</string>
+    <string name="app_name">Gold\nParfum</string>
     <string name="app_label">GOLD PARFUM</string>
     <string name="app_label_not_caps">Gold Parfum</string>
     <string name="parfum_and_cosmetics">Парфюмерия и косметика оптом</string>
     <string name="registration_label"> Зарегистрируйтесь!</string>
-    <string name="registration_body"> \n Регистрация позволяет узнавать узнать цену товара, оформить заказ и многое другое! </string>
+    <string name="registration_body"> \n Регистрация позволяет узнать цену товара, оформить заказ и многое другое! </string>
     <string name="receiver_email_address">zakaz@goldparfum.by</string>
     <string name="sender_email_address">goldappsender@gmail.com</string>
     <string name="error_occured"> Произошла ошибка </string>
@@ -97,6 +97,10 @@
 
     <string name="content_cleared">
         Очищено.
+    </string>
+
+    <string name="address_remembered">
+        Сохранено.
     </string>
 
     <string name="content_updated">

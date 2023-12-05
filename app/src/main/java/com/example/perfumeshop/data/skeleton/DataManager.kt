@@ -8,7 +8,6 @@ import com.example.perfumeshop.data.repository.FireRepository
 import com.example.perfumeshop.data.repository.RoomRepository
 import com.example.perfumeshop.data.room.entities.ProductEntity
 import com.example.perfumeshop.data.room.entities.toProductWithAmount
-import com.example.perfumeshop.presentation.features.main.profile_feature.favourite.ui.TAG
 import com.google.firebase.auth.FirebaseAuth
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Job
@@ -61,14 +60,14 @@ class DataManager(
 
             fireRepository.getFavouritesFromDatabase(uid)
                 .catch { e ->
-                    Log.d(TAG, "loadProductFromRemoteDatabase: $e")
+                    Log.d("TAG", "loadProductFromRemoteDatabase: $e")
                 }.collect { favObj ->
                     favs.add(favObj)
                 }
 
             fireRepository.getCartFromDatabase(uid)
                 .catch { e ->
-                    Log.d(TAG, "loadProductFromRemoteDatabase: $e")
+                    Log.d("TAG", "loadProductFromRemoteDatabase: $e")
                 }.collect { cartObj ->
                     cart.add(cartObj)
                 }

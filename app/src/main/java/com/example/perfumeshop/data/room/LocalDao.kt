@@ -44,6 +44,9 @@ interface LocalDao {
     @Query("SELECT * from cart_table Order By num ASC")
     fun getCartProductsAsList(): List<CartProductEntity>
 
+    @Query("Select Count(*) From cart_table")
+    fun getCartProductsAmount(): Flow<Int>
+
     @Query("Select Count(*) From cart_table Where product_id = :productId")
     suspend fun isInCart(productId: String): Int
 

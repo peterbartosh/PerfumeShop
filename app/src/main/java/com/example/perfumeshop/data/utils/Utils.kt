@@ -1,7 +1,13 @@
 package com.example.perfumeshop.data.utils
 
 import android.content.Context
+import android.content.Intent
 import android.net.ConnectivityManager
+import android.net.NetworkCapabilities
+import android.net.Uri
+import android.os.Build
+import android.util.Log
+import android.widget.Toast
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.saveable.listSaver
 import androidx.compose.runtime.saveable.rememberSaveable
@@ -9,26 +15,62 @@ import androidx.compose.runtime.snapshots.SnapshotStateList
 import androidx.compose.runtime.toMutableStateList
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
+import androidx.core.content.ContextCompat
+import com.example.perfumeshop.R
 import kotlin.math.round
 
-fun isUserConnected(context: Context) : Boolean {
-    val manager =
-        context.getSystemService(Context.CONNECTIVITY_SERVICE) as ConnectivityManager
-    val connected = manager.activeNetwork
-    return connected != null
+fun Context.showToast(stringId : Int, duration: Int = Toast.LENGTH_SHORT){
+    val toast = Toast.makeText(this, this.getString(stringId), duration)
+    toast.show()
+}
+
+fun Context.showToast(message: String, duration: Int = Toast.LENGTH_SHORT){
+    val toast = Toast.makeText(this, message, duration)
+    toast.show()
+}
+
+fun isUserConnected(ctx: Context) : Boolean {
+    val hasInternet: Boolean
+
+    val connectivityManager =
+        ctx.getSystemService(Context.CONNECTIVITY_SERVICE) as ConnectivityManager
+
+    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
+        val networkCapabilities = connectivityManager.activeNetwork ?: return false
+        val actNw =
+            connectivityManager.getNetworkCapabilities(networkCapabilities) ?: return false
+        hasInternet = when {
+            actNw.hasTransport(NetworkCapabilities.TRANSPORT_WIFI) -> true
+            actNw.hasTransport(NetworkCapabilities.TRANSPORT_CELLULAR) -> true
+            actNw.hasTransport(NetworkCapabilities.TRANSPORT_ETHERNET) -> true
+            else -> false
+        }
+    } else {
+        hasInternet = try {
+            if (connectivityManager.activeNetworkInfo == null) {
+                false
+            } else {
+                connectivityManager.activeNetworkInfo?.isConnected!!
+            }
+        } catch (e: Exception) {
+            false
+        }
+    }
+    return hasInternet
 }
 
 @Composable
-fun getWidthPercent(context: Context): Dp {
-    val displayMetrics = context.resources.displayMetrics
+fun Context.getWidthPercent(): Dp {
+    val displayMetrics = this.resources.displayMetrics
     return ((displayMetrics.widthPixels / displayMetrics.density) / 100).dp
 }
 
 @Composable
-fun getHeightPercent(context: Context): Dp {
-    val displayMetrics = context.resources.displayMetrics
+fun Context.getHeightPercent(): Dp {
+    val displayMetrics = this.resources.displayMetrics
     return ((displayMetrics.heightPixels / displayMetrics.density) / 100).dp
 }
+
 
 fun Double.round(decimals: Int): Double {
     var multiplier = 1.0
@@ -43,7 +85,7 @@ fun Float.round(decimals: Int): Float {
 }
 
 @Composable
-fun <T : Any> rememberSaveableMutableStateList(vararg elements : T) : SnapshotStateList<T>{
+fun <T : Any> rememberSavableMutableStateList(vararg elements : T) : SnapshotStateList<T>{
     return rememberSaveable(
         saver = listSaver(
             save = { stateList ->
@@ -116,5 +158,53 @@ fun generateNumber(
         finalNumber.shuffle()
 
         finalNumber.joinToString("")
+    }
+}
+
+fun composeIntent(context: Context, optionType : OptionType) {
+
+    try {
+        when (optionType){
+
+            OptionType.PhoneNumber -> {
+                ContextCompat.startActivity(context, Intent.createChooser(Intent(Intent.ACTION_DIAL).apply {
+                    data = Uri.parse(context.getString(R.string.phone_number_prefix) + context.getString(
+                        R.string.phone_number))
+                }, ""), null)
+            }
+
+            OptionType.Gmail -> {
+                ContextCompat.startActivity(context, Intent(Intent.ACTION_SENDTO).apply {
+                    data = Uri.parse(context.getString(R.string.email_prefix) + context.getString(R.string.email))
+                }, null)
+
+            }
+            OptionType.Telegram -> {
+                ContextCompat.startActivity(context, Intent(Intent.ACTION_VIEW).apply {
+                    data = Uri.parse(context.getString(R.string.telegram_prefix) + context.getString(
+                        R.string.telegram))
+                }, null)
+            }
+
+            OptionType.WhatsApp -> {
+                ContextCompat.startActivity(context, Intent(Intent.ACTION_VIEW).apply {
+                    data = Uri.parse(context.getString(R.string.whatsapp_prefix) + context.getString(
+                        R.string.whatsapp))
+                }, null)
+            }
+
+            OptionType.WebSite -> {
+                ContextCompat.startActivity(context, Intent(Intent.ACTION_VIEW).apply {
+                    data = Uri.parse(context.getString(R.string.website_prefix) + context.getString(
+                        R.string.website))
+                }, null)
+            }
+
+            else -> {}
+        }
+    } catch (e : Exception){
+
+        context.showToast(R.string.app_not_installed_error)
+        Log.d("TAG", "composeIntent: ${e.message}")
     }
 }

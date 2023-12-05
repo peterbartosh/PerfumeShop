@@ -7,24 +7,21 @@ import androidx.navigation.compose.NavHost
 import androidx.navigation.navOptions
 import com.example.perfumeshop.data.utils.OptionType
 import com.example.perfumeshop.data.utils.UserPreferencesType
-import com.example.perfumeshop.presentation.features.app_blocked.navigation.appBlockedScreen
-import com.example.perfumeshop.presentation.features.auth.authGraph
-import com.example.perfumeshop.presentation.features.auth.code_verification_feature.navigation.codeVerificationRoute
-import com.example.perfumeshop.presentation.features.auth.code_verification_feature.navigation.navigateToCodeVerification
-import com.example.perfumeshop.presentation.features.auth.login_feature.navigation.loginRoute
-import com.example.perfumeshop.presentation.features.auth.login_feature.navigation.navigateToLogin
-import com.example.perfumeshop.presentation.features.main.cart_feature.cart.navigation.navigateToCart
-import com.example.perfumeshop.presentation.features.main.cart_feature.order_making.navigation.navigateToOrderMaking
-import com.example.perfumeshop.presentation.features.main.home_feature.home.navigation.navigateToHome
-import com.example.perfumeshop.presentation.features.main.home_feature.search.navigation.navigateToSearch
-import com.example.perfumeshop.presentation.features.main.mainGraph
-import com.example.perfumeshop.presentation.features.main.profile_feature.edit_profile.navigation.navigateToEditProfileRoute
-import com.example.perfumeshop.presentation.features.main.profile_feature.favourite.navigation.navigateToFavouritesRoute
-import com.example.perfumeshop.presentation.features.main.profile_feature.orders.navigation.navigateToOrders
-import com.example.perfumeshop.presentation.features.start.ask_feature.navigation.askRoute
-import com.example.perfumeshop.presentation.features.start.ask_feature.navigation.navigateToAsk
-import com.example.perfumeshop.presentation.features.start.splash_feature.navigation.splashRoute
-import com.example.perfumeshop.presentation.features.start.startGraph
+import com.example.perfumeshop.presentation.app.navigation.nested.authGraph
+import com.example.perfumeshop.presentation.app.navigation.nested.mainGraph
+import com.example.perfumeshop.presentation.app.navigation.nested.startGraph
+import com.example.perfumeshop.presentation.features.app_blocked.appBlockedScreen
+import com.example.perfumeshop.presentation.features.cart.navigateToCart
+import com.example.perfumeshop.presentation.features.code_verification.navigateToCodeVerification
+import com.example.perfumeshop.presentation.features.edit_profile.navigateToEditProfileRoute
+import com.example.perfumeshop.presentation.features.favourite.navigateToFavouritesRoute
+import com.example.perfumeshop.presentation.features.first_ask.navigateToAsk
+import com.example.perfumeshop.presentation.features.home.navigateToHome
+import com.example.perfumeshop.presentation.features.login.navigateToLogin
+import com.example.perfumeshop.presentation.features.order_making.navigateToOrderMaking
+import com.example.perfumeshop.presentation.features.orders.navigateToOrders
+import com.example.perfumeshop.presentation.features.search.navigateToSearch
+import com.example.perfumeshop.presentation.features.splash.splashRoute
 
 
 @Composable
@@ -56,15 +53,10 @@ fun AppNavHost(
         appBlockedScreen(
             navigateAsk = {
                 navController.navigateToAsk(navOptions = navOptions)
-                navController.backQueue.removeIf{ nbse -> nbse.destination.route == splashRoute}
             },
             navigateHome = {
                 loadData()
                 navController.navigateToHome(navOptions = null)
-                navController.backQueue.removeIf{ nbse ->
-                    nbse.destination.route in
-                            listOf(splashRoute, askRoute, loginRoute, codeVerificationRoute)
-                }
             },
             onBackPressed = onBackPressed
         )
@@ -72,15 +64,10 @@ fun AppNavHost(
         startGraph(
             navigateAsk = {
                 navController.navigateToAsk(navOptions = navOptions)
-                navController.backQueue.removeIf{ nbse -> nbse.destination.route == splashRoute}
             },
             navigateHome = {
                loadData()
                navController.navigateToHome(navOptions = null)
-               navController.backQueue.removeIf{ nbse ->
-                   nbse.destination.route in
-                       listOf(splashRoute, askRoute, loginRoute, codeVerificationRoute)
-               }
             },
             navigateAuth = { navController.navigateToLogin(navOptions = navOptions) }
         )
@@ -99,8 +86,8 @@ fun AppNavHost(
             onUserPreferencesChanged = onUserPreferencesChanged,
             navigateToCart = { navController.navigateToCart(navOptions = navOptions) },
             navigateToOrderMaking = { navController.navigateToOrderMaking(navOptions = navOptions) },
-            navigateSearch = { query, queryType -> navController.navigateToSearch(query = query, queryType = queryType, navOptions = navOptions) },
-            navigateOption = { optionType ->
+            navigateToSearch = { query, queryType -> navController.navigateToSearch(query = query, queryType = queryType, navOptions = navOptions) },
+            navigateToOption = { optionType ->
                 when(optionType){
                     OptionType.Edit -> navController.navigateToEditProfileRoute(navOptions = navOptions)
                     OptionType.Auth -> navController.navigateToLogin(navOptions = navOptions)
@@ -108,9 +95,6 @@ fun AppNavHost(
                     OptionType.Favourite -> navController.navigateToFavouritesRoute(navOptions = navOptions)
                     else -> {}
             }},
-//            navigateProduct = { productId ->
-//                navController.navigateToProduct(productId = productId, navOptions = navOptions)
-//            },
             onBackPressed = onBackPressed
         )
     }

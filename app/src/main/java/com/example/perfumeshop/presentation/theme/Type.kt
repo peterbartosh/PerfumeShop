@@ -3,11 +3,22 @@ package com.example.perfumeshop.presentation.theme
 import androidx.compose.material3.Typography
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.text.TextStyle
+import androidx.compose.ui.text.font.Font
 import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontStyle
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.sp
+import com.example.perfumeshop.R
+
+//val arialFont = FontFamily(Font(R.font.))
+val gilroyBold = FontFamily(Font(R.font.gilroy_bold))
+
+val arialTypography = Typography(
+    bodyMedium = TextStyle(
+        fontFamily = gilroyBold
+    )
+)
 
 // Set of Material typography styles to start with
 @Composable

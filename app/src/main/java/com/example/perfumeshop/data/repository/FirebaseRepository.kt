@@ -177,14 +177,26 @@ class FireRepository @Inject constructor(
 
             var resultQuery = productsCollection as Query
 
-            if (initQueryType.name == QueryType.type.name)
+            if (initQueryType.name == QueryType.Type.name) {
                 resultQuery = resultQuery.whereEqualTo("type", initQuery)
+            }
+
+            if (initQueryType.name == QueryType.TypeVolume.name) {
+                try {
+                    val type = initQuery.split(":")[0]
+                    val volume = initQuery.split(":")[1].toInt()
+                    resultQuery = resultQuery.whereEqualTo("type", type)
+                    resultQuery = resultQuery.whereEqualTo("volume", volume)
+                } catch (nfe: NumberFormatException){
+                    Log.d(TAG, "getQueryProducts: $nfe")
+                }
+            }
 
             _filter?.let { filter ->
                 resultQuery = resultQuery.where(filter)
             }
 
-            if (queryType.name != QueryType.brand.name) {
+            if (queryType.name != QueryType.Brand.name) {
                 val direction =
                     if (isAscending) Query.Direction.ASCENDING else Query.Direction.DESCENDING
 
@@ -205,7 +217,7 @@ class FireRepository @Inject constructor(
                 }
             }
 
-            if (queryType.name == QueryType.brand.name) {
+            if (queryType.name == QueryType.Brand.name) {
                 resultQuery = resultQuery
                     .orderBy("brand")
                     .startAt(query.lowercase())
@@ -266,6 +278,7 @@ class FireRepository @Inject constructor(
             usersCollection.whereEqualTo("phone_number", phoneNumber).get().await().isEmpty
         }
     } catch (e : Exception){
+        Log.d("SOJKOS", "phoneNumberIsNotUsedYet: $e ${e.message}")
         false
     }
 

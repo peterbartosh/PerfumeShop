@@ -55,6 +55,8 @@ class RoomRepository @Inject constructor(private val localDao: LocalDao) {
         localDao.getCartProductsAsList()
     }
 
+    fun getCartProductsAmount() = localDao.getCartProductsAmount().flowOn(Dispatchers.IO)
+
     suspend fun isInCart(productId: String) = withContext(Dispatchers.IO){
         localDao.isInCart(productId) == 1
     }

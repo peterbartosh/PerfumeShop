@@ -28,6 +28,7 @@ class UserData @Inject constructor(
         secondName: String? = null,
         phoneNumber: String? = null,
         sexInd: Int = 2,
+        city: String? = null,
         streetName: String? = null,
         homeNumber: String? = null,
         flatNumber: String? = null
@@ -69,6 +70,7 @@ class UserData @Inject constructor(
         firstName: String? = null,
         secondName: String? = null,
         sexInd: Int = 2,
+        city: String? = null,
         streetName: String? = null,
         homeNumber: String? = null,
         flatNumber: String? = null
@@ -81,6 +83,7 @@ class UserData @Inject constructor(
             _user?.street = streetName
             _user?.home = homeNumber
             _user?.flat = flatNumber
+            _user?.city = city
 
             _user?.let { u ->
                 roomRepository.updateUserData(u)
